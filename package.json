@@ -10,6 +10,9 @@
   "module": "./dist/hookify.js",
   "types": "./dist/index.d.ts",
   "scripts": {
+    "install:examples": "for dir in ./examples/*/; do (cd \"$dir\" && npm install); done",
+    "setup": "npm install && npm run install:examples",
+    "dev:examples:basic": "cd examples/basic && npm run dev",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "watch": "vite build --watch",
