@@ -1,15 +1,13 @@
-import { useApi } from "@altalyst/hookify";
 import { useState } from "react";
-import { UseEffectAfterMount } from "./components/use-effect-after-mount";
+import { Link } from "react-router-dom";
 
-import reactLogo from "./assets/react.svg";
+import reactLogo from "../assets/react.svg";
 import viteLogo from "/vite.svg";
 
-import "./App.css";
+import "../styles/root.css";
 
-function App() {
+export const Root = () => {
   const [count, setCount] = useState(0);
-  useApi();
 
   return (
     <>
@@ -33,9 +31,13 @@ function App() {
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more
       </p>
-      <UseEffectAfterMount />
+      <nav>
+        <ul>
+          <li>
+            <Link to={`hooks`}>Hooks Demo</Link>
+          </li>
+        </ul>
+      </nav>
     </>
   );
-}
-
-export default App;
+};
