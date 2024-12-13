@@ -19,7 +19,7 @@ import { useEffect } from "react";
  * return <div ref={ref}>Click outside this element</div>;
  * ```
  *
- * For a full working example, check the implementation in [examples/useOutsideClick.ts](../../examples/basic/src/components/use-outside-click/use-outside-click.tsx).
+ * For a complete example, see [examples/useOutsideClick.ts](../../examples/basic/src/components/use-outside-click/use-outside-click.tsx).
  */
 export const useOutsideClick = (
   ref: RefObject<HTMLElement>,

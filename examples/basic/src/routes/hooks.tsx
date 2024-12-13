@@ -17,6 +17,9 @@ export const HooksPage = () => {
           <li>
             <Link to={"/hooks/use-outside-click"}>useOutsideClick hook</Link>
           </li>
+          <li>
+            <Link to={"/hooks/use-toggle-state"}>useToggleState hook</Link>
+          </li>
         </ul>
       </nav>
       <Outlet />
