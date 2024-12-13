@@ -14,6 +14,9 @@ export const HooksPage = () => {
           <li>
             <Link to={"/hooks/use-api"}>useApi hook</Link>
           </li>
+          <li>
+            <Link to={"/hooks/use-outside-click"}>useOutsideClick hook</Link>
+          </li>
         </ul>
       </nav>
       <Outlet />
