@@ -22,7 +22,7 @@ import { useCallback, useState } from "react";
  * );
  * ```
  *
- * For a complete example, see [examples/useToggleState.ts](../../examples/basic/src/components/use-toggle-state.tsx).
+ * For a complete example, see [examples/useToggleState.ts](../../examples/basic/src/components/use-toggle-state/index.tsx).
  */
 export const useToggleState = (
   initialState: boolean = false

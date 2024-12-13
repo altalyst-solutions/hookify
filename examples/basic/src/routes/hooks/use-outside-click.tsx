@@ -1,4 +1,4 @@
-import { UseOutsideClick } from "../../components/use-outside-click/use-outside-click";
+import { UseOutsideClick } from "../../components/use-outside-click";
 
 export const UseOutsideClickPage = () => {
   return (
