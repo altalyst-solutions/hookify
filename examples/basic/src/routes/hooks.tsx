@@ -20,6 +20,11 @@ export const HooksPage = () => {
           <li>
             <Link to={"/hooks/use-toggle-state"}>useToggleState hook</Link>
           </li>
+          <li>
+            <Link to={"/hooks/use-persisted-state"}>
+              usePersistedState hook
+            </Link>
+          </li>
         </ul>
       </nav>
       <Outlet />
