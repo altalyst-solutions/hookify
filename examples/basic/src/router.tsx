@@ -3,6 +3,7 @@ import { createBrowserRouter } from "react-router-dom";
 import { HooksPage } from "./routes/hooks.tsx";
 import { UseApiPage } from "./routes/hooks/use-api.tsx";
 import { UseEffectAfterMountPage } from "./routes/hooks/use-effect-after-mount.tsx";
+import { UseOutsideClickPage } from "./routes/hooks/use-outside-click.tsx";
 import { Root } from "./routes/root.tsx";
 
 export const router = createBrowserRouter([
@@ -21,6 +22,10 @@ export const router = createBrowserRouter([
       {
         path: "/hooks/use-api",
         element: <UseApiPage />,
+      },
+      {
+        path: "/hooks/use-outside-click",
+        element: <UseOutsideClickPage />,
       },
     ],
   },
