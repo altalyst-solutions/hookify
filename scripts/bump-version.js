@@ -30,11 +30,11 @@ const bumpVersion = (type) => {
   exec(`git push origin main --tags`);
 };
 
-// Set up Git user and authenticate using ACCESS_GITHUB_TOKEN
+// Set up Git user and authenticate using GITHUB_TOKEN
 const setupGit = () => {
-  const githubToken = process.env.ACCESS_GITHUB_TOKEN;
+  const githubToken = process.env.GITHUB_TOKEN;
   if (!githubToken) {
-    console.error("Error: ACCESS_GITHUB_TOKEN is not set");
+    console.error("Error: GITHUB_TOKEN is not set");
     process.exit(1);
   }
 
