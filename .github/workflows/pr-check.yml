@@ -1,12 +1,13 @@
-name: CI
+name: PR Check
 
 on:
-  push:
+  pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
-  build-and-publish:
+  pr-check:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -42,17 +43,11 @@ jobs:
       - name: Build library
         run: npm run build
 
-      - name: Bump version and push changes
-        uses: phips28/gh-action-bump-version@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_GITHUB_TOKEN }}
-        with:
-          minor-wording: "feat"
-          major-wording: "BREAKING CHANGE"
-          commit-message: "ci: bump version to {{version}}"
+      - name: Setup library link
+        run: npm link
 
-      - name: Publish to NPM
-        if: github.ref == 'refs/heads/main' # Ensure this only runs on the main branch
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-        run: npm publish
+      - name: Link library to examples
+        run: npm run link:library
+
+      - name: Build examples
+        run: npm run build:examples
