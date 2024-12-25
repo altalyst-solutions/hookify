@@ -8,7 +8,6 @@ on:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.head.repo.fork == false
     strategy:
       matrix:
         node-version: [20]
@@ -49,11 +48,14 @@ jobs:
       - name: Create .npmrc
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}" > ~/.npmrc
 
-      - name: Run version bump script
-        run: node ./scripts/bump-version.js
+      - name: Bump version and push changes
+        uses: phips28/gh-action-bump-version@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.ACCESS_GITHUB_TOKEN }}
+        with:
+          minor-wording: "feat"
+          major-wording: "BREAKING CHANGE"
+          commit-message: "ci: bump version to {{version}}"
 
       - name: Publish to NPM
         if: github.ref == 'refs/heads/main' # Ensure this only runs on the main branch
