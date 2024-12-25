@@ -12,9 +12,11 @@
   "scripts": {
     "install:examples": "for dir in ./examples/*/; do (cd \"$dir\" && npm install); done",
     "setup": "npm install && npm run install:examples",
+    "link:library": "for dir in ./examples/*/; do (cd \"$dir\" && npm link @altalyst/hookify); done",
     "dev:examples:basic": "cd examples/basic && npm run dev",
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:examples": "for dir in ./examples/*/; do (cd \"$dir\" && npm run build); done",
     "watch": "vite build --watch",
     "lint": "eslint .",
     "preview": "vite preview",

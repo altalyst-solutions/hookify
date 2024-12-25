@@ -38,12 +38,21 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm install
+        run: npm run setup
 
-      - name: Run tests
+      - name: Run library tests
         run: npm run test
         env:
           CI: true
 
       - name: Build library
         run: npm run build
+
+      - name: Setup library link
+        run: npm link
+
+      - name: Link library to examples
+        run: npm run link:library
+
+      - name: Build examples
+        run: npm run build:examples
