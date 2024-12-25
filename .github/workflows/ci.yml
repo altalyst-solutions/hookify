@@ -48,14 +48,11 @@ jobs:
       - name: Create .npmrc
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}" > ~/.npmrc
 
-      - name: Bump version and push changes
-        uses: phips28/gh-action-bump-version@master
+      - name: Run version bump script
+        run: node ./scripts/bump-version.js
         env:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_GITHUB_TOKEN }}
-        with:
-          minor-wording: "feat"
-          major-wording: "BREAKING CHANGE"
-          commit-message: "ci: bump version to {{version}}"
+          ACCESS_GITHUB_TOKEN: ${{ secrets.ACCESS_GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
 
       - name: Publish to NPM
         if: github.ref == 'refs/heads/main' # Ensure this only runs on the main branch
