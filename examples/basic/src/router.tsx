@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 
 import { HooksPage } from "./routes/hooks.tsx";
 import { UseApiPage } from "./routes/hooks/use-api.tsx";
+import { UseDebouncePage } from "./routes/hooks/use-debounce.tsx";
 import { UseEffectAfterMountPage } from "./routes/hooks/use-effect-after-mount.tsx";
 import { UseOutsideClickPage } from "./routes/hooks/use-outside-click.tsx";
 import { UsePersistedStatePage } from "./routes/hooks/use-persisted-state.tsx";
@@ -36,6 +37,10 @@ export const router = createBrowserRouter([
       {
         path: "/hooks/use-persisted-state",
         element: <UsePersistedStatePage />,
+      },
+      {
+        path: "/hooks/use-debounce",
+        element: <UseDebouncePage />,
       },
     ],
   },
