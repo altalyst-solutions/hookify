@@ -8,6 +8,7 @@ on:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.head.repo.fork == false
     strategy:
       matrix:
         node-version: [20]
