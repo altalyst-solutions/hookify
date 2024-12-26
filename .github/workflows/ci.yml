@@ -5,9 +5,13 @@ on:
     branches:
       - main
 
+env:
+  IS_FORK: ${{ github.repository != '@altalyst/hookify' }}
+
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    if: env.IS_FORK == 'false'
     strategy:
       matrix:
         node-version: [20]
