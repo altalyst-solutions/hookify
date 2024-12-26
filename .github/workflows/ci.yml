@@ -10,8 +10,8 @@ env:
 
 jobs:
   build-and-publish:
-    runs-on: ubuntu-latest
     if: env.IS_FORK == 'false'
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [20]
