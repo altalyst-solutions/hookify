@@ -7,7 +7,11 @@ on:
 
 jobs:
   build-and-publish:
-    if: ${{ github.repository == 'altalyst-solutions/hookify' }}
+    if: >
+      ${{ 
+        github.repository == 'altalyst-solutions/hookify' && 
+        !contains(github.event.head_commit.message, '[skip ci]') 
+      }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -56,7 +60,7 @@ jobs:
         with:
           minor-wording: "feat"
           major-wording: "BREAKING CHANGE"
-          commit-message: "ci: bump version to {{version}}"
+          commit-message: "ci: bump version to {{version}} [skip ci]"
 
       - name: Publish to NPM
         if: github.ref == 'refs/heads/main' # Ensure this only runs on the main branch
