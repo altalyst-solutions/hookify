@@ -8,6 +8,7 @@ on:
 
 jobs:
   pr-check:
+    if: ${{ github.repository == '@altalyst/hookify' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
