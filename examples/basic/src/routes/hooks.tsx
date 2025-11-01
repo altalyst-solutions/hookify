@@ -25,6 +25,11 @@ export const HooksPage = () => {
               usePersistedState hook
             </Link>
           </li>
+          <li>
+            <Link to={"/hooks/use-sequential-request"}>
+              useSequentialRequest hook
+            </Link>
+          </li>
         </ul>
       </nav>
       <Outlet />
