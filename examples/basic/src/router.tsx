@@ -4,6 +4,7 @@ import { HooksPage } from "./routes/hooks.tsx";
 import { UseApiPage } from "./routes/hooks/use-api.tsx";
 import { UseDebouncePage } from "./routes/hooks/use-debounce.tsx";
 import { UseEffectAfterMountPage } from "./routes/hooks/use-effect-after-mount.tsx";
+import { UseMountedPage } from "./routes/hooks/use-mounted.tsx";
 import { UseOutsideClickPage } from "./routes/hooks/use-outside-click.tsx";
 import { UsePersistedStatePage } from "./routes/hooks/use-persisted-state.tsx";
 import { UseSequentialRequestPage } from "./routes/hooks/use-sequential-request.tsx";
@@ -42,6 +43,10 @@ export const router = createBrowserRouter([
       {
         path: "/hooks/use-debounce",
         element: <UseDebouncePage />,
+      },
+      {
+        path: "/hooks/use-mounted",
+        element: <UseMountedPage />,
       },
       {
         path: "/hooks/use-sequential-request",
