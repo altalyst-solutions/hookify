@@ -5,14 +5,13 @@ on:
     branches:
       - main
 
-  pull_request:
-    branches:
-      - main
-
-  workflow_dispatch:
-
 jobs:
-  build-and-test:
+  build-and-publish:
+    if: >
+      ${{ 
+        github.repository == 'altalyst-solutions/hookify' && 
+        !contains(github.event.head_commit.message, '[skip ci]') 
+      }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -21,11 +20,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          registry-url: "https://registry.npmjs.org"
 
       - name: Cache node_modules
         uses: actions/cache@v4
@@ -38,12 +40,30 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm install
+        run: npm run setup
 
-      - name: Run tests
+      - name: Run library tests
         run: npm run test
         env:
           CI: true
 
       - name: Build library
         run: npm run build
+
+      - name: Create .npmrc
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}" > ~/.npmrc
+
+      - name: Bump version and push changes
+        uses: phips28/gh-action-bump-version@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_GITHUB_TOKEN }}
+        with:
+          minor-wording: "feat"
+          major-wording: "BREAKING CHANGE"
+          commit-message: "ci: bump version to {{version}} [skip ci]"
+
+      - name: Publish to NPM
+        if: github.ref == 'refs/heads/main' # Ensure this only runs on the main branch
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+        run: npm publish

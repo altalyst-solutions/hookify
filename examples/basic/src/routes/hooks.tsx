@@ -26,6 +26,9 @@ export const HooksPage = () => {
             </Link>
           </li>
           <li>
+            <Link to={"/hooks/use-debounce"}>useDebounce hook</Link>
+          </li>
+          <li>
             <Link to={"/hooks/use-sequential-request"}>
               useSequentialRequest hook
             </Link>

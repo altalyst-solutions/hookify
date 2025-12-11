@@ -1,8 +1,11 @@
 {
   "name": "@altalyst/hookify",
-  "private": true,
-  "version": "0.0.0",
+  "version": "0.0.7",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/altalyst-solutions/hookify.git"
+  },
   "files": [
     "dist"
   ],
@@ -12,9 +15,12 @@
   "scripts": {
     "install:examples": "for dir in ./examples/*/; do (cd \"$dir\" && npm install); done",
     "setup": "npm install && npm run install:examples",
+    "link:library": "for dir in ./examples/*/; do (cd \"$dir\" && npm link @altalyst/hookify); done",
+    "link:examples": "npm link && npm run link:library && npm run build",
     "dev:examples:basic": "cd examples/basic && npm run dev",
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:examples": "for dir in ./examples/*/; do (cd \"$dir\" && npm run build); done",
     "watch": "vite build --watch",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -42,11 +48,12 @@
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
     "jsdom": "^24.1.1",
+    "prettier": "^3.4.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
-    "vite": "^5.4.1",
+    "vite": "^5.4.11",
     "vite-plugin-dts": "^4.0.3",
     "vitest": "^2.0.5"
   }
