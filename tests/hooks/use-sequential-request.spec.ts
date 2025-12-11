@@ -27,55 +27,37 @@ describe("useSequentialRequest", () => {
   });
 
   it("should cancel the previous request if a new request is made", async () => {
-    let firstRequestResolve: (value: string) => void;
-    let secondRequestResolve: (value: string) => void;
-
-    // Mock the request function to return a promise that can be manually resolved
     mockRequest
-      .mockImplementationOnce((signal: AbortSignal) => {
-        return new Promise((resolve, reject) => {
-          firstRequestResolve = resolve;
-          // Listen for the abort event
-          signal.addEventListener("abort", () =>
-            reject(new Error("CanceledError"))
-          );
-        });
-      })
-      .mockImplementationOnce((_signal: AbortSignal) => {
-        return new Promise((resolve) => {
-          secondRequestResolve = resolve;
-        });
-      });
+      .mockImplementationOnce(
+        (signal: AbortSignal) =>
+          new Promise((_, reject) => {
+            signal.addEventListener("abort", () =>
+              reject(new Error("CanceledError"))
+            );
+          })
+      )
+      .mockResolvedValueOnce("second response");
 
     const { result } = renderHook(() =>
       useSequentialRequest((signal) => mockRequest(signal))
     );
 
-    // Trigger the first request
-    const promise1 = result.current();
+    // Start first request
+    const firstPromise = result.current();
 
-    // Allow some time for the first request to start
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    // Start second request immediately (should cancel first)
+    const secondPromise = result.current();
 
-    // Trigger the second request before the first one finishes
-    // This should cancel the first request
-    const promise2 = result.current();
+    // Catch first promise to prevent unhandled rejection
+    firstPromise.catch(() => {});
 
-    // Catch the first request rejection to prevent unhandled promise rejection
-    promise1.catch(() => {});
+    // Verify first request was canceled
+    await expect(firstPromise).rejects.toThrow("CanceledError");
 
-    // Ensure the first request is canceled
-    await expect(promise1).rejects.toThrow("CanceledError");
+    // Verify second request succeeded
+    await expect(secondPromise).resolves.toBe("second response");
 
-    // Resolve the second request
-    await act(async () => {
-      secondRequestResolve!("response");
-    });
-
-    // Ensure the second request completes successfully
-    await expect(promise2).resolves.toBe("response");
-
-    // Ensure that the mock request was called twice
+    // Both requests should have been called
     expect(mockRequest).toHaveBeenCalledTimes(2);
   });
 
