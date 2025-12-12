@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 
 import { HooksPage } from "./routes/hooks.tsx";
 import { UseApiPage } from "./routes/hooks/use-api.tsx";
+import { UseControlledStatePage } from "./routes/hooks/use-controlled-state.tsx";
 import { UseDebouncePage } from "./routes/hooks/use-debounce.tsx";
 import { UseEffectAfterMountPage } from "./routes/hooks/use-effect-after-mount.tsx";
 import { UseMountedPage } from "./routes/hooks/use-mounted.tsx";
@@ -35,6 +36,10 @@ export const router = createBrowserRouter([
       {
         path: "/hooks/use-toggle-state",
         element: <UseToggleStatePage />,
+      },
+      {
+        path: "/hooks/use-controlled-state",
+        element: <UseControlledStatePage />,
       },
       {
         path: "/hooks/use-persisted-state",
