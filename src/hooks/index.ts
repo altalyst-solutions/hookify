@@ -1,6 +1,7 @@
 export * from "./use-api";
 export * from "./use-controlled-state";
 export * from "./use-debounce";
+export * from "./use-doc-visible";
 export * from "./use-effect-after-mount";
 export * from "./use-mounted";
 export * from "./use-outside-click";

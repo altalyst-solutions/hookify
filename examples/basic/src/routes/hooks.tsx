@@ -34,6 +34,9 @@ export const HooksPage = () => {
             <Link to={"/hooks/use-debounce"}>useDebounce hook</Link>
           </li>
           <li>
+            <Link to={"/hooks/use-doc-visible"}>useDocVisible hook</Link>
+          </li>
+          <li>
             <Link to={"/hooks/use-mounted"}>useMounted hook</Link>
           </li>
           <li>
