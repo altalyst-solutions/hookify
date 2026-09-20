@@ -15,6 +15,7 @@
   "engines": {
     "node": ">=24"
   },
+  "packageManager": "npm@11.6.2",
   "scripts": {
     "install:examples": "for dir in ./examples/*/; do (cd \"$dir\" && npm install); done",
     "setup": "npm install && npm run install:examples",
