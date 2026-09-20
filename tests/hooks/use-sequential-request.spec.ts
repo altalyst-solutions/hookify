@@ -7,7 +7,7 @@ const mockRequest = vi.fn();
 
 describe("useSequentialRequest", () => {
   afterEach(() => {
-    vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
   it("should call the provided request function", async () => {
@@ -68,9 +68,9 @@ describe("useSequentialRequest", () => {
       signal: {} as AbortSignal,
     };
 
-    vi.spyOn(global, "AbortController").mockImplementation(
-      () => mockAbortController
-    );
+    vi.spyOn(global, "AbortController").mockImplementation(function () {
+      return mockAbortController;
+    } as unknown as () => AbortController);
 
     const { result, unmount } = renderHook(() =>
       useSequentialRequest((signal) => mockRequest(signal))
