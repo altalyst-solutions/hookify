@@ -17,9 +17,6 @@ jobs:
     permissions:
       contents: read
       id-token: write # required for npm trusted publishing (OIDC)
-    strategy:
-      matrix:
-        node-version: [20]
 
     steps:
       - name: Checkout code
@@ -30,7 +27,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version-file: ".nvmrc"
           registry-url: "https://registry.npmjs.org"
 
       - name: Cache node_modules
@@ -55,7 +52,7 @@ jobs:
         run: npm run build
 
       - name: Update npm
-        run: npm install -g npm@latest # trusted publishing (OIDC) requires npm >= 11.5.1
+        run: npm install -g npm@latest
 
       - name: Bump version and push changes
         uses: phips28/gh-action-bump-version@master
@@ -91,7 +88,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: ".nvmrc"
           registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
@@ -101,7 +98,7 @@ jobs:
         run: npm run build
 
       - name: Update npm
-        run: npm install -g npm@latest # trusted publishing (OIDC) requires npm >= 11.5.1
+        run: npm install -g npm@latest
 
       - name: Publish to NPM (dry run)
         run: npm publish --dry-run # authenticates via OIDC trusted publishing, no token needed

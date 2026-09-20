@@ -10,9 +10,6 @@ jobs:
   pr-check:
     if: ${{ github.repository == 'altalyst-solutions/hookify' }}
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [20]
 
     steps:
       - name: Checkout code
@@ -21,7 +18,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version-file: ".nvmrc"
 
       - name: Cache node_modules
         uses: actions/cache@v4
