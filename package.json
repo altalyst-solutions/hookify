@@ -12,6 +12,9 @@
   "main": "./dist/hookify.umd.cjs",
   "module": "./dist/hookify.js",
   "types": "./dist/index.d.ts",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "install:examples": "for dir in ./examples/*/; do (cd \"$dir\" && npm install); done",
     "setup": "npm install && npm run install:examples",
