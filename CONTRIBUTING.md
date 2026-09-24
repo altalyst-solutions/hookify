@@ -87,6 +87,14 @@ draft the wording yourself.
 3. Open a pull request describing what changed and why. Link any related
    issues.
 
+If you're using an AI coding agent, it can follow the `prepare-pr` skill to
+propose a branch name, group your changes into commits, and draft the PR
+description in this repo's standard format. It's mirrored at
+[`.github/skills/prepare-pr/`](.github/skills/prepare-pr/SKILL.md),
+`.claude/skills/prepare-pr/`, and `.agents/skills/prepare-pr/` so it's
+auto-discovered by GitHub Copilot, Claude Code, and other tools that follow
+the [Agent Skills spec](https://agentskills.io).
+
 ## Reporting bugs and requesting features
 
 Use the [issue templates](.github/ISSUE_TEMPLATE) to report bugs or request
