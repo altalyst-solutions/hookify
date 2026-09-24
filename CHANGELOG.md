@@ -16,6 +16,14 @@ have no `v` prefix, e.g. `0.4.0`).
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-09-24
+
+### Changed
+
+- Add prepare-pr skill and document it in CONTRIBUTING
+- Add follow-up PR detection to prepare-pr skill
+- Separate PR title from body in prepare-pr skill
+
 ## [0.5.0] - 2026-09-24
 
 ### Changed
@@ -37,6 +45,7 @@ have no `v` prefix, e.g. `0.4.0`).
 - Docusaurus documentation site with live, editable demos and a
   TypeDoc-generated API reference for every hook.
 
-[unreleased]: https://github.com/altalyst-solutions/hookify/compare/0.5.0...HEAD
+[unreleased]: https://github.com/altalyst-solutions/hookify/compare/0.5.1...HEAD
+[0.5.1]: https://github.com/altalyst-solutions/hookify/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/altalyst-solutions/hookify/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/altalyst-solutions/hookify/releases/tag/0.4.0
