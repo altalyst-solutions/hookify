@@ -42,15 +42,6 @@ jobs:
       - name: Build library
         run: npm run build
 
-      - name: Setup library link
-        run: npm link
-
-      - name: Link library to examples
-        run: npm run link:library
-
-      - name: Build examples
-        run: npm run build:examples
-
   docs-check:
     if: ${{ github.repository == 'altalyst-solutions/hookify' }}
     runs-on: ubuntu-latest

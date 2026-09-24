@@ -41,7 +41,7 @@ import { useCallback, useEffect, useRef } from "react";
  * return <button onClick={() => debouncedLog("Button clicked!")}>Click Me</button>;
  * ```
  *
- * For a complete example, see [examples/useDebounce.ts](../../examples/basic/src/components/use-debounce/index.tsx).
+ * For a live, editable example, see the [useDebounce docs page](https://altalyst-solutions.github.io/hookify/hooks/use-debounce).
  *
  * @see [Debouncing in JavaScript](https://www.freecodecamp.org/news/javascript-debounce-example)
  */
