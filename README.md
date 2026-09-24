@@ -45,8 +45,8 @@ demo.
 
 ## Features
 
-- 🪝 **Ten focused hooks** covering the most common React state, effect, and
-  side-effect patterns.
+- 🪝 **A growing collection of focused hooks** covering the most common React
+  state, effect, and side-effect patterns.
 - 📦 **Tiny and tree-shakeable** — import only what you use; no runtime
   dependencies beyond React.
 - 🔒 **Fully typed** — written in TypeScript with generated `.d.ts` files

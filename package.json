@@ -1,6 +1,26 @@
 {
   "name": "@altalyst/hookify",
   "version": "0.5.1",
+  "description": "A lightweight, dependency-free collection of framework-agnostic React hooks for debouncing, data fetching, toggling state, syncing state to storage, detecting outside clicks, and more.",
+  "keywords": [
+    "react",
+    "hooks",
+    "react-hooks",
+    "typescript",
+    "state-management",
+    "data-fetching",
+    "debounce",
+    "local-storage",
+    "toggle",
+    "outside-click",
+    "frontend",
+    "utility-hooks"
+  ],
+  "homepage": "https://altalyst-solutions.github.io/hookify",
+  "bugs": {
+    "url": "https://github.com/altalyst-solutions/hookify/issues"
+  },
+  "author": "Altalyst Solutions",
   "type": "module",
   "license": "MIT",
   "repository": {
