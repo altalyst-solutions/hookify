@@ -1,0 +1,79 @@
+---
+title: useApi
+sidebar_position: 2
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-api/App";
+import hookSource from "!!raw-loader!../../../src/hooks/use-api.ts";
+
+# useApi
+
+Performs an HTTP request and manages its `loading`, `data`, and `error`
+states for you, along with a `refetch` function to manually re-run the
+request.
+
+## When to use it
+
+- Fetching data from a REST endpoint on mount and rendering loading/error UI.
+- Supporting custom HTTP methods, headers, or request bodies.
+- Giving users a way to manually refresh fetched data.
+
+## Demo
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+  }}
+  showConsole
+/>
+
+## Signature
+
+```ts
+function useApi<T = unknown>(
+  url: string,
+  options?: UseApiOptions
+): UseApiReturn<T>;
+
+interface UseApiOptions {
+  method?: "GET" | "POST" | "PUT" | "DELETE";
+  headers?: HeadersInit;
+  body?: BodyInit;
+}
+
+interface UseApiReturn<T> {
+  data: T | null;
+  loading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+```
+
+| Parameter | Type            | Description                                         |
+| --------- | --------------- | --------------------------------------------------- |
+| `url`     | `string`        | The endpoint to fetch data from.                    |
+| `options` | `UseApiOptions` | Optional method, headers, and body for the request. |
+
+**Returns:** `{ data, loading, error, refetch }`
+
+## Usage notes
+
+- The request automatically re-runs whenever `url`, `method`, `headers`, or
+  `body` change.
+- The response body is parsed as JSON automatically.
+- `refetch` re-triggers the same request on demand — handy for "Retry" or
+  "Refresh" buttons.
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useApi</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-api.ts">
+    {hookSource}
+  </CodeBlock>
+</details>

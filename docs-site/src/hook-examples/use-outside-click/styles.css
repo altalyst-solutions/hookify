@@ -1,0 +1,20 @@
+.component__container {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.component__button {
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.component__dropdown {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}

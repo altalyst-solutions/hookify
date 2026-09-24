@@ -1,0 +1,66 @@
+---
+title: useEffectAfterMount
+sidebar_position: 1
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-effect-after-mount/App";
+import hookSource from "!!raw-loader!../../../src/hooks/use-effect-after-mount.ts";
+
+# useEffectAfterMount
+
+Runs an effect only after the component has mounted, skipping the very first
+render. It behaves like `useEffect`, except the callback is never invoked on
+initial mount — only on subsequent updates to the given dependencies.
+
+## When to use it
+
+- Reacting to prop/state changes without re-running logic on first render.
+- Avoiding duplicate work when an effect's initial run is already handled
+  elsewhere (e.g. during data fetching on mount).
+- Logging or syncing side effects that should only fire on genuine updates.
+
+## Demo
+
+Click the button a few times and watch the console — the effect only logs on
+updates, never for the initial render.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+  }}
+  showConsole
+/>
+
+## Signature
+
+```ts
+function useEffectAfterMount(fn: () => void, deps?: unknown[]): void;
+```
+
+| Parameter | Type         | Description                                                              |
+| --------- | ------------ | ------------------------------------------------------------------------ |
+| `fn`      | `() => void` | The callback to run after mount, whenever `deps` change.                 |
+| `deps`    | `unknown[]`  | Dependency array. Defaults to `[]` (fn runs once per dependency change). |
+
+**Returns:** `void`
+
+## Usage notes
+
+- The callback is skipped entirely on the first render — it only fires on
+  subsequent re-renders triggered by a dependency change.
+- Useful for avoiding the common "run once on mount, then only on updates"
+  pattern that plain `useEffect` doesn't support out of the box.
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useEffectAfterMount</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-effect-after-mount.ts">
+    {hookSource}
+  </CodeBlock>
+</details>

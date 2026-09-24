@@ -50,3 +50,33 @@ jobs:
 
       - name: Build examples
         run: npm run build:examples
+
+  docs-check:
+    if: ${{ github.repository == 'altalyst-solutions/hookify' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: ".nvmrc"
+          package-manager-cache: false
+
+      - name: Cache docs node_modules
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.npm
+            docs-site/node_modules
+          key: ${{ runner.os }}-docs-node-${{ hashFiles('docs-site/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-docs-node-
+
+      - name: Install docs dependencies
+        run: npm run docs:install
+
+      - name: Build docs site
+        run: npm run docs:build

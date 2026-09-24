@@ -1,0 +1,69 @@
+---
+title: useSequentialRequest
+sidebar_position: 10
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-sequential-request/App";
+import hookSource from "!!raw-loader!../../../src/hooks/use-sequential-request.ts";
+
+# useSequentialRequest
+
+Wraps an async request function so that only the most recent call ever
+resolves meaningfully — any in-flight previous request is automatically
+canceled via `AbortSignal`.
+
+## When to use it
+
+- Type-ahead search boxes where only the latest query's results matter.
+- Rapidly re-submitted forms or buttons where stale responses should be
+  discarded.
+- Any scenario prone to race conditions between overlapping requests.
+
+## Demo
+
+Open the Network tab in DevTools, then click "Run Query" repeatedly and
+watch earlier requests get canceled.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+  }}
+  showConsole
+/>
+
+## Signature
+
+```ts
+function useSequentialRequest<T>(
+  requestFn: (signal: AbortSignal) => Promise<T>
+): () => Promise<T>;
+```
+
+| Parameter   | Type                                  | Description                                                   |
+| ----------- | ------------------------------------- | ------------------------------------------------------------- |
+| `requestFn` | `(signal: AbortSignal) => Promise<T>` | The request function; must accept and honor an `AbortSignal`. |
+
+**Returns:** a callback that runs the request, canceling any previous one.
+
+## Usage notes
+
+- If a request is superseded before completing, it rejects with an error
+  whose message is `"CanceledError"` — check for this to distinguish a
+  cancellation from a real failure.
+- Any still-pending request is also canceled automatically on unmount.
+- Because `requestFn` is accessed through a ref internally, you can safely
+  pass an inline function without worrying about stale closures.
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useSequentialRequest</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-sequential-request.ts">
+    {hookSource}
+  </CodeBlock>
+</details>

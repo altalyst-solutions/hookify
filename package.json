@@ -19,6 +19,10 @@
   "scripts": {
     "install:examples": "for dir in ./examples/*/; do (cd \"$dir\" && npm install); done",
     "setup": "npm install && npm run install:examples",
+    "docs:install": "cd docs-site && npm install",
+    "docs:dev": "cd docs-site && npm start",
+    "docs:build": "cd docs-site && npm run build",
+    "docs:serve": "cd docs-site && npm run serve",
     "link:library": "for dir in ./examples/*/; do (cd \"$dir\" && npm link @altalyst/hookify); done",
     "link:examples": "npm link && npm run link:library && npm run build",
     "dev:examples:basic": "cd examples/basic && npm run dev",
