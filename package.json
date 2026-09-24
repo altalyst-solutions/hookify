@@ -1,6 +1,6 @@
 {
   "name": "@altalyst/hookify",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "A lightweight, dependency-free collection of framework-agnostic React hooks for debouncing, data fetching, toggling state, syncing state to storage, detecting outside clicks, and more.",
   "keywords": [
     "react",

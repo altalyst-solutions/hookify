@@ -18,6 +18,12 @@ or the [GitHub tags](https://github.com/altalyst-solutions/hookify/tags)
 (tags from `0.5.1` and earlier have no `v` prefix, e.g. `0.4.0`; tags from
 `0.6.0` onward are named `v<version>`, e.g. `v0.6.0`).
 
+## 0.5.2
+
+### Patch Changes
+
+- [#46](https://github.com/altalyst-solutions/hookify/pull/46) [`8baf00f`](https://github.com/altalyst-solutions/hookify/commit/8baf00fffc6fc735218fec7f00b2906951f5d56b) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add npm package metadata (`description`, `keywords`, `homepage`, `bugs`, `author`) to improve discoverability on npm and GitHub.
+
 ## 0.5.1 - 2026-09-24
 
 ### Changed
