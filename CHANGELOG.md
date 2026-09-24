@@ -16,7 +16,7 @@ rather than by hand. For the full list of published versions, see the
 [npm version history](https://www.npmjs.com/package/@altalyst/hookify?activeTab=versions)
 or the [GitHub tags](https://github.com/altalyst-solutions/hookify/tags)
 (tags from `0.5.1` and earlier have no `v` prefix, e.g. `0.4.0`; tags from
-`0.6.0` onward are named `@altalyst/hookify@<version>`).
+`0.6.0` onward are named `v<version>`, e.g. `v0.6.0`).
 
 ## 0.5.1 - 2026-09-24
 
