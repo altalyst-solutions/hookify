@@ -118,8 +118,10 @@ asks — otherwise just present it.
 Use the same `type: description` format as the commit messages (e.g.
 `docs: add MIT license, governance docs, and changelog automation`),
 summarizing the branch as a whole in one line, imperative mood, no trailing
-period. Put it directly above the body, e.g. as a top-level `# <title>`
-heading (or plain first line) when presenting the PR.
+period. Present the title as its own labeled line (e.g. `**PR title:**
+docs: ...`) separate from the body — never as a `# <title>` heading or plain
+first line inside the body's markdown, since that duplicates GitHub's
+separate title field once pasted into the description box.
 
 Then follow [`.github/PULL_REQUEST_TEMPLATE.md`](../../PULL_REQUEST_TEMPLATE.md)
 exactly for the body — same section order and headings:
@@ -137,9 +139,11 @@ exactly for the body — same section order and headings:
   "Unreleased" entry, commit message convention). Only check an item if it
   was genuinely run/confirmed.
 
-When asked for the PR "in markdown", wrap the whole title + body in a single
-` ```markdown ` fenced code block so it can be copy-pasted as-is, full width
-(no manual line wraps inside paragraphs).
+When asked for the PR "in markdown", present the title on its own line first
+(e.g. `**PR title:** docs: ...`), then wrap only the body in a
+` ```markdown ` fenced code block so the body can be copy-pasted as-is into
+GitHub's description field, full width (no manual line wraps inside
+paragraphs), without the title getting swept in as part of the body text.
 
 **Follow-up on an already-open PR:** don't draft a new title/body. Only
 refresh what the new commits actually change:
