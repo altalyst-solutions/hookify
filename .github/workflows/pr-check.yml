@@ -37,6 +37,9 @@ jobs:
       - name: Check formatting
         run: npm run format:check
 
+      - name: Lint library
+        run: npm run lint
+
       - name: Run library tests
         run: npm run test
         env:

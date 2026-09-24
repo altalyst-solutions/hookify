@@ -1,6 +1,7 @@
-import { useOutsideClick } from "@/hooks";
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+
+import { useOutsideClick } from "@/hooks";
 
 describe("useOutsideClick", () => {
   it("should call the callback when clicking outside the referenced element", () => {

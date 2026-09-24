@@ -1,6 +1,7 @@
-import { useEffectAfterMount } from "@/hooks";
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+
+import { useEffectAfterMount } from "@/hooks";
 
 describe("useEffectAfterMount", () => {
   it("should not call the function on the initial render", () => {

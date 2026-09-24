@@ -1,6 +1,7 @@
-import { useToggleState } from "@/hooks";
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+
+import { useToggleState } from "@/hooks";
 
 describe("useToggleState", () => {
   it("should initialize with default state as false", () => {

@@ -45,6 +45,7 @@ import { useCallback, useEffect, useRef } from "react";
  *
  * @see [Debouncing in JavaScript](https://www.freecodecamp.org/news/javascript-debounce-example)
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- `any[]` is required here (not `unknown[]`) so narrower callback signatures remain assignable to `T`, matching the pattern used by TS's own `Parameters<T>`.
 export const useDebounce = <T extends (...args: any[]) => void>(
   callback: T,
   delay: number

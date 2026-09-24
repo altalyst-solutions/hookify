@@ -1,6 +1,7 @@
-import { useDocVisible } from "@/hooks";
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { useDocVisible } from "@/hooks";
 
 describe("useDocVisible", () => {
   let visibilityState: DocumentVisibilityState;

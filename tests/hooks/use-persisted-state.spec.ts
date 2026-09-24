@@ -1,6 +1,7 @@
-import { usePersistedState } from "@/hooks";
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+import { usePersistedState } from "@/hooks";
 
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
