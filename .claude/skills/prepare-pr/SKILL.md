@@ -83,22 +83,28 @@ exact `git add` command(s) for that commit's files, and the exact
 unless the user explicitly asks you to stage/commit — treat them as
 information to review first.
 
-Every commit message must follow this repo's versioning convention (see
-[`CONTRIBUTING.md`](../../../CONTRIBUTING.md#commit-messages-and-versioning)),
-because **every commit included in a push to `main` is scanned** to decide
-the automatic version bump (see `.github/workflows/ci.yml`):
+Every commit message must follow this repo's
+[conventional-commit convention](../../../CONTRIBUTING.md#commit-messages-and-versioning)
+(`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`, `ci:`) for
+readability and changelog clarity. Commit message wording no longer
+controls the version bump — that's decided by the changeset(s) added in
+step 4a below — so don't worry about the substring `feat` or `BREAKING
+CHANGE` appearing incidentally.
 
-| Commit message contains...                              | Version bump |
-| ------------------------------------------------------- | ------------ |
-| `BREAKING CHANGE`, or a `type!:` prefix (e.g. `feat!:`) | major        |
-| `feat` (anywhere in the message)                        | minor        |
-| anything else                                           | patch        |
+### 4a. Add a changeset
 
-Use `feat:` only when the change is genuinely user-facing new functionality
-(e.g. a new hook). Use `fix:`, `docs:`, `chore:`, `refactor:`, `test:`, or
-`ci:` for everything else, and double-check none of those messages
-accidentally contain the substring `feat` or the words `BREAKING CHANGE`
-unless that bump is intended.
+If this PR changes the published package in a user-visible way (new hook,
+behavior change, bug fix, etc.), add a changeset before finishing:
+
+```
+npx changeset
+```
+
+Pick the correct bump (major/minor/patch) and write a summary from the
+consumer's point of view — it becomes the changelog entry. Stage the
+generated `.changeset/*.md` file as part of the relevant commit (or its own
+`docs`/`chore` commit). Skip this for changes that don't affect the
+published package (docs-site-only tweaks, CI, internal tooling).
 
 If the CLI's git commit trailer convention is active for this session,
 append it as a second `-m` flag on every `git commit` command, e.g.:
@@ -135,9 +141,8 @@ exactly for the body — same section order and headings:
   (Bug fix / New hook / Enhancement to an existing hook / Documentation /
   Other).
 - `## Checklist` — check off the items that were actually verified locally
-  (lint, format:check, test, build, tests/docs added, `CHANGELOG.md`
-  "Unreleased" entry, commit message convention). Only check an item if it
-  was genuinely run/confirmed.
+  (lint, format:check, test, build, tests/docs added, a changeset added for
+  user-facing changes). Only check an item if it was genuinely run/confirmed.
 
 When asked for the PR "in markdown", present the title on its own line first
 (e.g. `**PR title:** docs: ...`), then wrap only the body in a
@@ -151,7 +156,7 @@ refresh what the new commits actually change:
 - Append to (don't replace) `## Summary` if the new commits add meaningfully
   to what the PR does.
 - Re-check `## Type of change` boxes if a new category now applies.
-- Re-verify `## Checklist` items (lint/format/test/build, docs, changelog)
+- Re-verify `## Checklist` items (lint/format/test/build, docs, changeset)
   against the latest state, not just the original commits.
 - Leave everything else as-is. Present the diff of what would change and,
   only if the user confirms, apply it with `gh pr edit <number> --body "..."`
@@ -162,13 +167,13 @@ fix that doesn't change scope), say so and skip the edit entirely.
 
 ## 6. Don't forget
 
-- `CHANGELOG.md` is generated automatically by CI
-  (`scripts/update-changelog.js`) right after the version bump — don't add a
-  manual changelog commit unless drafting optional `## [Unreleased]` bullets
-  by hand.
+- `CHANGELOG.md` is written by Changesets, via the "Version Packages" pull
+  request that `changesets/action` opens after this PR merges — don't add a
+  manual changelog entry; add a changeset instead (step 4a).
 - Never stage (`git add`), commit, push, or edit a PR on your own initiative;
   only do so if the user explicitly confirms after reviewing the plan.
-- Version bumps only happen when a branch merges into `main` (see
-  `.github/workflows/ci.yml`'s `on: push: branches: [main]` trigger), so
-  follow-up commits pushed to a feature branch don't trigger a bump on their
-  own — all commits on the branch are scanned together at merge time.
+- Version bumps and npm publishes only happen when the "Version Packages"
+  PR is merged into `main` (see `.github/workflows/ci.yml` and
+  [CONTRIBUTING.md](../../../CONTRIBUTING.md#commit-messages-and-versioning)),
+  not when this PR itself merges — merging this PR just adds its
+  changeset(s) to that batch.
