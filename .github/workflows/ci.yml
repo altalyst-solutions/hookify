@@ -8,21 +8,19 @@ on:
 
 jobs:
   build-and-publish:
-    if: >
-      ${{ 
-        github.repository == 'altalyst-solutions/hookify' && 
-        !contains(github.event.head_commit.message, '[skip ci]') 
-      }}
+    if: ${{ github.repository == 'altalyst-solutions/hookify' }}
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write # required to push the "Version Packages" PR branch and release tags
+      pull-requests: write # required for changesets/action to open/update the "Version Packages" PR
       id-token: write # required for npm trusted publishing (OIDC)
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
         with:
-          persist-credentials: false
+          fetch-depth: 0
+          token: ${{ secrets.ACCESS_GITHUB_TOKEN }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v5
@@ -55,41 +53,17 @@ jobs:
       - name: Update npm
         run: npm install -g npm@latest
 
-      - name: Capture pre-bump version
-        id: pre_bump
-        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
-
-      - name: Bump version and push changes
-        id: bump_version
-        uses: phips28/gh-action-bump-version@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_GITHUB_TOKEN }}
-        with:
-          minor-wording: "feat"
-          major-wording: "BREAKING CHANGE"
-          commit-message: "ci: bump version to {{version}} [skip ci]"
-
-      - name: Generate changelog entry
-        if: steps.bump_version.outputs.newTag != ''
-        env:
-          NEW_VERSION: ${{ steps.bump_version.outputs.newTag }}
-          PREV_VERSION: ${{ steps.pre_bump.outputs.version }}
-        run: node scripts/update-changelog.js
-
-      - name: Commit and push changelog
-        if: steps.bump_version.outputs.newTag != ''
-        env:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_GITHUB_TOKEN }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add CHANGELOG.md
-          git commit -m "docs: update changelog for ${{ steps.bump_version.outputs.newTag }} [skip ci]"
-          git push "https://${{ github.actor }}:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git" HEAD:main
-
-      - name: Publish to NPM
+      - name: Create Release Pull Request or Publish to npm
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' # Ensure this only runs on push to main, never on manual dispatch
-        run: npm publish # authenticates via OIDC trusted publishing, no token needed
+        uses: changesets/action@v1
+        with:
+          version: npm run version
+          publish: npm run release
+          commit: "ci: version packages"
+          title: "ci: version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_GITHUB_TOKEN }}
+          # authenticates npm publish via OIDC trusted publishing, no NPM_TOKEN needed
 
   publish-dry-run:
     # Manual-only job to verify the trusted publisher OIDC setup without publishing.

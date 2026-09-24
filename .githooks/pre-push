@@ -1,0 +1,44 @@
+#!/bin/sh
+# Reminds/blocks pushing changes that affect the published package (src/ or
+# package.json) without a changeset. Doesn't run any network calls; only
+# looks at local git history, so it's fast and safe to run on every push.
+#
+# Skip this check for a single push with: git push --no-verify
+
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+if [ "$current_branch" = "main" ]; then
+  exit 0
+fi
+
+base_ref="main"
+if git show-ref --verify --quiet refs/remotes/origin/main; then
+  base_ref="origin/main"
+fi
+
+merge_base=$(git merge-base "$base_ref" HEAD 2>/dev/null)
+if [ -z "$merge_base" ]; then
+  # No common history to diff against (e.g. shallow clone) - don't block.
+  exit 0
+fi
+
+changed_files=$(git diff --name-only "$merge_base" HEAD)
+
+# Only src/ and package.json changes affect the published package; skip
+# docs-only, CI-only, or test-only changes.
+if ! echo "$changed_files" | grep -qE '^(src/|package\.json$)'; then
+  exit 0
+fi
+
+has_changeset=$(echo "$changed_files" | grep -E '^\.changeset/.+\.md$' | grep -v '^\.changeset/README\.md$')
+
+if [ -z "$has_changeset" ]; then
+  echo ""
+  echo "⚠️  This push changes src/ or package.json but adds no changeset."
+  echo "   Run 'npx changeset' to record a version bump + changelog entry."
+  echo "   If this genuinely shouldn't trigger a release, push again with:"
+  echo "     git push --no-verify"
+  echo ""
+  exit 1
+fi
+
+exit 0

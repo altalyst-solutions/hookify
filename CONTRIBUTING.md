@@ -57,28 +57,39 @@ checks on every PR via `.github/workflows/pr-check.yml`.
 
 ## Commit messages and versioning
 
-Hookify uses fully automated releases: every push to `main` bumps the
-version and publishes to npm (`.github/workflows/ci.yml`, via
-[gh-action-bump-version](https://github.com/phips28/gh-action-bump-version)).
-The version bump is derived by scanning **every commit message included in
-the push** (not just the last one — this matters since PRs here merge via a
-regular merge commit, not a squash), so please follow this convention in
-your commit messages:
+Hookify uses [Changesets](https://github.com/changesets/changesets) to
+manage versioning, `CHANGELOG.md`, and npm publishing
+(`.github/workflows/ci.yml`, via
+[changesets/action](https://github.com/changesets/action)).
 
-| Commit message contains...                              | Version bump |
-| ------------------------------------------------------- | ------------ |
-| `BREAKING CHANGE`, or a `type!:` prefix (e.g. `feat!:`) | major        |
-| `feat` (anywhere in the message)                        | minor        |
-| anything else                                           | patch        |
+If your change should be released (anything beyond docs/tooling that
+doesn't affect the published package), add a changeset in the same PR:
 
-Examples: `feat: add useIntersectionObserver hook`,
-`fix: guard useMounted against StrictMode double-invoke`,
-`feat!: rename \`delay\` option to \`wait\` (BREAKING CHANGE)`.
+```bash
+npx changeset
+```
 
-`CHANGELOG.md` is updated automatically right after each release by parsing
-these same commit messages — you don't need to edit it by hand, but feel
-free to add entries under `## [Unreleased]` in your PR if you'd like to
-draft the wording yourself.
+This prompts you for the bump type (major/minor/patch) and a short summary,
+then writes a Markdown file under `.changeset/` — commit it with your
+change. You can include multiple bullet points in the summary if useful;
+it becomes the changelog entry for this release, so write it for consumers
+of the package, not just for reviewers.
+
+When your PR merges to `main`, the `changesets/action` bot opens or updates
+a "Version Packages" pull request that bumps `package.json` and updates
+`CHANGELOG.md` from the accumulated changesets. Merging that PR triggers
+the actual npm publish — you don't need to (and shouldn't) edit
+`CHANGELOG.md` or `package.json`'s version by hand.
+
+If a change genuinely doesn't need a release (e.g. a docs typo fix), run
+`npx changeset add --empty` or simply skip adding a changeset — CI won't
+block the PR, but please don't skip it for anything user-facing.
+
+A local `pre-push` git hook (`.githooks/pre-push`, wired up automatically
+by `npm run setup` via the `prepare` script) blocks pushes that change
+`src/` or `package.json` without a changeset, as a safety net for forgetting
+the step above. Bypass it for an intentional exception with
+`git push --no-verify`.
 
 ## Pull requests
 

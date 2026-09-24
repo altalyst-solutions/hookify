@@ -22,7 +22,5 @@
 - [ ] `npm run build` passes
 - [ ] Added/updated tests in `tests/hooks`
 - [ ] Added/updated docs in `docs-site/docs/hooks` (for new/changed hooks)
-- [ ] Updated `CHANGELOG.md` under "Unreleased" (for user-facing changes)
-- [ ] Commit message/PR title follows the
-      [versioning convention](../CONTRIBUTING.md#commit-messages-and-versioning)
-      (`feat: ...`, includes `BREAKING CHANGE` if applicable, etc.)
+- [ ] Added a changeset (`npx changeset`) for user-facing changes — see
+      [CONTRIBUTING.md](../CONTRIBUTING.md#commit-messages-and-versioning)
