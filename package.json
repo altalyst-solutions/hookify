@@ -19,6 +19,7 @@
   "packageManager": "npm@11.6.2",
   "scripts": {
     "setup": "npm install",
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
     "docs:install": "cd docs-site && npm install",
     "docs:dev": "cd docs-site && npm start",
     "docs:build": "cd docs-site && npm run build",
@@ -31,13 +32,18 @@
     "format:check": "prettier --check .",
     "preview": "vite preview",
     "test": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "changeset publish"
   },
   "peerDependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^1.0.1",
+    "@changesets/cli": "^3.0.3",
     "@eslint/js": "^9.9.0",
     "@microsoft/api-extractor": "^7.59.1",
     "@testing-library/jest-dom": "^6.4.8",
