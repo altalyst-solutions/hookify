@@ -65,6 +65,16 @@ jobs:
           node-version-file: ".nvmrc"
           package-manager-cache: false
 
+      - name: Cache node_modules
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Cache docs node_modules
         uses: actions/cache@v6
         with:
@@ -74,6 +84,9 @@ jobs:
           key: ${{ runner.os }}-docs-node-${{ hashFiles('docs-site/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-docs-node-
+
+      - name: Install library dependencies
+        run: npm install
 
       - name: Install docs dependencies
         run: npm run docs:install
