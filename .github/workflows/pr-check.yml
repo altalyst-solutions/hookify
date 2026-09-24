@@ -34,6 +34,9 @@ jobs:
       - name: Install dependencies
         run: npm run setup
 
+      - name: Check formatting
+        run: npm run format:check
+
       - name: Run library tests
         run: npm run test
         env:

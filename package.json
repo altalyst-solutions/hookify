@@ -26,6 +26,8 @@
     "build": "tsc -b && vite build",
     "watch": "vite build --watch",
     "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "preview": "vite preview",
     "test": "vitest",
     "coverage": "vitest run --coverage"
