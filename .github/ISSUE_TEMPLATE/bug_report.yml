@@ -1,0 +1,51 @@
+name: Bug report
+description: Report a problem with a Hookify hook
+labels: ["bug"]
+body:
+  - type: input
+    id: hook
+    attributes:
+      label: Affected hook(s)
+      description: Which hook(s) does this affect?
+      placeholder: e.g. useDebounce
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Hookify version
+      placeholder: e.g. 0.4.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: >
+        A minimal code sample, StackBlitz/CodeSandbox link, or steps to
+        reproduce the issue.
+      render: tsx
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: React version, browser, framework (Next.js, Vite, etc.), OS.
+      placeholder: |
+        - React: 18.3.1
+        - Framework: Vite
+        - Browser/OS: Chrome 128 / macOS
+    validations:
+      required: false

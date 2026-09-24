@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a question / start a discussion
+    url: https://github.com/altalyst-solutions/hookify/discussions
+    about: For open-ended questions, ideas, or help using a hook, please use Discussions instead of an issue.
