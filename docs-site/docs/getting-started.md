@@ -48,7 +48,7 @@ export const Example = () => {
 
 ## What's next?
 
-- Browse the **Hooks** section for a live, editable demo and full API for each
-  hook (coming soon).
+- Browse the **[Hooks](/hooks)** section for a live, editable demo and usage
+  guide for each hook.
 - Check the **API Reference**, generated straight from the library's
-  TypeScript source (coming soon).
+  TypeScript source.
