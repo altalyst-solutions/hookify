@@ -1,0 +1,68 @@
+---
+title: useOutsideClick
+sidebar_position: 3
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-outside-click/App";
+import stylesSource from "!!raw-loader!@site/src/hook-examples/use-outside-click/styles.css";
+import hookSource from "!!raw-loader!../../../src/hooks/use-outside-click.ts";
+
+# useOutsideClick
+
+Invokes a callback whenever a click or touch event occurs outside a given
+element. Ideal for closing dropdowns, modals, or popovers automatically.
+
+## When to use it
+
+- Closing a dropdown menu when the user clicks elsewhere on the page.
+- Dismissing a modal or tooltip on an outside click/tap.
+- Any UI that should collapse when focus moves away from it.
+
+## Demo
+
+Open the dropdown, then click anywhere outside of it to close it.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/styles.css": stylesSource,
+  }}
+/>
+
+## Signature
+
+```ts
+function useOutsideClick(
+  ref: RefObject<HTMLElement>,
+  callback: () => void
+): void;
+```
+
+| Parameter  | Type                     | Description                                            |
+| ---------- | ------------------------ | ------------------------------------------------------ |
+| `ref`      | `RefObject<HTMLElement>` | Ref of the element to detect outside clicks against.   |
+| `callback` | `() => void`             | Invoked when a click/touch occurs outside the element. |
+
+**Returns:** `void`
+
+## Usage notes
+
+- Listens for both `click` and `touchstart` events, so it works well on
+  touch devices too.
+- Automatically removes its event listeners on unmount.
+- The callback fires only when the event target is outside the referenced
+  element (clicks inside it are ignored).
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useOutsideClick</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-outside-click.ts">
+    {hookSource}
+  </CodeBlock>
+</details>

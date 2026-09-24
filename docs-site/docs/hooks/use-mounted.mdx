@@ -1,0 +1,79 @@
+---
+title: useMounted
+sidebar_position: 9
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-mounted/App";
+import asyncDataFetcherSource from "!!raw-loader!@site/src/hook-examples/use-mounted/AsyncDataFetcher";
+import lifecycleLoggerSource from "!!raw-loader!@site/src/hook-examples/use-mounted/LifecycleLogger";
+import timerComponentSource from "!!raw-loader!@site/src/hook-examples/use-mounted/TimerComponent";
+import hookSource from "!!raw-loader!../../../src/hooks/use-mounted.ts";
+
+# useMounted
+
+Tracks whether a component is currently mounted, and optionally runs
+`onMount`/`onUnmount` lifecycle callbacks — including an `onMount` cleanup
+function, just like `useEffect`.
+
+## When to use it
+
+- Guarding against "set state on an unmounted component" warnings after an
+  async operation resolves late.
+- Running setup/teardown logic tied to a component's lifecycle in a single
+  place.
+- Encapsulating lifecycle logging or side effects reusable across components.
+
+## Demo
+
+Open the **Console** tab, then mount/unmount components to see the lifecycle
+logs and automatic cleanup in action.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/AsyncDataFetcher.tsx": asyncDataFetcherSource,
+    "/LifecycleLogger.tsx": lifecycleLoggerSource,
+    "/TimerComponent.tsx": timerComponentSource,
+  }}
+  activeFile="/LifecycleLogger.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+function useMounted(options?: UseMountedOptions): () => boolean;
+
+interface UseMountedOptions {
+  onMount?: () => void | (() => void);
+  onUnmount?: () => void;
+}
+```
+
+| Parameter | Type                | Description                                         |
+| --------- | ------------------- | --------------------------------------------------- |
+| `options` | `UseMountedOptions` | Optional `onMount`/`onUnmount` lifecycle callbacks. |
+
+**Returns:** `() => boolean` — call it to check if the component is still
+mounted.
+
+## Usage notes
+
+- `onMount` may return a cleanup function (same convention as `useEffect`),
+  which runs automatically right before `onUnmount`.
+- The returned `isMounted()` function has a stable identity, so it's safe to
+  reference inside async callbacks without adding it as a dependency.
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useMounted</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-mounted.ts">
+    {hookSource}
+  </CodeBlock>
+</details>

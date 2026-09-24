@@ -1,6 +1,7 @@
-import { useMounted } from "@/hooks";
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+
+import { useMounted } from "@/hooks";
 
 describe("useMounted", () => {
   it("should return true when component is mounted", () => {

@@ -1,0 +1,78 @@
+---
+title: usePersistedState
+sidebar_position: 6
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-persisted-state/App";
+import counterSource from "!!raw-loader!@site/src/hook-examples/use-persisted-state/Counter";
+import themeSwitcherSource from "!!raw-loader!@site/src/hook-examples/use-persisted-state/ThemeSwitcher";
+import todoListSource from "!!raw-loader!@site/src/hook-examples/use-persisted-state/TodoList";
+import userFormSource from "!!raw-loader!@site/src/hook-examples/use-persisted-state/UserForm";
+import hookSource from "!!raw-loader!../../../src/hooks/use-persisted-state.ts";
+
+# usePersistedState
+
+Behaves like `useState`, but automatically persists the value to
+`localStorage` and keeps it in sync across browser tabs.
+
+## When to use it
+
+- Remembering a user preference (theme, filters, form drafts) across reloads.
+- Sharing simple state between multiple open tabs of the same app.
+- Any state that should survive a page refresh without a backend.
+
+## Demo
+
+Reload the page after interacting with these — the state persists. Open a
+second tab to see cross-tab sync in action.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/Counter.tsx": counterSource,
+    "/ThemeSwitcher.tsx": themeSwitcherSource,
+    "/TodoList.tsx": todoListSource,
+    "/UserForm.tsx": userFormSource,
+  }}
+  activeFile="/ThemeSwitcher.tsx"
+/>
+
+## Signature
+
+```ts
+function usePersistedState<T>(
+  key: string,
+  initialValue: T
+): [T, (value: T | ((prevState: T) => T)) => void];
+```
+
+| Parameter      | Type     | Description                                        |
+| -------------- | -------- | -------------------------------------------------- |
+| `key`          | `string` | The `localStorage` key used to persist the value.  |
+| `initialValue` | `T`      | The value used when no persisted value exists yet. |
+
+**Returns:** a tuple of `[value, setValue]`, just like `useState`.
+
+## Usage notes
+
+- The state is serialized with `JSON.stringify`/`JSON.parse`, so it must be
+  JSON-serializable.
+- Reading/writing `localStorage` is wrapped in `try`/`catch` so the hook
+  degrades gracefully (falls back to `initialValue`) if storage is
+  unavailable (e.g. private browsing).
+- Listens for the `storage` event, so updates made in one tab automatically
+  propagate to other open tabs.
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>usePersistedState</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-persisted-state.ts">
+    {hookSource}
+  </CodeBlock>
+</details>

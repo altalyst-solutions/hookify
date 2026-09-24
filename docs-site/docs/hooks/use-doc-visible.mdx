@@ -1,0 +1,80 @@
+---
+title: useDocVisible
+sidebar_position: 8
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-doc-visible/App";
+import videoPlayerSource from "!!raw-loader!@site/src/hook-examples/use-doc-visible/VideoPlayer";
+import apiPollerSource from "!!raw-loader!@site/src/hook-examples/use-doc-visible/ApiPoller";
+import countdownTimerSource from "!!raw-loader!@site/src/hook-examples/use-doc-visible/CountdownTimer";
+import engagementTrackerSource from "!!raw-loader!@site/src/hook-examples/use-doc-visible/EngagementTracker";
+import hookSource from "!!raw-loader!../../../src/hooks/use-doc-visible.ts";
+
+# useDocVisible
+
+Tracks whether the browser tab/document is currently visible to the user,
+backed by the Page Visibility API and `useSyncExternalStore` for tear-free
+concurrent rendering.
+
+## When to use it
+
+- Pausing video/audio playback when the user switches tabs.
+- Pausing or throttling API polling while the tab is hidden.
+- Building analytics that measure real engagement time vs. background time.
+
+## Demo
+
+Switch to another tab and back to see each demo react to visibility changes.
+Open the **Console** tab to see the visibility change logs.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/VideoPlayer.tsx": videoPlayerSource,
+    "/ApiPoller.tsx": apiPollerSource,
+    "/CountdownTimer.tsx": countdownTimerSource,
+    "/EngagementTracker.tsx": engagementTrackerSource,
+  }}
+  activeFile="/ApiPoller.tsx"
+  showConsole
+  height={600}
+/>
+
+## Signature
+
+```ts
+function useDocVisible(options?: UseDocVisibleOptions): boolean;
+
+interface UseDocVisibleOptions {
+  onChange?: (isVisible: boolean) => void;
+}
+```
+
+| Parameter | Type                   | Description                                             |
+| --------- | ---------------------- | ------------------------------------------------------- |
+| `options` | `UseDocVisibleOptions` | Optional `onChange` callback fired on visibility flips. |
+
+**Returns:** `boolean` — `true` while the document is visible.
+
+## Usage notes
+
+- Built on `useSyncExternalStore`, so it's safe under React's concurrent
+  rendering without tearing.
+- Defaults to `true` during server-side rendering to avoid hydration
+  mismatches.
+- The `onChange` callback only fires when the visibility actually changes,
+  never on every render.
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useDocVisible</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-doc-visible.ts">
+    {hookSource}
+  </CodeBlock>
+</details>

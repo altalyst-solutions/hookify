@@ -36,7 +36,7 @@ import { useEffect, useRef, useState } from "react";
  * );
  * ```
  *
- * For a complete example, see [examples/usePersistedState.ts](../../examples/basic/src/components/use-persisted-state/index.tsx).
+ * For a live, editable example, see the [usePersistedState docs page](https://altalyst-solutions.github.io/hookify/hooks/use-persisted-state).
  */
 export const usePersistedState = <T>(
   key: string,

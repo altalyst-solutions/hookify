@@ -113,7 +113,7 @@ const buildCancelableFetch = <T>(
  * await submitForm();
  * ```
  *
- * For a complete example, see [examples/useSequentialRequest.ts](../../examples/basic/src/components/use-sequential-request.tsx).
+ * For a live, editable example, see the [useSequentialRequest docs page](https://altalyst-solutions.github.io/hookify/hooks/use-sequential-request).
  */
 export const useSequentialRequest = <T>(
   requestFn: (signal: AbortSignal) => Promise<T>

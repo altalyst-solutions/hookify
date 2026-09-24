@@ -41,10 +41,11 @@ import { useCallback, useEffect, useRef } from "react";
  * return <button onClick={() => debouncedLog("Button clicked!")}>Click Me</button>;
  * ```
  *
- * For a complete example, see [examples/useDebounce.ts](../../examples/basic/src/components/use-debounce/index.tsx).
+ * For a live, editable example, see the [useDebounce docs page](https://altalyst-solutions.github.io/hookify/hooks/use-debounce).
  *
  * @see [Debouncing in JavaScript](https://www.freecodecamp.org/news/javascript-debounce-example)
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- `any[]` is required here (not `unknown[]`) so narrower callback signatures remain assignable to `T`, matching the pattern used by TS's own `Parameters<T>`.
 export const useDebounce = <T extends (...args: any[]) => void>(
   callback: T,
   delay: number

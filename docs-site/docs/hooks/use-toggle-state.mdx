@@ -1,0 +1,67 @@
+---
+title: useToggleState
+sidebar_position: 4
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-toggle-state/App";
+import multiToggleSource from "!!raw-loader!@site/src/hook-examples/use-toggle-state/MultiToggle";
+import passwordFieldSource from "!!raw-loader!@site/src/hook-examples/use-toggle-state/PasswordField";
+import toggleButtonSource from "!!raw-loader!@site/src/hook-examples/use-toggle-state/ToggleButton";
+import toggleVisibilitySource from "!!raw-loader!@site/src/hook-examples/use-toggle-state/ToggleVisibility";
+import hookSource from "!!raw-loader!../../../src/hooks/use-toggle-state.ts";
+
+# useToggleState
+
+Manages a boolean state with a single toggle function. A minimal, ergonomic
+replacement for `useState(false)` plus a manual toggler.
+
+## When to use it
+
+- Showing/hiding UI elements (dropdowns, modals, password visibility).
+- Switching between two visual states (active/inactive, on/off).
+- Any binary state that flips back and forth on user interaction.
+
+## Demo
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/MultiToggle.tsx": multiToggleSource,
+    "/PasswordField.tsx": passwordFieldSource,
+    "/ToggleButton.tsx": toggleButtonSource,
+    "/ToggleVisibility.tsx": toggleVisibilitySource,
+  }}
+  activeFile="/ToggleVisibility.tsx"
+/>
+
+## Signature
+
+```ts
+function useToggleState(initialState?: boolean): [boolean, () => void];
+```
+
+| Parameter      | Type      | Description                             |
+| -------------- | --------- | --------------------------------------- |
+| `initialState` | `boolean` | The initial state. Defaults to `false`. |
+
+**Returns:** a tuple of `[state, toggle]`.
+
+## Usage notes
+
+- `toggle` is memoized with `useCallback` and never changes identity across
+  renders, so it's safe to pass down to child components or effect deps.
+- Call `toggle()` with no arguments — it always flips the current state.
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useToggleState</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-toggle-state.ts">
+    {hookSource}
+  </CodeBlock>
+</details>

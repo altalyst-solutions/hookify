@@ -1,6 +1,7 @@
-import { useControlledState } from "@/hooks";
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { useControlledState } from "@/hooks";
 
 describe("useControlledState", () => {
   const originalEnv = process.env.NODE_ENV;

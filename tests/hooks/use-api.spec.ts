@@ -1,7 +1,8 @@
-import { useApi } from "@/hooks";
 import { act, renderHook } from "@testing-library/react";
 import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { useApi } from "@/hooks";
 
 interface MockResponse {
   success: boolean;

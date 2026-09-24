@@ -1,0 +1,15 @@
+.wrapper {
+  margin-bottom: 1.5rem;
+  border-radius: var(--ifm-code-border-radius);
+  overflow: hidden;
+}
+
+.fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-code-border-radius);
+  color: var(--ifm-color-emphasis-600);
+}

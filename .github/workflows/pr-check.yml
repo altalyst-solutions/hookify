@@ -6,6 +6,9 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   pr-check:
     if: ${{ github.repository == 'altalyst-solutions/hookify' }}
@@ -34,6 +37,12 @@ jobs:
       - name: Install dependencies
         run: npm run setup
 
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Lint library
+        run: npm run lint
+
       - name: Run library tests
         run: npm run test
         env:
@@ -42,11 +51,45 @@ jobs:
       - name: Build library
         run: npm run build
 
-      - name: Setup library link
-        run: npm link
+  docs-check:
+    if: ${{ github.repository == 'altalyst-solutions/hookify' }}
+    runs-on: ubuntu-latest
 
-      - name: Link library to examples
-        run: npm run link:library
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
 
-      - name: Build examples
-        run: npm run build:examples
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: ".nvmrc"
+          package-manager-cache: false
+
+      - name: Cache node_modules
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Cache docs node_modules
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.npm
+            docs-site/node_modules
+          key: ${{ runner.os }}-docs-node-${{ hashFiles('docs-site/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-docs-node-
+
+      - name: Install library dependencies
+        run: npm install
+
+      - name: Install docs dependencies
+        run: npm run docs:install
+
+      - name: Build docs site
+        run: npm run docs:build

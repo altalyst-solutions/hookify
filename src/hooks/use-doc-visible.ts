@@ -106,7 +106,7 @@ const getServerSnapshot = (): boolean => {
  * });
  * ```
  *
- * For a complete example, see [examples/useDocVisible.ts](../../examples/basic/src/components/use-doc-visible/index.tsx).
+ * For a live, editable example, see the [useDocVisible docs page](https://altalyst-solutions.github.io/hookify/hooks/use-doc-visible).
  *
  * @see [Page Visibility API](https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API)
  */

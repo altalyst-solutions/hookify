@@ -1,0 +1,81 @@
+---
+title: useControlledState
+sidebar_position: 5
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-controlled-state/App";
+import uncontrolledInputSource from "!!raw-loader!@site/src/hook-examples/use-controlled-state/UncontrolledInput";
+import controlledInputSource from "!!raw-loader!@site/src/hook-examples/use-controlled-state/ControlledInput";
+import counterWithUpdaterSource from "!!raw-loader!@site/src/hook-examples/use-controlled-state/CounterWithUpdater";
+import customSelectSource from "!!raw-loader!@site/src/hook-examples/use-controlled-state/CustomSelect";
+import hookSource from "!!raw-loader!../../../src/hooks/use-controlled-state.ts";
+
+# useControlledState
+
+Implements the controlled/uncontrolled component pattern in a single hook.
+When a `value` prop is provided, the component operates in controlled mode
+(the parent owns the state); when it's `undefined`, the hook manages state
+internally.
+
+## When to use it
+
+- Building reusable form components (inputs, selects) that should work both
+  controlled and uncontrolled, like native `<input>`.
+- Avoiding duplicated controlled/uncontrolled logic across components.
+- Supporting `setState`-style updater functions (`prev => prev + 1`) alongside
+  direct value updates.
+
+## Demo
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/UncontrolledInput.tsx": uncontrolledInputSource,
+    "/ControlledInput.tsx": controlledInputSource,
+    "/CounterWithUpdater.tsx": counterWithUpdaterSource,
+    "/CustomSelect.tsx": customSelectSource,
+  }}
+  activeFile="/CustomSelect.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+function useControlledState<T>(
+  value: T | undefined,
+  defaultValue: T | (() => T),
+  onChange?: (value: T) => void
+): readonly [T, (newValue: T | ((prev: T) => T)) => void];
+```
+
+| Parameter      | Type                 | Description                                                      |
+| -------------- | -------------------- | ---------------------------------------------------------------- |
+| `value`        | `T \| undefined`     | The controlled value. Provide it to opt into controlled mode.    |
+| `defaultValue` | `T \| (() => T)`     | Initial value for uncontrolled mode; supports lazy initializers. |
+| `onChange`     | `(value: T) => void` | Called whenever the value changes, in either mode.               |
+
+**Returns:** a tuple of `[currentValue, setValue]`.
+
+## Usage notes
+
+- Pass `undefined` for `value` to run in uncontrolled mode; pass any defined
+  value to run in controlled mode.
+- `setValue` accepts either a new value or an updater function, mirroring
+  React's `setState`.
+- In development, switching between controlled and uncontrolled modes across
+  renders logs a warning, since it's considered an anti-pattern.
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useControlledState</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-controlled-state.ts">
+    {hookSource}
+  </CodeBlock>
+</details>
