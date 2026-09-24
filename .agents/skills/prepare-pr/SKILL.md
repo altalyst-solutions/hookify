@@ -2,9 +2,10 @@
 name: prepare-pr
 description: >-
   Standardizes preparing a branch name, grouped commits, and a pull request
-  description for uncommitted changes in this repository. Use whenever asked
-  to name a branch, group/organize commits, write git add/commit commands, or
-  draft a pull request for the current working tree changes.
+  description for uncommitted changes in this repository, including
+  follow-up commits pushed to an already-open PR. Use whenever asked to name
+  a branch, group/organize commits, write git add/commit/push commands, or
+  draft or update a pull request for the current working tree changes.
 ---
 
 # Preparing a branch, commits, and a pull request
@@ -28,7 +29,35 @@ work (e.g. "license", "README rewrite", "CI change", "new hook + its tests +
 its docs page"). Each group becomes one commit. Don't mix unrelated concerns
 in a single commit.
 
-## 2. Propose a branch name
+## 2. Determine whether this is new work or a follow-up
+
+Don't assume — a branch/PR from this same change may already exist. Check:
+
+1. `git branch --show-current` — are we already on a non-`main` branch?
+2. `git rev-parse --abbrev-ref --symbolic-full-name @{u}` — does the current
+   branch have an upstream (i.e. has it been pushed before)? Errors if not.
+3. `gh pr view --json number,url,title,state 2>/dev/null` — is there already
+   an open PR for this branch?
+
+State what you found before proceeding (e.g. "You're on `feat/x` with an open
+PR #42 — treating these as follow-up commits on that PR.") so the user can
+correct you if the detection is wrong. Then:
+
+- **No branch / no upstream / no PR** → this is new work: go to step 3.
+- **Branch and/or upstream exist, but no PR yet** → keep the existing branch
+  (skip step 3), continue at step 4, and draft the initial PR at step 5. If
+  the branch already has commits from an earlier session (check
+  `git log <default-branch>..HEAD --oneline`), the PR title/body must
+  summarize the **whole branch**, not just today's newest commits — and the
+  push command is still `git push -u origin <branch>` if `@{u}` errors (no
+  upstream yet), even though the branch itself isn't brand new.
+- **PR already open** → this is a follow-up: keep the existing branch (skip
+  step 3), continue at step 4 using `git push` (not `-u`), and only refresh
+  the PR body at step 5 if the change materially affects it.
+
+## 3. Propose a branch name
+
+_(New work only — skip this step for follow-ups on an existing branch.)_
 
 Use kebab-case, prefixed with the change's conventional-commit type, and keep
 it short but descriptive of the overall change:
@@ -46,7 +75,7 @@ Examples: `feat/use-intersection-observer-hook`,
 `fix/use-mounted-strict-mode-guard`,
 `docs/license-governance-and-changelog-automation`.
 
-## 3. Group commits and write commit commands
+## 4. Group commits and write commit commands
 
 Present the commits as a table with three columns: commit description, the
 exact `git add` command(s) for that commit's files, and the exact
@@ -78,10 +107,22 @@ append it as a second `-m` flag on every `git commit` command, e.g.:
 git commit -m "docs: add MIT license" -m "Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>"
 ```
 
-## 4. Draft the pull request
+Finish with the push command: `git push -u origin <branch>` for new work,
+or plain `git push` for a follow-up on a branch that already has an
+upstream. As with `git add`/`git commit`, only run it if the user explicitly
+asks — otherwise just present it.
 
-Follow [`.github/PULL_REQUEST_TEMPLATE.md`](../../PULL_REQUEST_TEMPLATE.md)
-exactly — same section order and headings:
+## 5. Draft or update the pull request
+
+**New work / no PR yet:** always start with a **PR title** — never omit it.
+Use the same `type: description` format as the commit messages (e.g.
+`docs: add MIT license, governance docs, and changelog automation`),
+summarizing the branch as a whole in one line, imperative mood, no trailing
+period. Put it directly above the body, e.g. as a top-level `# <title>`
+heading (or plain first line) when presenting the PR.
+
+Then follow [`.github/PULL_REQUEST_TEMPLATE.md`](../../PULL_REQUEST_TEMPLATE.md)
+exactly for the body — same section order and headings:
 
 - `## Summary` — one clear paragraph (not a bulleted list, not manually
   line-wrapped) describing what changed and why, unless the user asks for a
@@ -100,11 +141,30 @@ When asked for the PR "in markdown", wrap the whole title + body in a single
 ` ```markdown ` fenced code block so it can be copy-pasted as-is, full width
 (no manual line wraps inside paragraphs).
 
-## 5. Don't forget
+**Follow-up on an already-open PR:** don't draft a new title/body. Only
+refresh what the new commits actually change:
+
+- Append to (don't replace) `## Summary` if the new commits add meaningfully
+  to what the PR does.
+- Re-check `## Type of change` boxes if a new category now applies.
+- Re-verify `## Checklist` items (lint/format/test/build, docs, changelog)
+  against the latest state, not just the original commits.
+- Leave everything else as-is. Present the diff of what would change and,
+  only if the user confirms, apply it with `gh pr edit <number> --body "..."`
+  (never push the PR update without confirmation, same as commits).
+
+If the PR body is already accurate for the new commits (e.g. a small typo
+fix that doesn't change scope), say so and skip the edit entirely.
+
+## 6. Don't forget
 
 - `CHANGELOG.md` is generated automatically by CI
   (`scripts/update-changelog.js`) right after the version bump — don't add a
   manual changelog commit unless drafting optional `## [Unreleased]` bullets
   by hand.
-- Never stage (`git add`) or commit on your own initiative; only do so if the
-  user explicitly confirms after reviewing the plan.
+- Never stage (`git add`), commit, push, or edit a PR on your own initiative;
+  only do so if the user explicitly confirms after reviewing the plan.
+- Version bumps only happen when a branch merges into `main` (see
+  `.github/workflows/ci.yml`'s `on: push: branches: [main]` trigger), so
+  follow-up commits pushed to a feature branch don't trigger a bump on their
+  own — all commits on the branch are scanned together at merge time.
