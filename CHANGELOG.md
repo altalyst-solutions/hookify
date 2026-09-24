@@ -18,6 +18,12 @@ or the [GitHub tags](https://github.com/altalyst-solutions/hookify/tags)
 (tags from `0.5.1` and earlier have no `v` prefix, e.g. `0.4.0`; tags from
 `0.6.0` onward are named `v<version>`, e.g. `v0.6.0`).
 
+## 0.5.3
+
+### Patch Changes
+
+- [#48](https://github.com/altalyst-solutions/hookify/pull/48) [`2f47515`](https://github.com/altalyst-solutions/hookify/commit/2f47515e0d20a3c07ce9516f7ea0c7d62165b484) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Fix release automation so published versions correctly get a git tag and GitHub release. `changesets/action@v1` detected releases by matching a CLI output string that `@changesets/cli@3.0.3` no longer prints, silently skipping the tag/release step; upgrading to `changesets/action@v2` fixes this.
+
 ## 0.5.2
 
 ### Patch Changes
