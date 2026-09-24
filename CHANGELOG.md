@@ -18,6 +18,12 @@ or the [GitHub tags](https://github.com/altalyst-solutions/hookify/tags)
 (tags from `0.5.1` and earlier have no `v` prefix, e.g. `0.4.0`; tags from
 `0.6.0` onward are named `v<version>`, e.g. `v0.6.0`).
 
+## 0.5.4
+
+### Patch Changes
+
+- [#50](https://github.com/altalyst-solutions/hookify/pull/50) [`6de3e7e`](https://github.com/altalyst-solutions/hookify/commit/6de3e7e46893dc1a9173f000aa69a9acf0adc7df) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Use the default `GITHUB_TOKEN` for the release workflow now that branch protection only targets `main`, instead of a personal-account PAT. Release pull requests, commits, and tags will now be attributed to `github-actions[bot]`.
+
 ## 0.5.3
 
 ### Patch Changes
