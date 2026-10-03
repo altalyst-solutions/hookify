@@ -10,6 +10,8 @@ import BrowserOnly from "@docusaurus/BrowserOnly";
 import { useColorMode } from "@docusaurus/theme-common";
 import React from "react";
 
+import localHookifySource from "!!raw-loader!@hookify-local-source";
+
 import styles from "./styles.module.css";
 
 // Pinned to match the library's peer dependency range (react/react-dom ^18.3.1)
@@ -23,6 +25,20 @@ const REACT_DOM_TYPES_VERSION = "18.3.0";
 // "pull from npm CDN" approach: demos show the published library, not
 // unreleased local changes.
 const HOOKIFY_DEPENDENCY_VERSION = "latest";
+
+// When the docs run with HOOKIFY_LOCAL=1, the locally built library is injected
+// into the sandbox as a virtual `@altalyst/hookify` package, so unreleased
+// hooks can be previewed before publishing. Empty otherwise.
+const LOCAL_HOOKIFY_FILES: Record<string, string> = localHookifySource
+  ? {
+      "/node_modules/@altalyst/hookify/package.json": JSON.stringify({
+        name: "@altalyst/hookify",
+        version: "0.0.0-local",
+        main: "./index.js",
+      }),
+      "/node_modules/@altalyst/hookify/index.js": localHookifySource,
+    }
+  : {};
 
 export interface HookDemoProps {
   /**
@@ -68,14 +84,16 @@ export default function HookDemo({
           <SandpackProvider
             template="react-ts"
             theme={colorMode === "dark" ? "dark" : "light"}
-            files={files}
+            files={{ ...LOCAL_HOOKIFY_FILES, ...files }}
             options={{
               activeFile: resolvedActiveFile,
               visibleFiles: Object.keys(files),
             }}
             customSetup={{
               dependencies: {
-                "@altalyst/hookify": HOOKIFY_DEPENDENCY_VERSION,
+                ...(localHookifySource
+                  ? {}
+                  : { "@altalyst/hookify": HOOKIFY_DEPENDENCY_VERSION }),
                 react: REACT_VERSION,
                 "react-dom": REACT_VERSION,
                 ...dependencies,

@@ -42,6 +42,7 @@
     "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
     "docs:install": "cd docs-site && npm install",
     "docs:dev": "cd docs-site && npm start",
+    "docs:dev:local": "npm run build && cd docs-site && HOOKIFY_LOCAL=1 npm start",
     "docs:build": "cd docs-site && npm run build",
     "docs:serve": "cd docs-site && npm run serve",
     "dev": "vite",
