@@ -18,6 +18,12 @@ or the [GitHub tags](https://github.com/altalyst-solutions/hookify/tags)
 (tags from `0.5.1` and earlier have no `v` prefix, e.g. `0.4.0`; tags from
 `0.6.0` onward are named `v<version>`, e.g. `v0.6.0`).
 
+## 0.5.5
+
+### Patch Changes
+
+- [#54](https://github.com/altalyst-solutions/hookify/pull/54) [`09fc901`](https://github.com/altalyst-solutions/hookify/commit/09fc9012aa5d0cfec6941145f78c5c64d09afbc0) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Fix `react-hooks/exhaustive-deps` issues in `useApi` and `useMounted`. `useApi`'s `refetch` now keeps a stable identity until `url`, `method`, `headers`, or `body` change, and `useMounted` now calls the latest `onMount`/`onUnmount` callbacks instead of the ones from the first render.
+
 ## 0.5.4
 
 ### Patch Changes
