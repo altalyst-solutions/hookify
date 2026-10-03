@@ -54,6 +54,10 @@ docs-site/         # Docusaurus documentation site
    hot reload on their own. If a demo looks stale, refresh the page. Plain
    `npm run docs:dev` is unaffected and keeps using the npm release.
 
+   Editor types for example components come from the local `dist/` build (see
+   `docs-site/tsconfig.json`), so run `npm run build` once if your editor
+   reports that `@altalyst/hookify` can't be resolved.
+
 ## Development workflow
 
 ```bash
