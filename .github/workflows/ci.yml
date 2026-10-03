@@ -41,7 +41,7 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm run setup
+        run: npm ci
 
       - name: Run library tests
         run: npm run test
