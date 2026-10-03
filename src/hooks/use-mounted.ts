@@ -77,13 +77,20 @@ export const useMounted = (options?: UseMountedOptions): (() => boolean) => {
    */
   const cleanupRef = useRef<(() => void) | void>();
 
+  /**
+   * Holds the latest options so the mount/unmount effect can run exactly once
+   * while still calling the most recent callbacks.
+   */
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+
   useEffect(() => {
     // Mark the component as mounted
     isMounted.current = true;
 
     // Execute the onMount callback if provided
-    if (options?.onMount) {
-      cleanupRef.current = options.onMount();
+    if (optionsRef.current?.onMount) {
+      cleanupRef.current = optionsRef.current.onMount();
     }
 
     return () => {
@@ -96,7 +103,7 @@ export const useMounted = (options?: UseMountedOptions): (() => boolean) => {
       }
 
       // Call onUnmount callback
-      options?.onUnmount?.();
+      optionsRef.current?.onUnmount?.();
     };
   }, []);
 

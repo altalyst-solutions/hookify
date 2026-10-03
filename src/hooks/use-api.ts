@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 /**
  * Options for configuring the API request.
@@ -70,15 +70,17 @@ export const useApi = <T = unknown>(
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchApi = async () => {
+  const { method, headers, body } = options ?? {};
+
+  const fetchApi = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
       const response = await fetch(url, {
-        method: options?.method || "GET",
-        headers: options?.headers,
-        body: options?.body,
+        method: method || "GET",
+        headers,
+        body,
       });
 
       if (!response.ok) {
@@ -92,11 +94,11 @@ export const useApi = <T = unknown>(
     } finally {
       setLoading(false);
     }
-  };
+  }, [url, method, headers, body]);
 
   useEffect(() => {
     fetchApi();
-  }, [url, options?.method, options?.headers, options?.body]);
+  }, [fetchApi]);
 
   return { data, loading, error, refetch: fetchApi };
 };
