@@ -5,7 +5,7 @@ need to get set up, make a change, and submit a pull request.
 
 ## Getting started
 
-Hookify requires **Node.js >= 24** (see `.nvmrc`) and npm.
+Hookify requires **Node.js >= 24** (see `.nvmrc`) and npm. Use the Node version from `.nvmrc` so your npm matches CI; a different npm can rewrite `package-lock.json` (for example its `"peer"` flags). When bumping Node, edit `.nvmrc` and the `packageManager` field to the npm version it bundles (CI requires npm >= 11.5.1 for trusted publishing).
 
 ```bash
 git clone https://github.com/altalyst-solutions/hookify.git

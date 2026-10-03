@@ -51,8 +51,8 @@ jobs:
       - name: Build library
         run: npm run build
 
-      - name: Update npm
-        run: npm install -g npm@latest
+      - name: Verify npm supports trusted publishing
+        uses: ./.github/actions/verify-npm
 
       - name: Create Release Pull Request or Publish to npm
         # Ensure this only runs on push to main, never on manual dispatch
@@ -92,13 +92,13 @@ jobs:
           package-manager-cache: false
 
       - name: Install dependencies
-        run: npm run setup
+        run: npm ci
 
       - name: Build library
         run: npm run build
 
-      - name: Update npm
-        run: npm install -g npm@latest
+      - name: Verify npm supports trusted publishing
+        uses: ./.github/actions/verify-npm
 
       - name: Publish to NPM (dry run)
         run: npm publish --dry-run # authenticates via OIDC trusted publishing, no token needed

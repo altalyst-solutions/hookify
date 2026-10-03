@@ -1,0 +1,23 @@
+name: Verify npm version
+description: Fails if the installed npm is older than the minimum required for npm trusted publishing (OIDC).
+
+inputs:
+  minimum:
+    description: Minimum npm version required
+    required: false
+    default: "11.5.1"
+
+runs:
+  using: composite
+  steps:
+    - name: Check npm version
+      shell: bash
+      env:
+        MINIMUM: ${{ inputs.minimum }}
+      run: |
+        npm_version="$(npm --version)"
+        if [ "$(printf '%s\n' "$MINIMUM" "$npm_version" | sort -V | head -n1)" != "$MINIMUM" ]; then
+          echo "::error::npm $npm_version is too old (need >= $MINIMUM). npm is bundled with the Node version in .nvmrc."
+          exit 1
+        fi
+        echo "npm $npm_version satisfies >= $MINIMUM"
