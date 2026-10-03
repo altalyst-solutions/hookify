@@ -29,6 +29,10 @@ npm run watch            # optional, in another terminal: rebuild on changes
 
 With `HOOKIFY_LOCAL=1`, `docusaurus.config.ts` aliases `@hookify-local-source` to `../dist/hookify.js`, and `HookDemo` injects it into the sandbox as a virtual `@altalyst/hookify` package. Without it the alias points to an empty file and the npm version is used. Edits to `src/` reach the demos only while `npm run watch` is running.
 
+### Editor types for `@altalyst/hookify`
+
+`docs-site/tsconfig.json` maps `@altalyst/hookify` to the local `../dist/index.d.ts`, so example components (and `npm run typecheck`) see the current API, including unreleased hooks, instead of the npm release's types. Run `npm run build` in the repository root first (or keep `npm run watch` running); without `dist/` the import can't be resolved. This only affects type-checking, not the Docusaurus bundle or the demos.
+
 ## Build
 
 ```bash
