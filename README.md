@@ -141,6 +141,11 @@ npm run docs:install   # first time only
 npm run docs:dev       # starts Docusaurus with hot reload at localhost:3000
 ```
 
+Live demos run the published npm release, so new or changed hooks only show up
+in them after a release. To see unreleased changes in the demos, use
+`npm run docs:dev:local` (and `npm run watch` in a second terminal to rebuild
+the library as you edit). See [CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ## Contributing
 
 Contributions, issues, and feature requests are welcome! See
