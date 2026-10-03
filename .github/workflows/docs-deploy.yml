@@ -54,10 +54,10 @@ jobs:
             ${{ runner.os }}-docs-node-
 
       - name: Install library dependencies
-        run: npm install
+        run: npm ci
 
       - name: Install docs dependencies
-        run: npm run docs:install
+        run: cd docs-site && npm ci
 
       - name: Build docs site
         run: npm run docs:build
