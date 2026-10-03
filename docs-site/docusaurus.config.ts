@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import { themes as prismThemes } from "prism-react-renderer";
 import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
@@ -23,6 +25,10 @@ const typedocOptions: Parameters<typeof TypedocPlugin>[1] = {
   hidePageHeader: true,
 };
 
+// Set HOOKIFY_LOCAL=1 (see `npm run docs:dev:local`) to run live demos against
+// the locally built library in ../dist instead of the version published to npm.
+const useLocalHookify = process.env.HOOKIFY_LOCAL === "1";
+
 const config: Config = {
   title: "Hookify",
   tagline: "A collection of React hooks that just work.",
@@ -39,7 +45,22 @@ const config: Config = {
 
   onBrokenLinks: "throw",
 
-  plugins: [["docusaurus-plugin-typedoc", typedocOptions]],
+  plugins: [
+    ["docusaurus-plugin-typedoc", typedocOptions],
+    () => ({
+      name: "hookify-local-demo-source",
+      configureWebpack: () => ({
+        resolve: {
+          alias: {
+            // Resolved by HookDemo; empty source means "use the npm version".
+            "@hookify-local-source": useLocalHookify
+              ? path.resolve(__dirname, "../dist/hookify.js")
+              : path.resolve(__dirname, "src/components/HookDemo/empty.js"),
+          },
+        },
+      }),
+    }),
+  ],
 
   i18n: {
     defaultLocale: "en",

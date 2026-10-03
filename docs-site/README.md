@@ -18,6 +18,17 @@ npm run start
 
 This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
 
+### Previewing unreleased hooks in live demos
+
+By default, `HookDemo` runs the **published** `@altalyst/hookify` from npm, so new or changed hooks don't appear in demos until released. To run demos against the local library build, from the repository root:
+
+```bash
+npm run docs:dev:local   # builds the library, then starts the docs with HOOKIFY_LOCAL=1
+npm run watch            # optional, in another terminal: rebuild on changes
+```
+
+With `HOOKIFY_LOCAL=1`, `docusaurus.config.ts` aliases `@hookify-local-source` to `../dist/hookify.js`, and `HookDemo` injects it into the sandbox as a virtual `@altalyst/hookify` package. Without it the alias points to an empty file and the npm version is used. Edits to `src/` reach the demos only while `npm run watch` is running.
+
 ## Build
 
 ```bash

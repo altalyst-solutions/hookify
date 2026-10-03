@@ -40,6 +40,20 @@ docs-site/         # Docusaurus documentation site
    npm run docs:dev       # http://localhost:3000, hot reload
    ```
 
+   Live demos run the **published** `@altalyst/hookify` from npm, so a new or
+   changed hook won't appear in them until it is released. To preview
+   unreleased changes, run the demos against your local build instead:
+
+   ```bash
+   npm run docs:dev:local   # builds the library, then starts the docs site
+   npm run watch            # optional, in another terminal: rebuild on changes
+   ```
+
+   Demos use the built `dist/` (not `src/`), so edits to a hook only reach
+   them while `npm run watch` is running; docs pages and example components
+   hot reload on their own. If a demo looks stale, refresh the page. Plain
+   `npm run docs:dev` is unaffected and keeps using the npm release.
+
 ## Development workflow
 
 ```bash
