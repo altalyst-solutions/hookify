@@ -64,6 +64,7 @@ docs-site/         # Docusaurus documentation site
 npm test              # run the test suite (vitest)
 npm run coverage       # run tests with coverage
 npm run lint           # eslint
+npm run typecheck      # tsc -b (src and tests)
 npm run format         # prettier --write
 npm run format:check   # prettier --check
 npm run build          # build the library (tsc + vite)
