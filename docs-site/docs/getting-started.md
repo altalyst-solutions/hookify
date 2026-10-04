@@ -43,11 +43,11 @@ export const Example = () => {
 
 ## Requirements
 
-| Requirement            | Version   |
-| ---------------------- | --------- |
-| React                  | `^18.3.1` |
-| React DOM              | `^18.3.1` |
-| Node (for development) | `>=24`    |
+| Requirement            | Version                |
+| ---------------------- | ---------------------- |
+| React                  | `^18.0.0 \|\| ^19.0.0` |
+| React DOM              | `^18.0.0 \|\| ^19.0.0` |
+| Node (for development) | `>=24`                 |
 
 ## What's next?
 

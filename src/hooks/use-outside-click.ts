@@ -22,7 +22,7 @@ import { useEffect } from "react";
  * For a live, editable example, see the [useOutsideClick docs page](https://altalyst-solutions.github.io/hookify/hooks/use-outside-click).
  */
 export const useOutsideClick = (
-  ref: RefObject<HTMLElement>,
+  ref: RefObject<HTMLElement | null>,
   callback: () => void
 ) => {
   useEffect(() => {

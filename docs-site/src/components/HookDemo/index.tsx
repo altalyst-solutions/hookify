@@ -14,7 +14,7 @@ import localHookifySource from "!!raw-loader!@hookify-local-source";
 
 import styles from "./styles.module.css";
 
-// Pinned to match the library's peer dependency range (react/react-dom ^18.3.1)
+// Pinned to a version inside the library's supported peer range (react/react-dom ^18.0.0 || ^19.0.0)
 // so demos behave exactly like a real consumer's app, regardless of what
 // version the Sandpack "react-ts" template defaults to.
 const REACT_VERSION = "18.3.1";
