@@ -1,0 +1,97 @@
+---
+title: useAutofillSubmit
+sidebar_position: 11
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-autofill-submit/App";
+import stylesSource from "!!raw-loader!@site/src/hook-examples/use-autofill-submit/styles.css";
+import hookSource from "!!raw-loader!../../../src/hooks/use-autofill-submit.ts";
+
+# useAutofillSubmit
+
+Submits a form as soon as a password manager fills it, so choosing a saved
+login is all it takes to sign in. Password managers fill the fields and stop;
+this hook closes the gap.
+
+## When to use it
+
+- Sign-in forms where one tap on a saved login should be enough.
+- Any form filled by browser or OS autofill that should submit once complete.
+
+## How a fill is detected
+
+A field whose value changes while it is **not** the focused element was written
+by something other than the user's hands, so it counts as a fill. Typing and
+pasting into the focused field never do. Values are sampled on an interval
+because some providers (notably iOS AutoFill) write fields without any event.
+
+## Demo
+
+Interact with the form, then press the simulate button.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/styles.css": stylesSource,
+  }}
+/>
+
+## Signature
+
+```ts
+function useAutofillSubmit<const TName extends string>(
+  formRef: RefObject<HTMLFormElement | null>,
+  options: UseAutofillSubmitOptions<TName>
+): UseAutofillSubmitResult;
+```
+
+### Options
+
+| Option               | Type                                     | Default                                | Description                                                                |
+| -------------------- | ---------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------- |
+| `fields`             | `readonly TName[]`                       | required                               | `name` of every field that must be filled. Inline array literals are safe. |
+| `enabled`            | `boolean`                                | `true`                                 | Turn the watcher off without unmounting.                                   |
+| `pollInterval`       | `number`                                 | `250`                                  | Sampling interval in ms.                                                   |
+| `interactionEvents`  | `readonly (keyof HTMLElementEventMap)[]` | `keydown`, `pointerdown`, `touchstart` | Form events that count as the user being present.                          |
+| `requireInteraction` | `boolean`                                | `true`                                 | Require a gesture before auto-submitting.                                  |
+| `isFilled`           | `(value, name, element) => boolean`      | non-empty value                        | Decide whether a field counts as filled.                                   |
+| `onAutofill`         | `(context) => boolean \| void`           | —                                      | Called before submitting. Return `false` to veto (the hook stays armed).   |
+| `submit`             | `(context) => void`                      | `form.requestSubmit()`                 | Replace how the form is submitted.                                         |
+
+`context` is `{ form, values, filled }`, where `values` is typed as
+`Readonly<Record<TName, string>>` from your `fields`, so `values.email` is
+checked and `values.username` is a compile error.
+
+**Returns:** `{ rearm(), disarm(), isArmed() }` — stable functions that never
+trigger a re-render.
+
+## Usage notes
+
+- **Arms once.** Any submit, including this one, disarms the hook so a fill
+  racing a tap on the button cannot send credentials twice. Call `rearm()`
+  (or reset the form) after a failed attempt to allow another.
+- **A gesture is required first**, so credentials Safari restores on page load
+  never sign someone straight back in. Disable with
+  `requireInteraction: false` only when that is not a concern.
+- **Submits through the form.** The default calls `reportValidity()` then
+  `requestSubmit()`, so your `onSubmit` and validation run as for the button.
+  Browsers without `requestSubmit` (before iOS 16) fall back to a cancelable
+  `submit` event followed by `form.submit()`.
+- Fields are resolved by `name` on every sample, so conditionally rendered
+  fields work. Inputs, selects and textareas are supported; radio groups are
+  not, and pause detection.
+- The form ref must be populated when the effect runs.
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useAutofillSubmit</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-autofill-submit.ts">
+    {hookSource}
+  </CodeBlock>
+</details>

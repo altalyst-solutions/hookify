@@ -98,6 +98,7 @@ export const Example = () => {
 | Hook                                                                                                | Description                                                                                  |
 | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | [`useApi`](https://altalyst-solutions.github.io/hookify/hooks/use-api)                              | Declarative hook for making HTTP requests with built-in loading, error, and data state.      |
+| [`useAutofillSubmit`](https://altalyst-solutions.github.io/hookify/hooks/use-autofill-submit)       | Submit a form as soon as a password manager fills it, with typed, extensible options.        |
 | [`useControlledState`](https://altalyst-solutions.github.io/hookify/hooks/use-controlled-state)     | Manage a value that works in both controlled and uncontrolled modes, like native inputs.     |
 | [`useDebounce`](https://altalyst-solutions.github.io/hookify/hooks/use-debounce)                    | Debounce a callback so it only runs after a delay has passed since its last invocation.      |
 | [`useDocVisible`](https://altalyst-solutions.github.io/hookify/hooks/use-doc-visible)               | Track whether the current document/tab is visible via the Page Visibility API.               |
