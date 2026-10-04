@@ -18,6 +18,16 @@ or the [GitHub tags](https://github.com/altalyst-solutions/hookify/tags)
 (tags from `0.5.1` and earlier have no `v` prefix, e.g. `0.4.0`; tags from
 `0.6.0` onward are named `v<version>`, e.g. `v0.6.0`).
 
+## 0.8.0
+
+### Minor Changes
+
+- [#64](https://github.com/altalyst-solutions/hookify/pull/64) [`64f09ca`](https://github.com/altalyst-solutions/hookify/commit/64f09cabce9e3cc73585b47b7026981af9da0203) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Support React 19 alongside React 18. The `react` and `react-dom` peer dependency range is now `^18.0.0 || ^19.0.0`, and a couple of hook signatures were adjusted to type-check against both `@types/react` 18 and 19.
+
+### Patch Changes
+
+- [#64](https://github.com/altalyst-solutions/hookify/pull/64) [`ad20bf2`](https://github.com/altalyst-solutions/hookify/commit/ad20bf2562c8a0aa3ec4596bf0ec141b2b94a32c) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Fix `useEffectAfterMount` calling its callback on the initial mount when rendered inside React `StrictMode`.
+
 ## 0.7.0
 
 ### Minor Changes
