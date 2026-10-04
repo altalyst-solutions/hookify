@@ -1,5 +1,5 @@
 import type { RefObject } from "react";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /** A form control whose value can be filled by a password manager. */
 export type AutofillField =
@@ -92,11 +92,13 @@ const isShallowEqual = (a: readonly unknown[], b: readonly unknown[]) =>
  * array literals do not change identity (and re-run effects) every render.
  */
 const useStableArray = <T>(next: readonly T[]): readonly T[] => {
-  const ref = useRef(next);
-  useEffect(() => {
-    ref.current = next;
-  });
-  return isShallowEqual(ref.current, next) ? ref.current : next;
+  // State instead of a ref: refs must not be read during render.
+  const [stable, setStable] = useState(next);
+  if (!isShallowEqual(stable, next)) {
+    setStable(next);
+    return next;
+  }
+  return stable;
 };
 
 /**

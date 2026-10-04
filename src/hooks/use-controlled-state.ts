@@ -122,9 +122,12 @@ export const useControlledState = <T>(
    * A ref that stores the current value to prevent stale closures in the setValue callback.
    * This ensures that updater functions always have access to the latest value
    * without requiring `currentValue` to be in the dependency array.
+   * It is synced in an effect rather than during render, which keeps render pure.
    */
   const currentValueRef = useRef(currentValue);
-  currentValueRef.current = currentValue;
+  useEffect(() => {
+    currentValueRef.current = currentValue;
+  });
 
   // Warn in development if switching between controlled/uncontrolled modes
   useEffect(() => {

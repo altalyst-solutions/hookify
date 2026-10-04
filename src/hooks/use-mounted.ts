@@ -82,7 +82,11 @@ export const useMounted = (options?: UseMountedOptions): (() => boolean) => {
    * while still calling the most recent callbacks.
    */
   const optionsRef = useRef(options);
-  optionsRef.current = options;
+
+  // Declared before the mount effect so onMount always sees the latest options.
+  useEffect(() => {
+    optionsRef.current = options;
+  });
 
   useEffect(() => {
     // Mark the component as mounted
