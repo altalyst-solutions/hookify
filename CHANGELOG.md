@@ -18,6 +18,12 @@ or the [GitHub tags](https://github.com/altalyst-solutions/hookify/tags)
 (tags from `0.5.1` and earlier have no `v` prefix, e.g. `0.4.0`; tags from
 `0.6.0` onward are named `v<version>`, e.g. `v0.6.0`).
 
+## 0.6.0
+
+### Minor Changes
+
+- [#59](https://github.com/altalyst-solutions/hookify/pull/59) [`70ae856`](https://github.com/altalyst-solutions/hookify/commit/70ae856d8e782d4d2fdacefbe7164520278cfc8e) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useAutofillSubmit`, a hook that submits a form as soon as a password manager fills it. It is fully typed (field names are inferred as literals) and configurable through `enabled`, `pollInterval`, `interactionEvents`, `requireInteraction`, `isFilled`, `onAutofill` (can veto) and `submit`, and returns `rearm`, `disarm` and `isArmed` controls.
+
 ## 0.5.5
 
 ### Patch Changes
