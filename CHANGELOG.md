@@ -18,6 +18,12 @@ or the [GitHub tags](https://github.com/altalyst-solutions/hookify/tags)
 (tags from `0.5.1` and earlier have no `v` prefix, e.g. `0.4.0`; tags from
 `0.6.0` onward are named `v<version>`, e.g. `v0.6.0`).
 
+## 0.7.0
+
+### Minor Changes
+
+- [#61](https://github.com/altalyst-solutions/hookify/pull/61) [`ccfd349`](https://github.com/altalyst-solutions/hookify/commit/ccfd34967247fb9ac4a9aa4ee490d25cf54830fa) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Improve package output for bundlers and Node. The UMD build (`hookify.umd.cjs`) is replaced by a CommonJS build (`hookify.cjs`) alongside the ES module build, a `.d.cts` types file is now shipped for CommonJS consumers, and an `exports` map plus `"sideEffects": false` are added so unused hooks are reliably tree-shaken. Script-tag usage via the global `hookify` is no longer available; use an ESM CDN or an import map instead.
+
 ## 0.6.0
 
 ### Minor Changes
