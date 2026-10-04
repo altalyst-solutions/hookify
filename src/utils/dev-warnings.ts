@@ -1,3 +1,7 @@
+// Bundlers replace `process.env.NODE_ENV` at build time. Declaring only what is
+// used avoids depending on Node's global types in browser-targeted source.
+declare const process: { env: { NODE_ENV?: string } };
+
 /**
  * Indicates whether the application is running in development mode.
  *
