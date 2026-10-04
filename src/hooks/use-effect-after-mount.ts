@@ -21,6 +21,13 @@ import { useEffect, useRef } from "react";
 export const useEffectAfterMount = (fn: () => void, deps: unknown[] = []) => {
   const isMounted = useRef(false);
 
+  // Reset on unmount so StrictMode's simulated remount still counts as the initial mount.
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
   useEffect(() => {
     if (!isMounted.current) {
       isMounted.current = true;

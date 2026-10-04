@@ -18,24 +18,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version-file: ".nvmrc"
-          package-manager-cache: false
-
-      - name: Cache node_modules
-        uses: actions/cache@v6
-        with:
-          path: |
-            ~/.npm
-            node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install dependencies
-        run: npm ci
+      - name: Set up Node and install dependencies
+        uses: ./.github/actions/setup-deps
 
       - name: Check formatting
         run: npm run format:check
@@ -51,6 +35,37 @@ jobs:
       - name: Build library
         run: npm run build
 
+  react-compat:
+    if: ${{ github.repository == 'altalyst-solutions/hookify' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        react: ["18.0.0", "18", "19"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node and install dependencies
+        uses: ./.github/actions/setup-deps
+
+      - name: Install React ${{ matrix.react }}
+        run: |
+          TYPES="${{ matrix.react }}"
+          TYPES="${TYPES%%.*}"
+          npm install --no-save \
+            react@${{ matrix.react }} react-dom@${{ matrix.react }} \
+            @types/react@$TYPES @types/react-dom@$TYPES
+
+      - name: Type-check
+        run: npx tsc -b
+
+      - name: Run library tests
+        run: npm run test -- --run
+        env:
+          CI: true
+
   docs-check:
     if: ${{ github.repository == 'altalyst-solutions/hookify' }}
     runs-on: ubuntu-latest
@@ -59,21 +74,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version-file: ".nvmrc"
-          package-manager-cache: false
-
-      - name: Cache node_modules
-        uses: actions/cache@v6
-        with:
-          path: |
-            ~/.npm
-            node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+      - name: Set up Node and install dependencies
+        uses: ./.github/actions/setup-deps
 
       - name: Cache docs node_modules
         uses: actions/cache@v6
@@ -84,9 +86,6 @@ jobs:
           key: ${{ runner.os }}-docs-node-${{ hashFiles('docs-site/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-docs-node-
-
-      - name: Install library dependencies
-        run: npm ci
 
       - name: Install docs dependencies
         run: cd docs-site && npm ci

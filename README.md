@@ -51,7 +51,7 @@ demo.
   dependencies beyond React. Ships ESM and CommonJS builds.
 - 🔒 **Fully typed** — written in TypeScript with generated `.d.ts` files
   included.
-- ⚡ **Zero config** — works out of the box with any React 18+ project (CRA,
+- ⚡ **Zero config** — works out of the box with any React 18 or 19 project (CRA,
   Vite, Next.js, Remix, etc.).
 - 📚 **Live docs** — every hook has a runnable, editable demo and full API
   reference generated straight from the source.

@@ -75,7 +75,7 @@ export const useMounted = (options?: UseMountedOptions): (() => boolean) => {
    * A ref that stores the cleanup function returned by the `onMount` callback, if any.
    * This cleanup function will be invoked during the component's unmount phase.
    */
-  const cleanupRef = useRef<(() => void) | void>();
+  const cleanupRef = useRef<(() => void) | void>(undefined);
 
   /**
    * Holds the latest options so the mount/unmount effect can run exactly once
