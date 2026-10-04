@@ -1,0 +1,16 @@
+.component__container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.component__form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.component__form input,
+.component__container button {
+  padding: 8px 12px;
+}
