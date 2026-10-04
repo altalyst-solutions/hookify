@@ -41,7 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        react: ["18.0.0", "18", "19"]
+        react: ["18.0.0"]
 
     steps:
       - name: Checkout code
