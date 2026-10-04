@@ -17,9 +17,9 @@ import styles from "./styles.module.css";
 // Pinned to a version inside the library's supported peer range (react/react-dom ^18.0.0 || ^19.0.0)
 // so demos behave exactly like a real consumer's app, regardless of what
 // version the Sandpack "react-ts" template defaults to.
-const REACT_VERSION = "18.3.1";
-const REACT_TYPES_VERSION = "18.3.3";
-const REACT_DOM_TYPES_VERSION = "18.3.0";
+const REACT_VERSION = "19.3.0";
+const REACT_TYPES_VERSION = "19.3.0";
+const REACT_DOM_TYPES_VERSION = "19.3.0";
 
 // Always resolves to the latest version published to npm, matching the
 // "pull from npm CDN" approach: demos show the published library, not
