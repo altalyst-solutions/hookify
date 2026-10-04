@@ -48,7 +48,7 @@ demo.
 - 🪝 **A growing collection of focused hooks** covering the most common React
   state, effect, and side-effect patterns.
 - 📦 **Tiny and tree-shakeable** — import only what you use; no runtime
-  dependencies beyond React.
+  dependencies beyond React. Ships ESM and CommonJS builds.
 - 🔒 **Fully typed** — written in TypeScript with generated `.d.ts` files
   included.
 - ⚡ **Zero config** — works out of the box with any React 18+ project (CRA,

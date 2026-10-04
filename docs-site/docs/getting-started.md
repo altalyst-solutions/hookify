@@ -17,6 +17,9 @@ Hookify has `react` and `react-dom` as peer dependencies (v18+).
 npm install @altalyst/hookify
 ```
 
+Hookify ships ESM and CommonJS builds with bundled TypeScript types, and is
+tree-shakeable, so only the hooks you import end up in your bundle.
+
 ## Quick start
 
 Import any hook directly from the package root:
