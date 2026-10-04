@@ -30,6 +30,30 @@ interface UseApiReturn<T> {
 }
 
 /**
+ * The outcome of a request, reported as a value instead of a thrown error.
+ * @template T
+ */
+type RequestResult<T> = { ok: true; data: T } | { ok: false; error: string };
+
+/** Performs the request and reports the outcome as a value, so it never throws. */
+const requestJson = async <T>(
+  url: string,
+  init: RequestInit
+): Promise<RequestResult<T>> => {
+  try {
+    const response = await fetch(url, init);
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+
+    return { ok: true, data: (await response.json()) as T };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message };
+  }
+};
+
+/**
  * Custom React hook to perform API requests.
  *
  * This hook simplifies the process of making HTTP requests from a React component,
@@ -72,33 +96,71 @@ export const useApi = <T = unknown>(
 
   const { method, headers, body } = options ?? {};
 
+  /**
+   * The headers as a comparable string. Inline `headers` objects get a new
+   * identity every render, so comparing them by value keeps `request` (and
+   * therefore the fetch) from re-running when nothing actually changed.
+   */
+  const headersKey = headers
+    ? JSON.stringify([...new Headers(headers).entries()])
+    : undefined;
+
+  /**
+   * Performs the request for the current url and options. Its identity changes
+   * only when those inputs change, which is what triggers a new fetch.
+   */
+  const request = useCallback(
+    () =>
+      requestJson<T>(url, {
+        method: method || "GET",
+        headers: headersKey
+          ? Object.fromEntries(JSON.parse(headersKey) as [string, string][])
+          : undefined,
+        body,
+      }),
+    [url, method, headersKey, body]
+  );
+
+  /**
+   * Writes a finished request into state. Only ever called from a promise
+   * callback, never synchronously inside an effect.
+   */
+  const applyResult = useCallback((result: RequestResult<T>) => {
+    if (result.ok) {
+      setData(result.data);
+    } else {
+      setError(result.error);
+    }
+    setLoading(false);
+  }, []);
+
+  /**
+   * Tracks the request the current state belongs to. When the inputs change,
+   * the state is reset during render (the documented "adjust state while
+   * rendering" pattern) so consumers never see a stale "loaded" frame before
+   * the new fetch starts.
+   */
+  const [currentRequest, setCurrentRequest] = useState(() => request);
+  if (currentRequest !== request) {
+    setCurrentRequest(() => request);
+    setLoading(true);
+    setError(null);
+  }
+
+  /**
+   * Manually re-runs the request, exposed to consumers as `refetch`.
+   * Switches back to the loading state before fetching.
+   */
   const fetchApi = useCallback(async () => {
     setLoading(true);
     setError(null);
+    applyResult(await request());
+  }, [request, applyResult]);
 
-    try {
-      const response = await fetch(url, {
-        method: method || "GET",
-        headers,
-        body,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-
-      const result: T = await response.json();
-      setData(result);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  }, [url, method, headers, body]);
-
+  // Fetch on mount and whenever the request inputs change.
   useEffect(() => {
-    fetchApi();
-  }, [fetchApi]);
+    request().then(applyResult);
+  }, [request, applyResult]);
 
   return { data, loading, error, refetch: fetchApi };
 };
