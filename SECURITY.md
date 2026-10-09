@@ -40,9 +40,27 @@ with no patched release available). The affected packages (`micromatch`,
 `fast-glob`, `globby`, `@docusaurus/*`, etc.) are only flagged because they
 depend on `braces`.
 
+`npm audit` in `docs-site/` also reports moderate findings for
+[GHSA-rj75-hqrm-r3gf](https://github.com/advisories/GHSA-rj75-hqrm-r3gf), a
+quadratic-complexity CPU exhaustion in `postcss-selector-parser` below 7.1.6.
+The remaining vulnerable 6.x copy is pinned by Docusaurus's `cssnano` toolchain
+(`cssnano-preset-advanced` and several `postcss-*` plugins require `^6`), so it
+cannot be upgraded without forcing an incompatible major version. It only parses
+our own CSS at build time. `tinypool` (Docusaurus's build worker pool) is
+pinned to a patched 2.x release through an `overrides` entry in
+`docs-site/package.json`; remove that override once Docusaurus ships a release
+that depends on a patched `tinypool` itself.
+
 We accept this risk for now: `braces` only runs at build and dev time against
 glob patterns from our own configuration and files, and it does not ship in
 the built site or in the library. We re-check `npm audit` periodically and
 will update as soon as a patched `braces` or Docusaurus release is available.
-The library itself (`npm audit` at the repository root) reports no
-vulnerabilities.
+
+`npm audit` at the repository root reports moderate findings that trace back
+to [GHSA-hp3w-g68c-fv3c](https://github.com/advisories/GHSA-hp3w-g68c-fv3c), a
+denial of service in `sprintf-js` (all versions through 1.1.3, with no patched
+release available). It is pulled in only through `@microsoft/api-extractor`
+(used by `vite-plugin-dts` to generate type declarations at build time), so
+`@rushstack/ts-command-line`, `argparse` and `@microsoft/api-extractor` are
+flagged transitively. It is not part of the published package's runtime
+dependencies, and we accept it until a patched release is available.
