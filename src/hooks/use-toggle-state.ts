@@ -5,11 +5,11 @@ import { useCallback, useState } from "react";
  *
  * This hook is useful for managing binary states, such as showing/hiding elements, toggling themes, or activating/deactivating features.
  *
- * @param {boolean} [initialState=false] - The initial state of the toggle (default is `false`).
- * @returns {[boolean, () => void]} - An array containing the current state and a function to toggle it.
+ * @param initialState - The initial state of the toggle (default is `false`).
+ * @returns An array containing the current state and a function to toggle it.
  *
  * @example
- * ```typescript
+ * ```tsx
  * const [isVisible, toggleVisibility] = useToggleState(false);
  *
  * return (

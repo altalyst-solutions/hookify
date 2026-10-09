@@ -27,8 +27,12 @@ docs-site/         # Docusaurus documentation site
 
 1. Create `src/hooks/use-your-hook.ts` and export it from
    `src/hooks/index.ts`.
-2. Write thorough JSDoc on the exported function, including `@example`
-   blocks — this is used to auto-generate the API reference.
+2. Write thorough doc comments (TSDoc style) on the exported function,
+   including `@example` blocks — this is used to auto-generate the API
+   reference. Don't put types in braces: use `@param name - description`,
+   `@returns description` and `@typeParam T - description`. `npm run lint`
+   enforces this. Tag code examples ` ```tsx ` when they contain JSX and
+   ` ```ts ` otherwise.
 3. Add a matching spec at `tests/hooks/use-your-hook.spec.ts`.
 4. Add a docs page at `docs-site/docs/hooks/use-your-hook.mdx` (copy an
    existing hook's page as a starting point) and, if useful, example

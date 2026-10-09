@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 
 /**
  * Options for configuring the API request.
- * @interface UseApiOptions
  */
 interface UseApiOptions {
   /** The HTTP method to use for the request. Default is `GET`. */
@@ -15,8 +14,7 @@ interface UseApiOptions {
 
 /**
  * The return type of the useApi hook.
- * @template T
- * @interface UseApiReturn
+ * @typeParam T - The type of data expected in the response.
  */
 interface UseApiReturn<T> {
   /** The fetched data, or null if there’s no data yet. */
@@ -31,7 +29,7 @@ interface UseApiReturn<T> {
 
 /**
  * The outcome of a request, reported as a value instead of a thrown error.
- * @template T
+ * @typeParam T - The type of data returned on success.
  */
 type RequestResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -71,20 +69,22 @@ const requestJson = async <T>(
  * during the request process are caught and returned, allowing the consuming
  * component to handle them appropriately.
  *
- * @template T The type of data expected in the response. This helps ensure type safety
- *             when consuming the data in a TypeScript environment.
- * @param {string} url - The endpoint from which to fetch data. This should be a fully
- *                       qualified URL that the application can reach.
- * @param {UseApiOptions} [options] - Options for configuring the request, including
- *                                     HTTP method, headers, and body content.
- * @returns {UseApiReturn<T>} The result of the API request, including:
+ * @typeParam T - The type of data expected in the response. This helps ensure type safety
+ *                when consuming the data in a TypeScript environment.
+ * @param url - The endpoint from which to fetch data. This should be a fully
+ *              qualified URL that the application can reach.
+ * @param options - Options for configuring the request, including
+ *                  HTTP method, headers, and body content.
+ * @returns The result of the API request, including:
  * - `data`: The fetched data, or null if there’s no data yet.
  * - `loading`: Indicates whether the request is currently being processed.
  * - `error`: Contains any error message if the request fails, or null if no error occurred.
  * - `refetch`: Function to manually refetch the data, useful for refreshing data in UI.
  *
  * @example
+ * ```ts
  * const { data, loading, error, refetch } = useApi<MyDataType>('https://api.example.com/data');
+ * ```
  */
 export const useApi = <T = unknown>(
   url: string,

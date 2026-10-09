@@ -24,14 +24,14 @@ export const isDevelopment: boolean = process.env.NODE_ENV !== "production";
  * @param message - The warning message to log.
  *
  * @example
- * ```typescript
+ * ```ts
  * if (value === undefined) {
  *   warnInDevelopment("Value should not be undefined. Using default value instead.");
  * }
  * ```
  *
  * @example
- * ```typescript
+ * ```ts
  * warnInDevelopment(
  *   `Component "${componentName}" is changing from controlled to uncontrolled mode.`
  * );
@@ -55,14 +55,14 @@ export const warnInDevelopment = (message: string) => {
  * @param message - The error message to log.
  *
  * @example
- * ```typescript
+ * ```ts
  * if (!isValidConfig(config)) {
  *   errorInDevelopment("Invalid configuration detected. Please check your setup.");
  * }
  * ```
  *
  * @example
- * ```typescript
+ * ```ts
  * errorInDevelopment(
  *   `Failed to initialize hook: required parameter "callback" is missing.`
  * );

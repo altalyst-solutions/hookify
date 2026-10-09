@@ -6,11 +6,11 @@ import { useEffect } from "react";
  *
  * This hook is useful for handling scenarios like closing dropdowns, modals, or tooltips when clicking outside the component.
  *
- * @param {RefObject<HTMLElement>} ref - A React ref object pointing to the element to detect outside clicks for.
- * @param {() => void} callback - The callback function to execute when a click or touch event occurs outside the specified element.
+ * @param ref - A React ref object pointing to the element to detect outside clicks for.
+ * @param callback - The callback function to execute when a click or touch event occurs outside the specified element.
  *
  * @example
- * ```typescript
+ * ```tsx
  * const ref = useRef<HTMLDivElement>(null);
  * useOutsideClick(ref, () => {
  *   console.log("Clicked outside the component");
