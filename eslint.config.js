@@ -5,6 +5,8 @@ import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 import jsxA11y from "eslint-plugin-jsx-a11y";
+import jsdoc from "eslint-plugin-jsdoc";
+import tsdoc from "eslint-plugin-tsdoc";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
@@ -39,6 +41,28 @@ export default tseslint.config(
       ],
       "simple-import-sort/imports": "error",
       "simple-import-sort/exports": "error",
+    },
+  },
+  {
+    ...jsdoc.configs["flat/recommended-typescript-error"],
+    plugins: {
+      ...jsdoc.configs["flat/recommended-typescript-error"].plugins,
+      tsdoc,
+    },
+    files: ["src/**/*.ts"],
+    settings: {
+      jsdoc: { tagNamePreference: { template: "typeParam" } },
+    },
+    rules: {
+      ...jsdoc.configs["flat/recommended-typescript-error"].rules,
+      "jsdoc/tag-lines": "off",
+      "tsdoc/syntax": "error",
+      "jsdoc/require-jsdoc": "off",
+      "jsdoc/require-returns": "off",
+      "jsdoc/require-param": "off",
+      "jsdoc/check-param-names": "error",
+      "jsdoc/no-types": "error",
+      "jsdoc/check-tag-names": "error",
     },
   }
 );

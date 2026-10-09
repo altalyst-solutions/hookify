@@ -8,9 +8,9 @@ import { useCallback, useEffect, useRef } from "react";
  * which is useful for accessing the latest state or props in callbacks without
  * needing to include them as dependencies.
  *
- * @template T - The type of the value to track.
- * @param {T} value - The value to keep a reference to.
- * @returns {MutableRefObject<T>} A ref object containing the latest value.
+ * @typeParam T - The type of the value to track.
+ * @param value - The value to keep a reference to.
+ * @returns A ref object containing the latest value.
  */
 const useLatest = <T>(value: T): MutableRefObject<T> => {
   const ref = useRef(value);
@@ -28,9 +28,9 @@ const useLatest = <T>(value: T): MutableRefObject<T> => {
  * with a "CanceledError". Otherwise, it resolves or rejects based on the original
  * request function's behavior.
  *
- * @template T - The type of data expected from the request.
- * @param {(signal: AbortSignal) => Promise<T>} requestFn - The request function that accepts an AbortSignal.
- * @returns {{ run: () => Promise<T>, cancel: () => void }} An object containing:
+ * @typeParam T - The type of data expected from the request.
+ * @param requestFn - The request function that accepts an AbortSignal.
+ * @returns An object containing:
  * - `run`: Function to execute the request.
  * - `cancel`: Function to abort the ongoing request.
  */
@@ -70,16 +70,16 @@ const buildCancelableFetch = <T>(
  * The hook also handles cleanup on component unmount, automatically canceling any pending
  * requests to prevent memory leaks and unwanted state updates.
  *
- * @template T - The type of data expected from the request.
- * @param {(signal: AbortSignal) => Promise<T>} requestFn - The asynchronous request function
+ * @typeParam T - The type of data expected from the request.
+ * @param requestFn - The asynchronous request function
  *        that should accept an AbortSignal parameter for cancellation support. This function
  *        should handle the abort signal appropriately (e.g., pass it to fetch API).
- * @returns {() => Promise<T>} A callback function that triggers the request. When called,
+ * @returns A callback function that triggers the request. When called,
  *          it cancels any previous ongoing request and starts a new one. The returned promise
  *          resolves with the request result or rejects with "CanceledError" if canceled.
  *
  * @example
- * ```typescript
+ * ```ts
  * const searchUsers = useSequentialRequest(async (signal) => {
  *   const response = await fetch(`/api/users?query=${query}`, { signal });
  *   return response.json();
@@ -99,7 +99,7 @@ const buildCancelableFetch = <T>(
  * ```
  *
  * @example
- * ```typescript
+ * ```ts
  * const submitForm = useSequentialRequest(async (signal) => {
  *   const response = await fetch('/api/submit', {
  *     method: 'POST',
@@ -132,7 +132,7 @@ export const useSequentialRequest = <T>(
   /**
    * Executes the request function, canceling any previous ongoing request.
    *
-   * @returns {Promise<T>} A promise that resolves with the request result or rejects
+   * @returns A promise that resolves with the request result or rejects
    *                       with "CanceledError" if the request is canceled.
    */
   return useCallback(async () => {

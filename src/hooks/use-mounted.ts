@@ -31,14 +31,14 @@ type UseMountedOptions = {
  * (like API calls or timers) where you need to verify the component is still mounted
  * before updating state with the async result.
  *
- * @param {UseMountedOptions} [options] - Optional configuration object:
+ * @param options - Optional configuration object:
  * - `onMount`: Callback invoked when the component mounts. Can return a cleanup function.
  * - `onUnmount`: Callback invoked when the component unmounts.
- * @returns {() => boolean} A function that returns `true` if the component is currently mounted,
- *                          and `false` if it has unmounted.
+ * @returns A function that returns `true` if the component is currently mounted,
+ *          and `false` if it has unmounted.
  *
  * @example
- * ```typescript
+ * ```ts
  * const isMounted = useMounted();
  *
  * useEffect(() => {
@@ -51,7 +51,7 @@ type UseMountedOptions = {
  * ```
  *
  * @example
- * ```typescript
+ * ```ts
  * const isMounted = useMounted({
  *   onMount: () => {
  *     console.log('Component mounted');
@@ -114,7 +114,7 @@ export const useMounted = (options?: UseMountedOptions): (() => boolean) => {
   /**
    * Returns the current mount status of the component.
    * Memoized to provide a stable function reference across renders.
-   * @returns {boolean} `true` if mounted, `false` if unmounted.
+   * @returns `true` if mounted, `false` if unmounted.
    */
   return useCallback((): boolean => isMounted.current, []);
 };

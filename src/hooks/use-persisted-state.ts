@@ -5,13 +5,13 @@ import { useEffect, useRef, useState } from "react";
  *
  * This hook allows you to maintain a state value that is automatically saved to and loaded from `localStorage`. It also synchronizes the state across multiple tabs when the same key is updated elsewhere.
  *
- * @template T - The type of the state value.
- * @param {string} key - The unique key used to store the value in `localStorage`.
- * @param {T} initialValue - The initial value for the state if no value exists in `localStorage`.
- * @returns {[T, (value: T | ((prevState: T) => T)) => void]} - An array containing the current state and a function to update it.
+ * @typeParam T - The type of the state value.
+ * @param key - The unique key used to store the value in `localStorage`.
+ * @param initialValue - The initial value for the state if no value exists in `localStorage`.
+ * @returns An array containing the current state and a function to update it.
  *
  * @example
- * ```typescript
+ * ```tsx
  * const [theme, setTheme] = usePersistedState<"light" | "dark">("theme", "light");
  *
  * return (
@@ -25,7 +25,7 @@ import { useEffect, useRef, useState } from "react";
  * ```
  *
  * @example
- * ```typescript
+ * ```tsx
  * const [counter, setCounter] = usePersistedState<number>("counter", 0);
  *
  * return (

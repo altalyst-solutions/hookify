@@ -14,8 +14,8 @@ type UseDocVisibleOptions = {
  * This function sets up an event listener for the browser's `visibilitychange` event
  * and returns a cleanup function to remove the listener when the subscription ends.
  *
- * @param {() => void} callback - The callback function to invoke when visibility changes.
- * @returns {() => void} A cleanup function to unsubscribe from the event.
+ * @param callback - The callback function to invoke when visibility changes.
+ * @returns A cleanup function to unsubscribe from the event.
  */
 const subscribe = (callback: () => void): (() => void) => {
   document.addEventListener("visibilitychange", callback);
@@ -30,7 +30,7 @@ const subscribe = (callback: () => void): (() => void) => {
  * This function reads the browser's `document.visibilityState` API to determine
  * if the document is currently visible to the user.
  *
- * @returns {boolean} True if the document is visible, false otherwise.
+ * @returns True if the document is visible, false otherwise.
  */
 const getSnapshot = (): boolean => {
   return document.visibilityState === "visible";
@@ -43,7 +43,7 @@ const getSnapshot = (): boolean => {
  * returns a default value of `true` to ensure the hook works correctly in SSR
  * environments without causing hydration mismatches.
  *
- * @returns {boolean} Always returns true for SSR compatibility.
+ * @returns Always returns true for SSR compatibility.
  */
 const getServerSnapshot = (): boolean => {
   return true;
@@ -67,11 +67,11 @@ const getServerSnapshot = (): boolean => {
  * The optional `onChange` callback provides a convenient way to respond to visibility changes
  * without needing additional `useEffect` hooks in the consuming component.
  *
- * @param {UseDocVisibleOptions} [options] - Optional configuration for the hook, including an onChange callback.
- * @returns {boolean} Returns `true` if the document is visible, `false` if it's hidden.
+ * @param options - Optional configuration for the hook, including an onChange callback.
+ * @returns `true` if the document is visible, `false` if it's hidden.
  *
  * @example
- * ```typescript
+ * ```ts
  * const isVisible = useDocVisible();
  *
  * useEffect(() => {
@@ -84,7 +84,7 @@ const getServerSnapshot = (): boolean => {
  * ```
  *
  * @example
- * ```typescript
+ * ```ts
  * // With onChange callback
  * const isVisible = useDocVisible({
  *   onChange: (visible) => {
@@ -94,7 +94,7 @@ const getServerSnapshot = (): boolean => {
  * ```
  *
  * @example
- * ```typescript
+ * ```ts
  * // Pause video playback when tab is hidden
  * const videoRef = useRef<HTMLVideoElement>(null);
  * const isVisible = useDocVisible({

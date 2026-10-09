@@ -7,12 +7,12 @@ import { useEffect, useRef } from "react";
  * This hook is useful in cases where you want to skip the effect on the initial render and
  * only trigger it on subsequent renders when dependencies change.
  *
- * @param {() => void} fn - The callback function to be executed after the component mounts and dependencies change.
- * @param {unknown[]} [deps=[]] - An array of dependencies that the effect depends on. When these dependencies change,
+ * @param fn - The callback function to be executed after the component mounts and dependencies change.
+ * @param deps - An array of dependencies that the effect depends on. When these dependencies change,
  * the callback function will be triggered. If not provided, defaults to an empty array.
  *
  * @example
- * ```typescript
+ * ```ts
  * useEffectAfterMount(() => {
  *   console.log("This will only log on updates, not on the initial render");
  * }, [someDependency]);

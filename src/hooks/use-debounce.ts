@@ -7,13 +7,13 @@ import { useCallback, useEffect, useRef } from "react";
  * This hook is useful for optimizing performance in scenarios where frequent function calls need to be reduced,
  * such as handling search input, resize events, or button clicks.
  *
- * @template T - The type of the callback function to debounce.
- * @param {T} callback - The function to be debounced.
- * @param {number} delay - The debounce delay in milliseconds.
- * @returns {(...args: Parameters<T>) => void} - A debounced version of the provided callback function.
+ * @typeParam T - The type of the callback function to debounce.
+ * @param callback - The function to be debounced.
+ * @param delay - The debounce delay in milliseconds.
+ * @returns A debounced version of the provided callback function.
  *
  * @example
- * ```typescript
+ * ```tsx
  * const [query, setQuery] = useState("");
  *
  * const fetchData = (searchTerm: string) => {
@@ -31,7 +31,7 @@ import { useCallback, useEffect, useRef } from "react";
  * ```
  *
  * @example
- * ```typescript
+ * ```tsx
  * const logMessage = (message: string) => {
  *   console.log(message);
  * };
