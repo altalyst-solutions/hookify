@@ -18,6 +18,12 @@ or the [GitHub tags](https://github.com/altalyst-solutions/hookify/tags)
 (tags from `0.5.1` and earlier have no `v` prefix, e.g. `0.4.0`; tags from
 `0.6.0` onward are named `v<version>`, e.g. `v0.6.0`).
 
+## 0.8.2
+
+### Patch Changes
+
+- [#71](https://github.com/altalyst-solutions/hookify/pull/71) [`5e568b1`](https://github.com/altalyst-solutions/hookify/commit/5e568b1f1476810a4b8fee1330d8dd3e2adc18c8) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Clean up the doc comments shipped in the type declarations so editor hovers and the API reference read cleanly: braced types are removed from `@param` and `@returns` (the signatures already carry them), `@template` becomes `@typeParam`, and code examples are tagged `tsx` or `ts`. The `useApi` example is now a proper fenced code block. No runtime or type changes.
+
 ## 0.8.1
 
 ### Patch Changes
