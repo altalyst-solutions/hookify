@@ -4,6 +4,7 @@ export * from "./use-controlled-state";
 export * from "./use-debounce";
 export * from "./use-doc-visible";
 export * from "./use-effect-after-mount";
+export * from "./use-latest";
 export * from "./use-mounted";
 export * from "./use-outside-click";
 export * from "./use-persisted-state";
