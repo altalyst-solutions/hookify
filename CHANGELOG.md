@@ -18,6 +18,16 @@ or the [GitHub tags](https://github.com/altalyst-solutions/hookify/tags)
 (tags from `0.5.1` and earlier have no `v` prefix, e.g. `0.4.0`; tags from
 `0.6.0` onward are named `v<version>`, e.g. `v0.6.0`).
 
+## 0.9.0
+
+### Minor Changes
+
+- [#78](https://github.com/altalyst-solutions/hookify/pull/78) [`d59fbea`](https://github.com/altalyst-solutions/hookify/commit/d59fbea6c0ed6c7ccf1eed7a9d207b8a1ed88f83) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useEventListener` hook that attaches a typed, auto-cleaned event listener to `window`, `document`, an element, a ref, or any `EventTarget`.
+
+- [#74](https://github.com/altalyst-solutions/hookify/pull/74) [`827e5cd`](https://github.com/altalyst-solutions/hookify/commit/827e5cd96b198caec54b861e0cbda82c47d35673) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useLatest` hook that returns a stable ref holding the latest value.
+
+- [#77](https://github.com/altalyst-solutions/hookify/pull/77) [`661a125`](https://github.com/altalyst-solutions/hookify/commit/661a125338d9e2078d708878dd6f2e7da037abe2) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `usePrevious` hook that returns the value from the previous render, with an optional `initialValue`.
+
 ## 0.8.2
 
 ### Patch Changes
