@@ -1,0 +1,83 @@
+---
+title: usePrevious
+sidebar_position: 13
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-previous/App";
+import counterDiffSource from "!!raw-loader!@site/src/hook-examples/use-previous/CounterDiff";
+import hookSource from "!!raw-loader!../../../src/hooks/use-previous.ts";
+
+# usePrevious
+
+Returns the value from the previous render. It does not cause extra
+re-renders.
+
+## When to use it
+
+- Diffing props or state, for example detecting whether a number went up or
+  down.
+- Driving animations or transitions between an old and a new value.
+- Running logic only when a specific value changed.
+
+## Demo
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/CounterDiff.tsx": counterDiffSource,
+  }}
+  activeFile="/CounterDiff.tsx"
+/>
+
+## Signature
+
+```ts
+interface UsePreviousOptions<T> {
+  initialValue: T;
+}
+
+interface UsePrevious {
+  <T>(value: T, options: UsePreviousOptions<T>): T;
+  <T>(value: T): T | undefined;
+}
+
+const usePrevious: UsePrevious;
+```
+
+| Parameter              | Description                                                    |
+| ---------------------- | -------------------------------------------------------------- |
+| `value`                | The value to track.                                            |
+| `options.initialValue` | Optional. Returned on the first render instead of `undefined`. |
+
+**Returns:** the value from the previous render, or `undefined` (or
+`initialValue`) on the first render.
+
+## Notes
+
+- The value is recorded after each commit, so it reflects the previous
+  _render_. If the component rerenders for an unrelated reason, the returned
+  value catches up to the current one.
+- To track a specific field of an object, pass that field (for example `usePrevious(user.id)`)
+  rather than the whole object.
+
+## Example
+
+```tsx
+const prevCount = usePrevious(count);
+
+const direction =
+  prevCount === undefined || prevCount === count
+    ? "none"
+    : count > prevCount
+      ? "up"
+      : "down";
+```
+
+## Source
+
+<CodeBlock language="ts" title="src/hooks/use-previous.ts">
+  {hookSource}
+</CodeBlock>

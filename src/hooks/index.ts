@@ -8,5 +8,6 @@ export * from "./use-latest";
 export * from "./use-mounted";
 export * from "./use-outside-click";
 export * from "./use-persisted-state";
+export * from "./use-previous";
 export * from "./use-sequential-request";
 export * from "./use-toggle-state";
