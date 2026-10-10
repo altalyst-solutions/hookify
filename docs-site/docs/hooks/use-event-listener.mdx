@@ -1,0 +1,101 @@
+---
+title: useEventListener
+sidebar_position: 14
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-event-listener/App";
+import demoSource from "!!raw-loader!@site/src/hook-examples/use-event-listener/EventListenerDemo";
+import hookSource from "!!raw-loader!../../../src/hooks/use-event-listener.ts";
+
+# useEventListener
+
+Attaches a typed event listener to `window`, `document`, an element (or a ref
+to one), or any `EventTarget`, and removes it automatically on cleanup.
+
+## When to use it
+
+- Reacting to `resize`, `scroll` or `keydown` on the window or document.
+- Listening on an element held by a ref without writing the
+  add/remove-in-an-effect boilerplate.
+- Subscribing to custom events or other `EventTarget`s such as
+  `MediaQueryList`.
+
+## Demo
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/EventListenerDemo.tsx": demoSource,
+  }}
+  activeFile="/EventListenerDemo.tsx"
+/>
+
+## Signature
+
+```ts
+type EventListenerTarget<T extends EventTarget> =
+  T | RefObject<T | null> | null;
+
+function useEventListener<K extends keyof WindowEventMap>(
+  type: K,
+  handler: (event: WindowEventMap[K]) => void,
+  target?: EventListenerTarget<Window>,
+  options?: AddEventListenerOptions
+): void;
+// Equivalent overloads exist for Document, HTMLElement (or a ref to one),
+// and any EventTarget with a custom event type:
+function useEventListener<E extends Event = Event>(
+  type: string,
+  handler: (event: E) => void,
+  target: EventListenerTarget<EventTarget>,
+  options?: AddEventListenerOptions
+): void;
+```
+
+| Parameter | Description                                                                                   |
+| --------- | --------------------------------------------------------------------------------------------- |
+| `type`    | Event name. The handler's event type is inferred for `window`, `document` and elements.       |
+| `handler` | Called with the event. The latest handler is always used.                                     |
+| `target`  | `window` (default when omitted), `document`, an element, a ref, any `EventTarget`, or `null`. |
+| `options` | Standard `addEventListener` options: `capture`, `passive`, `once`, `signal`.                  |
+
+**Returns:** `void`
+
+## Notes
+
+- **No re-subscribing on handler change.** Pass an inline function freely;
+  the hook calls the newest one through [`useLatest`](./use-latest).
+- **`null` attaches nothing.** Use it for a ref that is not mounted yet, or
+  to conditionally disable the listener, as in the demo.
+- **Refs are read when the effect runs.** A ref attached in the same commit
+  works; swapping `ref.current` afterwards does not re-subscribe.
+- **Options.** Changing `capture`, `passive`, `once` or `signal` re-subscribes.
+  Inline option objects are fine. Use `signal` to detach from outside the
+  component.
+- **Custom events.** Provide the event type as a generic, for example
+  `useEventListener<CustomEvent<number>>("ping", (e) => e.detail, bus)`.
+- **SSR-safe.** Nothing is attached on the server.
+- Works with React 18 and 19, including StrictMode.
+
+## Example
+
+```tsx
+// window
+useEventListener("resize", () => setWidth(window.innerWidth));
+
+// document
+useEventListener("keydown", (e) => e.key === "Escape" && close(), document);
+
+// element via ref
+const ref = useRef<HTMLDivElement>(null);
+useEventListener("scroll", () => update(), ref, { passive: true });
+```
+
+## Source
+
+<CodeBlock language="ts" title="src/hooks/use-event-listener.ts">
+  {hookSource}
+</CodeBlock>

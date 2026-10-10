@@ -103,6 +103,7 @@ export const Example = () => {
 | [`useDebounce`](https://altalyst-solutions.github.io/hookify/hooks/use-debounce)                    | Debounce a callback so it only runs after a delay has passed since its last invocation.      |
 | [`useDocVisible`](https://altalyst-solutions.github.io/hookify/hooks/use-doc-visible)               | Track whether the current document/tab is visible via the Page Visibility API.               |
 | [`useEffectAfterMount`](https://altalyst-solutions.github.io/hookify/hooks/use-effect-after-mount)  | Run an effect only after the initial mount, skipping the first render.                       |
+| [`useEventListener`](https://altalyst-solutions.github.io/hookify/hooks/use-event-listener)         | Attach a typed, auto-cleaned event listener to window, document, an element, or a ref.       |
 | [`useLatest`](https://altalyst-solutions.github.io/hookify/hooks/use-latest)                        | Keep a stable ref to the latest value or callback to avoid stale closures.                   |
 | [`useMounted`](https://altalyst-solutions.github.io/hookify/hooks/use-mounted)                      | Track whether a component is currently mounted to guard async state updates.                 |
 | [`useOutsideClick`](https://altalyst-solutions.github.io/hookify/hooks/use-outside-click)           | Fire a callback when a click or touch happens outside a given element.                       |
