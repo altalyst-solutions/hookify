@@ -1,0 +1,62 @@
+---
+title: useLatest
+sidebar_position: 12
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-latest/App";
+import intervalLoggerSource from "!!raw-loader!@site/src/hook-examples/use-latest/IntervalLogger";
+import hookSource from "!!raw-loader!../../../src/hooks/use-latest.ts";
+
+# useLatest
+
+Returns a stable ref that always holds the latest value, so long-lived
+closures can read fresh props, state or callbacks without stale captures.
+
+## When to use it
+
+- Calling the latest callback from a timer, event listener or async handler
+  without re-subscribing.
+- Keeping effects with stable dependencies while still reading current values.
+
+## Demo
+
+Click the button, then open the **Console** tab: the interval is created once
+but always logs the latest count.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/IntervalLogger.tsx": intervalLoggerSource,
+  }}
+  activeFile="/IntervalLogger.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+function useLatest<T>(value: T): RefObject<T>;
+```
+
+**Returns:** a ref whose `current` is the latest `value`. It is synchronized
+after each commit, so read it inside callbacks or effects, not during render.
+
+## Example
+
+```tsx
+const onTickRef = useLatest(onTick);
+
+useEffect(() => {
+  const id = setInterval(() => onTickRef.current(), 1000);
+  return () => clearInterval(id);
+}, [onTickRef]);
+```
+
+## Source
+
+<CodeBlock language="ts" title="src/hooks/use-latest.ts">
+  {hookSource}
+</CodeBlock>
