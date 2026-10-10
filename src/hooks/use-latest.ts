@@ -1,4 +1,4 @@
-import { type RefObject, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 /**
  * Returns a ref that always holds the latest value passed to the hook.
@@ -24,7 +24,7 @@ import { type RefObject, useEffect, useRef } from "react";
  * }, [onTickRef]);
  * ```
  */
-export const useLatest = <T>(value: T): RefObject<T> => {
+export const useLatest = <T>(value: T): { readonly current: T } => {
   const ref = useRef(value);
 
   useEffect(() => {

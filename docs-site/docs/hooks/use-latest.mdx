@@ -38,7 +38,7 @@ but always logs the latest count.
 ## Signature
 
 ```ts
-function useLatest<T>(value: T): RefObject<T>;
+function useLatest<T>(value: T): { readonly current: T };
 ```
 
 **Returns:** a ref whose `current` is the latest `value`. It is synchronized
