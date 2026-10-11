@@ -1,0 +1,104 @@
+---
+title: useThrottle
+sidebar_position: 15
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-throttle/App";
+import pointerTrackerSource from "!!raw-loader!@site/src/hook-examples/use-throttle/PointerTracker";
+import sliderValueSource from "!!raw-loader!@site/src/hook-examples/use-throttle/SliderValue";
+import hookSource from "!!raw-loader!../../../src/hooks/use-throttle.ts";
+
+# useThrottle
+
+Returns a throttled copy of a value that updates at most once per interval.
+It is the value-based counterpart to [`useDebounce`](./use-debounce.mdx):
+debouncing waits for a pause, throttling guarantees regular updates while the
+value keeps changing.
+
+## When to use it
+
+- Driving expensive renders or effects from fast-changing values (pointer
+  position, scroll offset, slider input).
+- Rate-limiting requests triggered by a continuously changing value.
+- Showing periodic progress while an input is being dragged or typed.
+
+## Demo
+
+Move the pointer or drag the slider and compare the live and throttled values.
+Toggle `leading` / `trailing` and open the **Console** tab to see when the
+throttled value is emitted.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/PointerTracker.tsx": pointerTrackerSource,
+    "/SliderValue.tsx": sliderValueSource,
+  }}
+  activeFile="/SliderValue.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+interface UseThrottleOptions {
+  leading?: boolean;
+  trailing?: boolean;
+}
+
+function useThrottle<T>(
+  value: T,
+  delay: number,
+  options?: UseThrottleOptions
+): T;
+```
+
+| Parameter          | Type      | Description                                                   |
+| ------------------ | --------- | ------------------------------------------------------------- |
+| `value`            | `T`       | The value to throttle.                                        |
+| `delay`            | `number`  | Minimum interval between updates, in milliseconds.            |
+| `options.leading`  | `boolean` | Emit immediately when a window starts. Defaults to `true`.    |
+| `options.trailing` | `boolean` | Emit the latest value when a window ends. Defaults to `true`. |
+
+**Returns:** the throttled value. On the first render it equals `value`.
+
+## Usage notes
+
+- A throttle window starts when a change arrives and none is active. With
+  `leading`, that change is emitted immediately. With `trailing`, the latest
+  value seen during the window is emitted when it ends, and a new window
+  starts so updates stay at least `delay` apart.
+- `{ leading: false }` delays every update to the end of its window;
+  `{ trailing: false }` drops values that arrive mid-window; setting both to
+  `false` means the returned value never updates.
+- Values are compared with `Object.is`. Pass a stable reference (for example
+  memoized objects) to avoid treating equal content as a change.
+- A changed `delay` or option applies from the next window.
+- Pending timers are cleared on unmount, and the hook is safe under
+  React `StrictMode`.
+- Need to throttle a function rather than a value? Compose it with your own
+  handler, or use [`useDebounce`](./use-debounce.mdx) when a trailing pause is
+  what you want.
+
+## Example
+
+```tsx
+const [scrollY, setScrollY] = useState(0);
+const throttledScrollY = useThrottle(scrollY, 200);
+
+useEventListener("scroll", () => setScrollY(window.scrollY));
+```
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useThrottle</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-throttle.ts">
+    {hookSource}
+  </CodeBlock>
+</details>
