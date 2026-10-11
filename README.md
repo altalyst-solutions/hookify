@@ -110,6 +110,7 @@ export const Example = () => {
 | [`usePersistedState`](https://altalyst-solutions.github.io/hookify/hooks/use-persisted-state)       | Persist state to `localStorage` and sync it across browser tabs.                             |
 | [`usePrevious`](https://altalyst-solutions.github.io/hookify/hooks/use-previous)                    | Get the value from the previous render, with an optional initial value.                      |
 | [`useSequentialRequest`](https://altalyst-solutions.github.io/hookify/hooks/use-sequential-request) | Ensure only the latest of several in-flight async requests resolves; stale ones are ignored. |
+| [`useThrottle`](https://altalyst-solutions.github.io/hookify/hooks/use-throttle)                    | Throttle a value so it updates at most once per interval, with leading/trailing options.     |
 | [`useToggleState`](https://altalyst-solutions.github.io/hookify/hooks/use-toggle-state)             | Toggle a boolean state with a simple, memoized setter.                                       |
 
 Browse the [hooks documentation](https://altalyst-solutions.github.io/hookify/hooks)
