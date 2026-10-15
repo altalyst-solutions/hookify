@@ -1,0 +1,97 @@
+---
+title: useInterval
+sidebar_position: 16
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-interval/App";
+import clockSource from "!!raw-loader!@site/src/hook-examples/use-interval/Clock";
+import pollerSource from "!!raw-loader!@site/src/hook-examples/use-interval/Poller";
+import hookSource from "!!raw-loader!../../../src/hooks/use-interval.ts";
+
+# useInterval
+
+A declarative `setInterval`. It calls your callback every `delay`
+milliseconds, pauses when `delay` is `null`, and always runs the latest
+callback without resetting the timer.
+
+## When to use it
+
+- Counters, clocks and countdowns.
+- Polling an endpoint, with the ability to pause (for example when a tab is
+  hidden, combined with [`useDocVisible`](./use-doc-visible.mdx)).
+- Any recurring work that reads fresh props or state without stale closures.
+
+## Demo
+
+Pause the counter and drag the delay slider, then enable polling and open the
+**Console** tab to see the `immediate` option in action.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/Clock.tsx": clockSource,
+    "/Poller.tsx": pollerSource,
+  }}
+  activeFile="/Clock.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+interface UseIntervalOptions {
+  immediate?: boolean;
+}
+
+function useInterval(
+  callback: () => void,
+  delay: number | null,
+  options?: UseIntervalOptions
+): void;
+```
+
+| Parameter           | Type             | Description                                                   |
+| ------------------- | ---------------- | ------------------------------------------------------------- |
+| `callback`          | `() => void`     | Called on every tick. The latest version is always used.      |
+| `delay`             | `number \| null` | Interval in milliseconds. `null` pauses the interval.         |
+| `options.immediate` | `boolean`        | Also call once when the interval starts. Defaults to `false`. |
+
+**Returns:** nothing.
+
+## Usage notes
+
+- Changing `callback` never resets the timer, so it is safe to close over
+  state or props.
+- Changing `delay`, or switching it between `null` and a number, restarts the
+  interval. Resuming waits a full `delay` before the first tick.
+- With `immediate`, the callback also runs whenever the interval starts: on
+  mount, when resuming from `null`, and when `delay` changes. Under React
+  `StrictMode` in development, effects run twice, so expect an extra call.
+- The interval is cleared on unmount.
+- Browsers throttle timers in background tabs, so ticks are not exact. Use
+  timestamps (for example `Date.now()`) when you need accurate elapsed time.
+- Need a pause/resume toggle? Keep a boolean in state and pass
+  `running ? delay : null`.
+
+## Example
+
+```tsx
+const [count, setCount] = useState(0);
+const [running, setRunning] = useState(true);
+
+useInterval(() => setCount((c) => c + 1), running ? 1000 : null);
+```
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useInterval</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-interval.ts">
+    {hookSource}
+  </CodeBlock>
+</details>
