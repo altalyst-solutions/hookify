@@ -1,0 +1,121 @@
+---
+title: useClipboard
+sidebar_position: 18
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-clipboard/App";
+import copyButtonSource from "!!raw-loader!@site/src/hook-examples/use-clipboard/CopyButton";
+import copyFieldSource from "!!raw-loader!@site/src/hook-examples/use-clipboard/CopyField";
+import hookSource from "!!raw-loader!../../../src/hooks/use-clipboard.ts";
+
+# useClipboard
+
+Copy text to the clipboard and get a temporary `copied` flag for "Copied!"
+feedback. Failures are captured as state instead of thrown.
+
+## When to use it
+
+- "Copy" buttons for code snippets, links, tokens and IDs.
+- Showing confirmation, or an error message, after a copy attempt.
+
+## Demo
+
+Click **Copy**, then open the **Console** tab to see the `onCopy` callback in
+the second example. The second example never auto-resets: `copied` clears when
+you edit the text.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/CopyButton.tsx": copyButtonSource,
+    "/CopyField.tsx": copyFieldSource,
+  }}
+  activeFile="/CopyButton.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+interface UseClipboardOptions {
+  timeout?: number | null;
+  onCopy?: (text: string) => void;
+  onError?: (error: Error) => void;
+}
+
+interface UseClipboardReturn {
+  copy: (text: string) => Promise<boolean>;
+  copied: boolean;
+  error: Error | null;
+  reset: () => void;
+}
+
+function useClipboard(options?: UseClipboardOptions): UseClipboardReturn;
+```
+
+| Option    | Type                     | Description                                                                        |
+| --------- | ------------------------ | ---------------------------------------------------------------------------------- |
+| `timeout` | `number \| null`         | Milliseconds `copied` stays `true`. `null` disables the reset. Defaults to `2000`. |
+| `onCopy`  | `(text: string) => void` | Called with the text after a successful copy.                                      |
+| `onError` | `(error: Error) => void` | Called with the error when a copy fails.                                           |
+
+**Returns:**
+
+| Property | Type                                 | Description                                                                     |
+| -------- | ------------------------------------ | ------------------------------------------------------------------------------- |
+| `copy`   | `(text: string) => Promise<boolean>` | Copies the text. Resolves `true` on success, `false` on failure. Never rejects. |
+| `copied` | `boolean`                            | `true` after a successful copy until `timeout` elapses or `reset`.              |
+| `error`  | `Error \| null`                      | The last failure, cleared by the next copy or `reset`.                          |
+| `reset`  | `() => void`                         | Clears `copied` and `error` and cancels the pending timeout.                    |
+
+## Usage notes
+
+- Uses `navigator.clipboard.writeText`, which needs a secure context (HTTPS or
+  `localhost`). Most browsers also require a user gesture, so call `copy` from
+  an event handler such as `onClick`.
+- Safari requires the write to start inside the user-gesture handler. Call
+  `copy` synchronously from the handler, not after an `await`.
+- If your app is embedded in a cross-origin iframe, the embedding page must
+  allow it with `<iframe allow="clipboard-write">`.
+- A `Permissions-Policy: clipboard-write=()` header on your site blocks
+  writes. Allow it with `clipboard-write=(self)`.
+- If the Clipboard API is missing (old browser, insecure context, server
+  rendering) or the write is rejected (for example permission denied),
+  `copy` resolves `false` and `error` is set. There is no `execCommand`
+  fallback.
+- Calling `copy` again restarts the timeout. If several copies overlap, only
+  the latest one updates `copied` and `error`.
+- `onCopy` and `onError` always use their latest version, so inline callbacks
+  are safe. `copy` and `reset` keep a stable identity.
+- The timeout is cleared on unmount and no state is updated afterwards.
+- Safe to call during server rendering: nothing touches `navigator` until
+  `copy` runs.
+
+## Example
+
+```tsx
+const { copy, copied, error } = useClipboard({ timeout: 1500 });
+
+return (
+  <>
+    <button onClick={() => copy(shareUrl)}>
+      {copied ? "Copied!" : "Share"}
+    </button>
+    {error && <span role="alert">Could not copy</span>}
+  </>
+);
+```
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useClipboard</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-clipboard.ts">
+    {hookSource}
+  </CodeBlock>
+</details>

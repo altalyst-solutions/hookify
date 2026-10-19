@@ -8,7 +8,7 @@ import {
 } from "@codesandbox/sandpack-react";
 import BrowserOnly from "@docusaurus/BrowserOnly";
 import { useColorMode } from "@docusaurus/theme-common";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 
 import localHookifySource from "!!raw-loader!@hookify-local-source";
 
@@ -39,6 +39,34 @@ const LOCAL_HOOKIFY_FILES: Record<string, string> = localHookifySource
       "/node_modules/@altalyst/hookify/index.js": localHookifySource,
     }
   : {};
+
+// Chrome ignores the `allow` attribute Sandpack puts on the preview iframe for
+// its first navigation, so `navigator.clipboard` fails inside demos with a
+// permissions-policy error (https://crbug.com/414348233). Navigating the
+// iframe once more after its first load makes the policy apply. The reload is
+// harmless: Sandpack re-initializes the bundler when the iframe reloads.
+const PreviewIframePermissions = ({
+  container,
+}: {
+  container: React.RefObject<HTMLElement | null>;
+}): null => {
+  useEffect(() => {
+    const iframes = Array.from(
+      container.current?.querySelectorAll("iframe") ?? []
+    );
+    const cleanups = iframes.map((iframe) => {
+      const onLoad = () => {
+        iframe.removeEventListener("load", onLoad);
+        const src = iframe.getAttribute("src");
+        if (src) iframe.src = src;
+      };
+      iframe.addEventListener("load", onLoad);
+      return () => iframe.removeEventListener("load", onLoad);
+    });
+    return () => cleanups.forEach((cleanup) => cleanup());
+  }, [container]);
+  return null;
+};
 
 export interface HookDemoProps {
   /**
@@ -73,6 +101,7 @@ export default function HookDemo({
   height = 400,
 }: HookDemoProps): React.ReactElement {
   const { colorMode } = useColorMode();
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const resolvedActiveFile = activeFile ?? Object.keys(files)[0];
 
   return (
@@ -80,7 +109,7 @@ export default function HookDemo({
       fallback={<div className={styles.fallback}>Loading demo…</div>}
     >
       {() => (
-        <div className={styles.wrapper}>
+        <div className={styles.wrapper} ref={wrapperRef}>
           <SandpackProvider
             template="react-ts"
             theme={colorMode === "dark" ? "dark" : "light"}
@@ -104,6 +133,7 @@ export default function HookDemo({
               },
             }}
           >
+            <PreviewIframePermissions container={wrapperRef} />
             <SandpackLayout>
               {showFileExplorer && <SandpackFileExplorer />}
               <SandpackCodeEditor showLineNumbers showTabs style={{ height }} />
