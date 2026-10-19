@@ -95,24 +95,25 @@ export const Example = () => {
 
 ## Available hooks
 
-| Hook                                                                                                | Description                                                                                    |
-| --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| [`useApi`](https://altalyst-solutions.github.io/hookify/hooks/use-api)                              | Declarative hook for making HTTP requests with built-in loading, error, and data state.        |
-| [`useAutofillSubmit`](https://altalyst-solutions.github.io/hookify/hooks/use-autofill-submit)       | Submit a form as soon as a password manager fills it, with typed, extensible options.          |
-| [`useControlledState`](https://altalyst-solutions.github.io/hookify/hooks/use-controlled-state)     | Manage a value that works in both controlled and uncontrolled modes, like native inputs.       |
-| [`useDebounce`](https://altalyst-solutions.github.io/hookify/hooks/use-debounce)                    | Debounce a callback so it only runs after a delay has passed since its last invocation.        |
-| [`useDocVisible`](https://altalyst-solutions.github.io/hookify/hooks/use-doc-visible)               | Track whether the current document/tab is visible via the Page Visibility API.                 |
-| [`useEffectAfterMount`](https://altalyst-solutions.github.io/hookify/hooks/use-effect-after-mount)  | Run an effect only after the initial mount, skipping the first render.                         |
-| [`useEventListener`](https://altalyst-solutions.github.io/hookify/hooks/use-event-listener)         | Attach a typed, auto-cleaned event listener to window, document, an element, or a ref.         |
-| [`useInterval`](https://altalyst-solutions.github.io/hookify/hooks/use-interval)                    | Declarative `setInterval` that can be paused with `null` and always calls the latest callback. |
-| [`useLatest`](https://altalyst-solutions.github.io/hookify/hooks/use-latest)                        | Keep a stable ref to the latest value or callback to avoid stale closures.                     |
-| [`useMounted`](https://altalyst-solutions.github.io/hookify/hooks/use-mounted)                      | Track whether a component is currently mounted to guard async state updates.                   |
-| [`useOutsideClick`](https://altalyst-solutions.github.io/hookify/hooks/use-outside-click)           | Fire a callback when a click or touch happens outside a given element.                         |
-| [`usePersistedState`](https://altalyst-solutions.github.io/hookify/hooks/use-persisted-state)       | Persist state to `localStorage` and sync it across browser tabs.                               |
-| [`usePrevious`](https://altalyst-solutions.github.io/hookify/hooks/use-previous)                    | Get the value from the previous render, with an optional initial value.                        |
-| [`useSequentialRequest`](https://altalyst-solutions.github.io/hookify/hooks/use-sequential-request) | Ensure only the latest of several in-flight async requests resolves; stale ones are ignored.   |
-| [`useThrottle`](https://altalyst-solutions.github.io/hookify/hooks/use-throttle)                    | Throttle a value so it updates at most once per interval, with leading/trailing options.       |
-| [`useToggleState`](https://altalyst-solutions.github.io/hookify/hooks/use-toggle-state)             | Toggle a boolean state with a simple, memoized setter.                                         |
+| Hook                                                                                                | Description                                                                                     |
+| --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| [`useApi`](https://altalyst-solutions.github.io/hookify/hooks/use-api)                              | Declarative hook for making HTTP requests with built-in loading, error, and data state.         |
+| [`useAutofillSubmit`](https://altalyst-solutions.github.io/hookify/hooks/use-autofill-submit)       | Submit a form as soon as a password manager fills it, with typed, extensible options.           |
+| [`useControlledState`](https://altalyst-solutions.github.io/hookify/hooks/use-controlled-state)     | Manage a value that works in both controlled and uncontrolled modes, like native inputs.        |
+| [`useDebounce`](https://altalyst-solutions.github.io/hookify/hooks/use-debounce)                    | Debounce a callback so it only runs after a delay has passed since its last invocation.         |
+| [`useDocVisible`](https://altalyst-solutions.github.io/hookify/hooks/use-doc-visible)               | Track whether the current document/tab is visible via the Page Visibility API.                  |
+| [`useEffectAfterMount`](https://altalyst-solutions.github.io/hookify/hooks/use-effect-after-mount)  | Run an effect only after the initial mount, skipping the first render.                          |
+| [`useEventListener`](https://altalyst-solutions.github.io/hookify/hooks/use-event-listener)         | Attach a typed, auto-cleaned event listener to window, document, an element, or a ref.          |
+| [`useInterval`](https://altalyst-solutions.github.io/hookify/hooks/use-interval)                    | Declarative `setInterval` that can be paused with `null` and always calls the latest callback.  |
+| [`useLatest`](https://altalyst-solutions.github.io/hookify/hooks/use-latest)                        | Keep a stable ref to the latest value or callback to avoid stale closures.                      |
+| [`useMediaQuery`](https://altalyst-solutions.github.io/hookify/hooks/use-media-query)               | Subscribe to a CSS media query and get a hydration-safe boolean that tracks whether it matches. |
+| [`useMounted`](https://altalyst-solutions.github.io/hookify/hooks/use-mounted)                      | Track whether a component is currently mounted to guard async state updates.                    |
+| [`useOutsideClick`](https://altalyst-solutions.github.io/hookify/hooks/use-outside-click)           | Fire a callback when a click or touch happens outside a given element.                          |
+| [`usePersistedState`](https://altalyst-solutions.github.io/hookify/hooks/use-persisted-state)       | Persist state to `localStorage` and sync it across browser tabs.                                |
+| [`usePrevious`](https://altalyst-solutions.github.io/hookify/hooks/use-previous)                    | Get the value from the previous render, with an optional initial value.                         |
+| [`useSequentialRequest`](https://altalyst-solutions.github.io/hookify/hooks/use-sequential-request) | Ensure only the latest of several in-flight async requests resolves; stale ones are ignored.    |
+| [`useThrottle`](https://altalyst-solutions.github.io/hookify/hooks/use-throttle)                    | Throttle a value so it updates at most once per interval, with leading/trailing options.        |
+| [`useToggleState`](https://altalyst-solutions.github.io/hookify/hooks/use-toggle-state)             | Toggle a boolean state with a simple, memoized setter.                                          |
 
 Browse the [hooks documentation](https://altalyst-solutions.github.io/hookify/hooks)
 for live, editable demos and the full API of each hook.

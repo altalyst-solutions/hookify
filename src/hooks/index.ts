@@ -7,6 +7,7 @@ export * from "./use-effect-after-mount";
 export * from "./use-event-listener";
 export * from "./use-interval";
 export * from "./use-latest";
+export * from "./use-media-query";
 export * from "./use-mounted";
 export * from "./use-outside-click";
 export * from "./use-persisted-state";

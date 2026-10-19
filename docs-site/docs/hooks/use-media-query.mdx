@@ -1,0 +1,101 @@
+---
+title: useMediaQuery
+sidebar_position: 17
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-media-query/App";
+import breakpointsSource from "!!raw-loader!@site/src/hook-examples/use-media-query/Breakpoints";
+import preferencesSource from "!!raw-loader!@site/src/hook-examples/use-media-query/Preferences";
+import hookSource from "!!raw-loader!../../../src/hooks/use-media-query.ts";
+
+# useMediaQuery
+
+Subscribes to a CSS media query and returns whether it currently matches. It
+re-renders only when the match state flips, and is hydration-safe.
+
+## When to use it
+
+- Switching layouts or rendering different components by viewport width.
+- Respecting `prefers-color-scheme` and `prefers-reduced-motion`.
+- Detecting capabilities such as `(hover: hover)` or `(orientation: landscape)`.
+- Building your own helpers (`useBreakpoint`, `useIsDark`, ...) on top.
+
+## Demo
+
+The preview is an iframe, so queries match against the preview's width, not
+the window's. On a wide window it keeps a fixed width; narrow your browser
+below ~700px (where the preview goes full width) to cross the breakpoints,
+and change your OS preferences to update the second demo. Open the **Console**
+tab to see the `onChange` callback.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/Breakpoints.tsx": breakpointsSource,
+    "/Preferences.tsx": preferencesSource,
+  }}
+  activeFile="/Breakpoints.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+interface UseMediaQueryOptions {
+  defaultValue?: boolean;
+  onChange?: (matches: boolean) => void;
+}
+
+function useMediaQuery(query: string, options?: UseMediaQueryOptions): boolean;
+```
+
+| Parameter              | Type                         | Description                                                                           |
+| ---------------------- | ---------------------------- | ------------------------------------------------------------------------------------- |
+| `query`                | `string`                     | A CSS media query, for example `"(min-width: 768px)"`.                                |
+| `options.defaultValue` | `boolean`                    | Value on the server, during hydration, and without `matchMedia`. Defaults to `false`. |
+| `options.onChange`     | `(matches: boolean) => void` | Called when the match state changes. Not called on mount. Latest version is used.     |
+
+**Returns:** `true` when the query currently matches.
+
+## Usage notes
+
+- **Hydration-safe.** Built on `useSyncExternalStore`: the server and the first
+  client render both use `defaultValue`, then React re-renders with the real
+  value if it differs. Choose `defaultValue` to match your most likely
+  layout (for example `true` for a mobile-first design checking
+  `(max-width: 767px)`) to minimize flashes. Client-only apps still get the
+  real value on the first render.
+- **Dynamic queries.** Changing `query` re-subscribes and re-reads the match.
+- **Graceful fallback.** Without `window.matchMedia` (SSR, some test
+  environments) the hook returns `defaultValue` and never throws.
+- **`onChange` never re-subscribes.** Pass an inline function freely.
+- **Extend it.** Wrap the hook for your design system, as the demo's
+  `useBreakpoint` does (see the example below).
+- Works with React 18 and 19, including StrictMode.
+
+## Example
+
+```tsx
+const isDesktop = useMediaQuery("(min-width: 1024px)");
+const prefersDark = useMediaQuery("(prefers-color-scheme: dark)");
+const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)", {
+  defaultValue: true, // be conservative until we know
+});
+
+// Build your own helpers on top
+const useBreakpoint = (px: number) => useMediaQuery(`(min-width: ${px}px)`);
+```
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useMediaQuery</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-media-query.ts">
+    {hookSource}
+  </CodeBlock>
+</details>
