@@ -36,5 +36,5 @@ export const useEffectAfterMount = (fn: () => void, deps: unknown[] = []) => {
 
     fn();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deps]);
+  }, [...deps]);
 };
