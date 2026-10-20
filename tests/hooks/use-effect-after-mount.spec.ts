@@ -36,4 +36,28 @@ describe("useEffectAfterMount", () => {
 
     expect(fn).not.toHaveBeenCalled();
   });
+
+  it("should not call the function when an inline deps array has unchanged values", () => {
+    const fn = vi.fn();
+    const { rerender } = renderHook(
+      ({ value }) => useEffectAfterMount(fn, [value]),
+      { initialProps: { value: 1 } }
+    );
+
+    rerender({ value: 1 });
+
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  it("should call the function when an inline deps array value changes", () => {
+    const fn = vi.fn();
+    const { rerender } = renderHook(
+      ({ value }) => useEffectAfterMount(fn, [value]),
+      { initialProps: { value: 1 } }
+    );
+
+    rerender({ value: 2 });
+
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
 });
