@@ -18,6 +18,18 @@ or the [GitHub tags](https://github.com/altalyst-solutions/hookify/tags)
 (tags from `0.5.1` and earlier have no `v` prefix, e.g. `0.4.0`; tags from
 `0.6.0` onward are named `v<version>`, e.g. `v0.6.0`).
 
+## 0.10.0
+
+### Minor Changes
+
+- [#83](https://github.com/altalyst-solutions/hookify/pull/83) [`55d3447`](https://github.com/altalyst-solutions/hookify/commit/55d3447f3f66e360aefea2b51073dc467a42443b) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useClipboard` hook, which copies text with the Clipboard API and exposes a temporary `copied` state, an `error` state, a `reset` function, a configurable `timeout`, and `onCopy`/`onError` callbacks.
+
+- [#81](https://github.com/altalyst-solutions/hookify/pull/81) [`be59751`](https://github.com/altalyst-solutions/hookify/commit/be597517fa04c8b9f764c1416bcbf7d4b5395ce0) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useMediaQuery` hook, which subscribes to a CSS media query and returns whether it matches. It is hydration-safe via `useSyncExternalStore`, supports a `defaultValue` for the server and an `onChange` callback, and falls back gracefully when `matchMedia` is unavailable.
+
+### Patch Changes
+
+- [#84](https://github.com/altalyst-solutions/hookify/pull/84) [`9def775`](https://github.com/altalyst-solutions/hookify/commit/9def775bddc01a755aa5a47a13aa9c4bf8e80a65) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Fix `useEffectAfterMount` running its callback on every re-render when `deps` was an inline array. It now compares the items in `deps` like `useEffect`, so the callback only runs after mount and when a dependency actually changes.
+
 ## 0.9.0
 
 ### Minor Changes
