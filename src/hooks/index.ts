@@ -2,6 +2,7 @@ export * from "./use-api";
 export * from "./use-autofill-submit";
 export * from "./use-clipboard";
 export * from "./use-controlled-state";
+export * from "./use-cooldown";
 export * from "./use-debounce";
 export * from "./use-doc-visible";
 export * from "./use-effect-after-mount";
