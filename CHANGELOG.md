@@ -18,6 +18,12 @@ or the [GitHub tags](https://github.com/altalyst-solutions/hookify/tags)
 (tags from `0.5.1` and earlier have no `v` prefix, e.g. `0.4.0`; tags from
 `0.6.0` onward are named `v<version>`, e.g. `v0.6.0`).
 
+## 0.11.0
+
+### Minor Changes
+
+- [#85](https://github.com/altalyst-solutions/hookify/pull/85) [`f557f35`](https://github.com/altalyst-solutions/hookify/commit/f557f350b439bbf4d0924ec3632c03b06a31d83f) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useCooldown`, a whole-second countdown hook with `start`, `reset`, `isActive`, `autoStart` and `onComplete` for resend and retry buttons.
+
 ## 0.10.0
 
 ### Minor Changes
