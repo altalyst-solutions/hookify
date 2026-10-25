@@ -89,7 +89,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
-    "@vitest/coverage-v8": "^5.0.1",
+    "@vitest/coverage-v8": "^5.0.5",
     "eslint": "^9.9.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-jsdoc": "^63.3.3",
@@ -109,6 +109,6 @@
     "typescript-eslint": "^8.0.1",
     "vite": "^8.3.0",
     "vite-plugin-dts": "^5.1.1",
-    "vitest": "^5.0.1"
+    "vitest": "^5.0.5"
   }
 }
