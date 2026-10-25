@@ -103,6 +103,7 @@ export const Example = () => {
 | [`useControlledState`](https://altalyst-solutions.github.io/hookify/hooks/use-controlled-state)     | Manage a value that works in both controlled and uncontrolled modes, like native inputs.        |
 | [`useCooldown`](https://altalyst-solutions.github.io/hookify/hooks/use-cooldown)                    | Whole-second countdown with start, restart and reset controls for resend and retry buttons.     |
 | [`useDebounce`](https://altalyst-solutions.github.io/hookify/hooks/use-debounce)                    | Debounce a callback so it only runs after a delay has passed since its last invocation.         |
+| [`useDebouncedCallback`](https://altalyst-solutions.github.io/hookify/hooks/use-debounced-callback) | Stable debounced callback with cancel, flush, isPending and leading/trailing options.           |
 | [`useDocVisible`](https://altalyst-solutions.github.io/hookify/hooks/use-doc-visible)               | Track whether the current document/tab is visible via the Page Visibility API.                  |
 | [`useEffectAfterMount`](https://altalyst-solutions.github.io/hookify/hooks/use-effect-after-mount)  | Run an effect only after the initial mount, skipping the first render.                          |
 | [`useEventListener`](https://altalyst-solutions.github.io/hookify/hooks/use-event-listener)         | Attach a typed, auto-cleaned event listener to window, document, an element, or a ref.          |

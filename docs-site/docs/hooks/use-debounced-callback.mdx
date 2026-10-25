@@ -1,0 +1,131 @@
+---
+title: useDebouncedCallback
+sidebar_position: 20
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-debounced-callback/App";
+import searchInputSource from "!!raw-loader!@site/src/hook-examples/use-debounced-callback/SearchInput";
+import autosaveSource from "!!raw-loader!@site/src/hook-examples/use-debounced-callback/Autosave";
+import clickGuardSource from "!!raw-loader!@site/src/hook-examples/use-debounced-callback/ClickGuard";
+import hookSource from "!!raw-loader!../../../src/hooks/use-debounced-callback.ts";
+
+# useDebouncedCallback
+
+Returns a stable, debounced version of a callback, with `cancel`, `flush` and
+`isPending` controls and optional leading/trailing behavior. It builds on
+[`useDebounce`](./use-debounce.mdx) for cases where you need to control the
+pending call, not just delay it.
+
+## When to use it
+
+- Searching or validating as the user types, with Enter to run immediately
+  and Esc to cancel.
+- Autosaving drafts, saving right away on blur or unmount.
+- Ignoring rapid repeat actions such as double-clicks on a submit button.
+- Passing a debounced handler to dependency arrays or long-lived listeners
+  without re-creating it.
+
+## Demo
+
+Edit the delay or the code below — the preview re-runs live. Open the
+**Console** tab to see when the callbacks run.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/SearchInput.tsx": searchInputSource,
+    "/Autosave.tsx": autosaveSource,
+    "/ClickGuard.tsx": clickGuardSource,
+  }}
+  activeFile="/SearchInput.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+interface UseDebouncedCallbackOptions {
+  leading?: boolean;
+  trailing?: boolean;
+  flushOnUnmount?: boolean;
+}
+
+interface DebouncedFunction<T extends (...args: any[]) => void> {
+  (...args: Parameters<T>): void;
+  cancel: () => void;
+  flush: () => void;
+  isPending: () => boolean;
+}
+
+function useDebouncedCallback<T extends (...args: any[]) => void>(
+  callback: T,
+  delay: number,
+  options?: UseDebouncedCallbackOptions
+): DebouncedFunction<T>;
+```
+
+| Parameter                | Type      | Description                                                                 |
+| ------------------------ | --------- | --------------------------------------------------------------------------- |
+| `callback`               | `T`       | The function to debounce.                                                   |
+| `delay`                  | `number`  | The debounce delay, in milliseconds.                                        |
+| `options.leading`        | `boolean` | Invoke immediately when a burst of calls starts. Defaults to `false`.       |
+| `options.trailing`       | `boolean` | Invoke with the latest arguments once calls pause. Defaults to `true`.      |
+| `options.flushOnUnmount` | `boolean` | Invoke a pending call instead of discarding it on unmount. Default `false`. |
+
+**Returns:** a debounced function with the same parameters as `callback`,
+plus:
+
+| Member        | Description                                                     |
+| ------------- | --------------------------------------------------------------- |
+| `cancel()`    | Discards the pending call, if any.                              |
+| `flush()`     | Invokes the pending call immediately with its latest arguments. |
+| `isPending()` | Returns `true` while a call is waiting to be invoked.           |
+
+## Usage notes
+
+- **Stable identity.** The returned function (and its `cancel`, `flush` and
+  `isPending`) never changes between renders, so it is safe in dependency
+  arrays. This differs from `useDebounce`, whose function changes with
+  `callback` and `delay`.
+- **Always the latest callback.** Changing `callback` or `delay` does not
+  reset a running timer. The pending call runs the newest `callback`, and a
+  new `delay` applies from the next call. The callback is read after each
+  commit, so call the debounced function from handlers and effects rather than
+  during render.
+- **Leading and trailing.** By default only the trailing call runs. With
+  `leading`, the first call of a burst runs immediately; with both options, a
+  trailing call follows only if there were further calls in the burst. With
+  `{ leading: true, trailing: false }` only the first call of each burst runs.
+  Setting both to `false` means the callback never runs.
+- **`isPending` is not reactive.** It reads the current state and does not
+  re-render your component when it changes. Use it in handlers, or pair it
+  with state your callback already updates.
+- **Unmount.** A pending call is discarded and its timer cleared. Set
+  `flushOnUnmount` to invoke it instead, for example to save a draft.
+- **Return value.** The callback's return value is ignored; the debounced
+  function returns `void`.
+- **Rate-limiting values.** To limit how often a changing _value_ updates, use
+  [`useThrottle`](./use-throttle.mdx).
+- Safe under React `StrictMode`.
+
+## Example
+
+```tsx
+const save = useDebouncedCallback(saveDraft, 1000, { flushOnUnmount: true });
+
+return <textarea onChange={(e) => save(e.target.value)} onBlur={save.flush} />;
+```
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useDebouncedCallback</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-debounced-callback.ts">
+    {hookSource}
+  </CodeBlock>
+</details>
