@@ -65,6 +65,8 @@ function useDebounce<T extends (...args: any[]) => void>(
   so it's safe to use inside effects and event handlers without manual
   cleanup.
 - Changing `callback` or `delay` resets the debounce timer.
+- Need a stable function, `cancel`, `flush`, or leading-edge calls? Use
+  [`useDebouncedCallback`](./use-debounced-callback.mdx).
 
 ## Hook source
 
