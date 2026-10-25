@@ -101,6 +101,7 @@ export const Example = () => {
 | [`useAutofillSubmit`](https://altalyst-solutions.github.io/hookify/hooks/use-autofill-submit)       | Submit a form as soon as a password manager fills it, with typed, extensible options.           |
 | [`useClipboard`](https://altalyst-solutions.github.io/hookify/hooks/use-clipboard)                  | Copy text to the clipboard with a temporary `copied` state, error handling, and callbacks.      |
 | [`useControlledState`](https://altalyst-solutions.github.io/hookify/hooks/use-controlled-state)     | Manage a value that works in both controlled and uncontrolled modes, like native inputs.        |
+| [`useCooldown`](https://altalyst-solutions.github.io/hookify/hooks/use-cooldown)                    | Whole-second countdown with start, restart and reset controls for resend and retry buttons.     |
 | [`useDebounce`](https://altalyst-solutions.github.io/hookify/hooks/use-debounce)                    | Debounce a callback so it only runs after a delay has passed since its last invocation.         |
 | [`useDocVisible`](https://altalyst-solutions.github.io/hookify/hooks/use-doc-visible)               | Track whether the current document/tab is visible via the Page Visibility API.                  |
 | [`useEffectAfterMount`](https://altalyst-solutions.github.io/hookify/hooks/use-effect-after-mount)  | Run an effect only after the initial mount, skipping the first render.                          |

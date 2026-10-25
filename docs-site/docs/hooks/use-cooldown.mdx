@@ -1,0 +1,120 @@
+---
+title: useCooldown
+sidebar_position: 19
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-cooldown/App";
+import resendButtonSource from "!!raw-loader!@site/src/hook-examples/use-cooldown/ResendButton";
+import retryAfterSource from "!!raw-loader!@site/src/hook-examples/use-cooldown/RetryAfter";
+import hookSource from "!!raw-loader!../../../src/hooks/use-cooldown.ts";
+
+# useCooldown
+
+A one-second countdown for actions that must not be repeated straight away.
+It returns the whole seconds left plus controls to start, restart or cancel
+the countdown.
+
+## When to use it
+
+- "Resend verification email" or "Request a new code" buttons.
+- Honoring a server's `Retry-After` / rate-limit response.
+- Any short lock-out after an action, with a visible "try again in Ns".
+
+## Demo
+
+Click **Resend email** and watch the button count down; open the **Console**
+tab to see `onComplete` fire. In the second demo, each attempt overrides the
+duration and **Skip wait** cancels it.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/ResendButton.tsx": resendButtonSource,
+    "/RetryAfter.tsx": retryAfterSource,
+  }}
+  activeFile="/ResendButton.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+interface UseCooldownOptions {
+  autoStart?: boolean;
+  onComplete?: () => void;
+}
+
+interface UseCooldownReturn {
+  remaining: number;
+  isActive: boolean;
+  start: (seconds?: number) => void;
+  reset: () => void;
+}
+
+function useCooldown(
+  seconds: number,
+  options?: UseCooldownOptions
+): UseCooldownReturn;
+```
+
+| Parameter            | Type         | Description                                        |
+| -------------------- | ------------ | -------------------------------------------------- |
+| `seconds`            | `number`     | Default cooldown length in seconds.                |
+| `options.autoStart`  | `boolean`    | Begin counting down on mount. Defaults to `false`. |
+| `options.onComplete` | `() => void` | Called when the countdown reaches `0` by itself.   |
+
+**Returns:** an object with:
+
+| Property    | Type                         | Description                                                |
+| ----------- | ---------------------------- | ---------------------------------------------------------- |
+| `remaining` | `number`                     | Whole seconds left. `0` when idle.                         |
+| `isActive`  | `boolean`                    | `true` while counting down.                                |
+| `start`     | `(seconds?: number) => void` | Start or restart the countdown. Optional one-off duration. |
+| `reset`     | `() => void`                 | Cancel the countdown and set `remaining` to `0`.           |
+
+## Usage notes
+
+- The hook is idle until you call `start`, unless `autoStart` is set.
+- Calling `start` while a countdown is running restarts it from the full
+  duration.
+- `start(seconds)` overrides the duration for that run only, which suits
+  server-provided wait times. `seconds` is rounded up; `0`, negative or
+  non-finite values mean no cooldown.
+- Changing the `seconds` argument does not affect a running countdown; the
+  next `start` uses the new value.
+- `onComplete` runs only when the countdown finishes on its own, not on
+  `reset`, restart or unmount. The latest callback is always used.
+- `start` and `reset` are stable across renders.
+- The pause between ticks is never shorter than a second, but browsers may
+  delay timers in background tabs. For a hard deadline, compare timestamps.
+- Need a countdown that also pauses? Use
+  [`useInterval`](./use-interval.mdx) directly.
+
+## Example
+
+```tsx
+const { remaining, isActive, start } = useCooldown(30);
+
+const resend = async () => {
+  await sendVerificationEmail();
+  start();
+};
+
+<button onClick={resend} disabled={isActive}>
+  {isActive ? `Resend in ${remaining}s` : "Resend email"}
+</button>;
+```
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useCooldown</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-cooldown.ts">
+    {hookSource}
+  </CodeBlock>
+</details>
