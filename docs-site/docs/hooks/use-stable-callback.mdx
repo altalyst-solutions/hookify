@@ -1,0 +1,119 @@
+---
+title: useStableCallback
+sidebar_position: 22
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-stable-callback/App";
+import memoizedListSource from "!!raw-loader!@site/src/hook-examples/use-stable-callback/MemoizedList";
+import subscribeOnceSource from "!!raw-loader!@site/src/hook-examples/use-stable-callback/SubscribeOnce";
+import hookSource from "!!raw-loader!../../../src/hooks/use-stable-callback.ts";
+
+# useStableCallback
+
+Returns a function whose identity never changes but that always calls your
+latest callback. It lets you pass handlers to memoized children, dependency
+arrays and long-lived subscriptions without re-creating them or reading stale
+props and state.
+
+## When to use it
+
+- Passing an event handler to a `React.memo` child without it re-rendering
+  whenever the handler's dependencies change.
+- Subscribing to timers, sockets, observers or DOM events once, while the
+  handler still reads current props and state.
+- Calling an optional callback prop (`onChange?`) without `?.` at every call
+  site.
+- Keeping an effect's dependency array small without silencing the linter.
+
+## Demo
+
+Edit the code below — the preview re-runs live. Open the **Console** tab to
+see which rows render and when the timer starts.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/MemoizedList.tsx": memoizedListSource,
+    "/SubscribeOnce.tsx": subscribeOnceSource,
+  }}
+  activeFile="/MemoizedList.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+type AnyFunction = (...args: never[]) => unknown;
+
+interface UseStableCallback {
+  <T extends AnyFunction>(callback: T): T;
+  <T extends AnyFunction>(
+    callback: T | null | undefined
+  ): (...args: Parameters<T>) => ReturnType<T> | undefined;
+}
+
+const useStableCallback: UseStableCallback;
+```
+
+| Parameter  | Type                     | Description                                     |
+| ---------- | ------------------------ | ----------------------------------------------- |
+| `callback` | `T \| null \| undefined` | The function to call. May be omitted for no-op. |
+
+**Returns:** a function with the same parameters and return type as
+`callback`, and a permanent identity. If `callback` can be `null` or
+`undefined`, the return type also includes `undefined`.
+
+## Usage notes
+
+- **Stable identity.** The returned function is the same on every render, so
+  it never triggers a re-render of a memoized child and never re-runs an
+  effect that lists it as a dependency.
+- **Always the latest callback.** The newest `callback` is stored after each
+  render, in a layout effect, so it is already in place by the time effects
+  and event handlers run. Callbacks passed in an earlier render are never
+  called.
+- **Not for render.** The callback is not updated during render, so calling
+  the returned function while rendering would run the previous render's
+  callback. Call it from event handlers, effects, timers and other callbacks.
+- **Arguments, `this` and results pass through.** Return values, thrown
+  errors and `this` are forwarded unchanged, and the type of `callback` is
+  preserved.
+- **Optional callbacks.** Pass `undefined` or `null` and the returned
+  function simply does nothing and returns `undefined`, which is handy for
+  optional props.
+- **Effects are not re-run.** Because the identity never changes, an effect
+  that depends on the function does not re-run when the callback's own
+  dependencies change. If you _want_ that, depend on those values directly.
+- **vs `useLatest`.** [`useLatest`](./use-latest.mdx) gives you a ref to any
+  value; `useStableCallback` wraps a function so you can pass it around and
+  call it directly.
+- **vs `useDebouncedCallback`.** To also delay or cancel calls, use
+  [`useDebouncedCallback`](./use-debounced-callback.mdx), which is stable and
+  latest-aware too.
+- Safe under React `StrictMode` and server rendering (no layout-effect
+  warning), and works on React 18 and 19.
+
+## Example
+
+```tsx
+const handleSelect = useStableCallback((id: string) => {
+  setSelected(id);
+  analytics.track(id, filter);
+});
+
+return <MemoList onSelect={handleSelect} />;
+```
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useStableCallback</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-stable-callback.ts">
+    {hookSource}
+  </CodeBlock>
+</details>
