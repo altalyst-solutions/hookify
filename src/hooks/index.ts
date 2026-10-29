@@ -9,6 +9,7 @@ export * from "./use-doc-visible";
 export * from "./use-effect-after-mount";
 export * from "./use-event-listener";
 export * from "./use-interval";
+export * from "./use-isomorphic-layout-effect";
 export * from "./use-latest";
 export * from "./use-media-query";
 export * from "./use-mounted";
