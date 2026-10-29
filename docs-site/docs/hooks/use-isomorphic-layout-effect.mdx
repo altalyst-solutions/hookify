@@ -1,0 +1,116 @@
+---
+title: useIsomorphicLayoutEffect
+sidebar_position: 21
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-isomorphic-layout-effect/App";
+import autoGrowTextareaSource from "!!raw-loader!@site/src/hook-examples/use-isomorphic-layout-effect/AutoGrowTextarea";
+import effectTimelineSource from "!!raw-loader!@site/src/hook-examples/use-isomorphic-layout-effect/EffectTimeline";
+import hookSource from "!!raw-loader!../../../src/hooks/use-isomorphic-layout-effect.ts";
+
+# useIsomorphicLayoutEffect
+
+A drop-in replacement for `useLayoutEffect` that is safe in server-rendered
+apps. In the browser it _is_ `useLayoutEffect`; where there is no DOM it
+falls back to `useEffect`.
+
+## When to use it
+
+- Measuring or adjusting the DOM before the browser paints (sizing,
+  positioning, scroll restoration) in code that also renders on the server,
+  such as Next.js, Remix or Gatsby.
+- Writing your own hooks or components that need layout timing and must work
+  in both client and server environments. This avoids the server-side
+  `useLayoutEffect does nothing on the server` warning in React 18.
+
+## Demo
+
+Edit the code below — the preview re-runs live. Type in the textarea, then
+open the **Console** tab and click the button to see when each phase runs.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/AutoGrowTextarea.tsx": autoGrowTextareaSource,
+    "/EffectTimeline.tsx": effectTimelineSource,
+  }}
+  activeFile="/AutoGrowTextarea.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+const useIsomorphicLayoutEffect: typeof useLayoutEffect;
+
+// i.e.
+function useIsomorphicLayoutEffect(
+  effect: EffectCallback,
+  deps?: DependencyList
+): void;
+```
+
+| Parameter | Type             | Description                                                            |
+| --------- | ---------------- | ---------------------------------------------------------------------- |
+| `effect`  | `EffectCallback` | The effect to run. May return a cleanup function.                      |
+| `deps`    | `DependencyList` | Optional. Controls when the effect re-runs, exactly as in React hooks. |
+
+**Returns:** nothing, like `useLayoutEffect`.
+
+## Usage notes
+
+- **Same API as `useLayoutEffect`.** The signature, timing, cleanup and
+  dependency behavior are React's own, so you can swap it in anywhere,
+  including inside your own hooks and libraries. It is `useLayoutEffect`
+  itself, not a wrapper, so there is no extra overhead.
+- **Chosen once, at module load.** It uses `useLayoutEffect` when `window`
+  and `window.document.createElement` exist, and `useEffect` otherwise
+  (server rendering, React Native). Neither effect runs during server
+  rendering; the fallback just avoids the React 18 warning. React 19 removed
+  that warning, but the hook stays useful for apps supporting both versions.
+- **Hydration.** The effect runs on the client after hydration like any other
+  layout effect, so keep the _first_ render identical on server and client and
+  apply layout changes inside the effect.
+- **Prefer `useEffect` when you can.** Layout effects block painting, so use
+  this hook only when you must read or write layout before the paint.
+  Otherwise use `useEffect`.
+- **Linting.** `react-hooks/exhaustive-deps` does not check custom hooks by
+  default. To have it check this one, add it to `additionalHooks`:
+
+  ```js
+  "react-hooks/exhaustive-deps": [
+    "warn",
+    { additionalHooks: "(useIsomorphicLayoutEffect)" },
+  ]
+  ```
+
+- Safe under React `StrictMode`.
+
+## Example
+
+```tsx
+const ref = useRef<HTMLTextAreaElement>(null);
+
+useIsomorphicLayoutEffect(() => {
+  const el = ref.current;
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = `${el.scrollHeight}px`;
+}, [value]);
+
+return <textarea ref={ref} value={value} onChange={onChange} />;
+```
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useIsomorphicLayoutEffect</code> source
+  </summary>
+  <CodeBlock language="ts" title="use-isomorphic-layout-effect.ts">
+    {hookSource}
+  </CodeBlock>
+</details>

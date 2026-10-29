@@ -7,6 +7,7 @@ import {
   useDebounce,
   useDocVisible,
   useEffectAfterMount,
+  useIsomorphicLayoutEffect,
   useMounted,
   usePersistedState,
   useToggleState,
@@ -33,6 +34,24 @@ describe("hooks under StrictMode", () => {
 
     rerender({ dep: 2 });
     expect(fn).toHaveBeenCalled();
+  });
+
+  it("useIsomorphicLayoutEffect balances setup and cleanup", () => {
+    const setup = vi.fn();
+    const cleanup = vi.fn();
+    const { unmount } = renderHook(
+      () =>
+        useIsomorphicLayoutEffect(() => {
+          setup();
+          return cleanup;
+        }, []),
+      strict
+    );
+
+    expect(setup.mock.calls.length).toBe(cleanup.mock.calls.length + 1);
+
+    unmount();
+    expect(setup.mock.calls.length).toBe(cleanup.mock.calls.length);
   });
 
   it("useMounted reports mounted and balances onMount/onUnmount", () => {
