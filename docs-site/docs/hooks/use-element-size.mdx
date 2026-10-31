@@ -1,0 +1,161 @@
+---
+title: useElementSize
+sidebar_position: 24
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-element-size/App";
+import containerLayoutSource from "!!raw-loader!@site/src/hook-examples/use-element-size/ContainerLayout";
+import resizableBoxSource from "!!raw-loader!@site/src/hook-examples/use-element-size/ResizableBox";
+import hookSource from "!!raw-loader!../../../src/hooks/use-element-size.ts";
+
+# useElementSize
+
+Tracks the size of an element with a `ResizeObserver` and returns its `width`
+and `height` as state. Attach the returned `ref` to any element and your
+component re-renders only when that element's size actually changes.
+
+## When to use it
+
+- Making layout decisions from a container's width instead of the viewport's.
+- Sizing a chart, canvas or virtual list to the space it is given.
+- Showing or hiding content (truncation, "show more") based on available space.
+- Building your own helpers (`useIsNarrow`, `useAspectRatio`, ...) on top.
+
+## Demo
+
+Edit the code below — the preview re-runs live. Drag the bottom-right corner of
+each box to resize it, and open the **Console** tab to see the `onResize`
+callback.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/ResizableBox.tsx": resizableBoxSource,
+    "/ContainerLayout.tsx": containerLayoutSource,
+  }}
+  activeFile="/ResizableBox.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+interface ElementSize {
+  width: number;
+  height: number;
+}
+
+interface UseElementSizeOptions {
+  box?: "content-box" | "border-box";
+  defaultSize?: ElementSize;
+  onResize?: (size: ElementSize, entry: ResizeObserverEntry) => void;
+}
+
+interface UseElementSizeResult<T extends Element> extends ElementSize {
+  ref: (element: T | null) => void;
+}
+
+function useElementSize<T extends Element = HTMLElement>(
+  options?: UseElementSizeOptions
+): UseElementSizeResult<T>;
+```
+
+| Option        | Type                                         | Description                                                                                                |
+| ------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `box`         | `"content-box" \| "border-box"`              | Which box to measure. Defaults to `"content-box"`; `"border-box"` includes padding and border.             |
+| `defaultSize` | `{ width: number; height: number }`          | Size used on the server and until the first measurement. Only read on first render. Defaults to `0` x `0`. |
+| `onResize`    | `(size, entry: ResizeObserverEntry) => void` | Called when the measured size changes, including the first measurement. The latest callback is used.       |
+
+**Returns:** an object with the `width` and `height` (in CSS pixels) and the
+`ref` to attach to the element. The type parameter `T` is the element type, for
+example `useElementSize<HTMLDivElement>()`.
+
+## Usage notes
+
+- `ref` is a callback ref, so it works when the element mounts later, is
+  rendered conditionally, or is swapped for another one. It has a stable
+  identity across renders.
+- The first measurement arrives after the element mounts, so the first render
+  (and the server render) uses `defaultSize`. Pick a default that matches your
+  server-rendered layout if the difference is visible.
+- Values are fractional CSS pixels, exactly as the browser reports them. Round
+  them yourself if you need whole numbers. CSS transforms such as `scale()` do
+  not affect them, and a `display: none` element measures `0` x `0`.
+- The component re-renders only when `width` or `height` changes. `onResize`
+  runs at the same moments, straight from the observer, so use it for side
+  effects instead of copying the size into state. Its second argument is the raw
+  [`ResizeObserverEntry`](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserverEntry),
+  in case you need `contentRect` or the other boxes.
+- Changing `box` re-observes the element. `onResize` can change freely without
+  re-observing.
+- When the element unmounts, the observer is disconnected and the last
+  measured size is kept. The observer is also disconnected when the component
+  unmounts.
+- Where `ResizeObserver` is unavailable (older browsers, some test
+  environments), the hook returns `defaultSize` and never throws.
+- Observing an element whose size depends on the component's own render can
+  create a loop (for example, the content sets its size from `width`). Browsers
+  report this as a `ResizeObserver loop` warning. Keep the observed element's
+  size independent of the measured values.
+- To combine it with another ref, call both from a function ref:
+  `ref={(el) => { ref(el); myRef.current = el; }}`.
+- Need to react to the viewport instead? Use
+  [`useMediaQuery`](./use-media-query.mdx). For custom DOM events, use
+  [`useEventListener`](./use-event-listener.mdx).
+
+## Examples
+
+```tsx
+const { ref, width, height } = useElementSize<HTMLDivElement>();
+
+return (
+  <div ref={ref}>
+    {Math.round(width)} x {Math.round(height)}
+  </div>
+);
+```
+
+```tsx
+// Include padding and border, and run a side effect on every change
+const { ref } = useElementSize<HTMLElement>({
+  box: "border-box",
+  onResize: ({ width }) => analytics.track("panel-width", width),
+});
+```
+
+```tsx
+// Compose your own helpers on top
+const useIsNarrow = (limit: number) => {
+  const { ref, width } = useElementSize<HTMLDivElement>();
+  return { ref, isNarrow: width > 0 && width < limit };
+};
+```
+
+```tsx
+// Share the element with another ref
+const { ref: sizeRef, width } = useElementSize<HTMLDivElement>();
+const containerRef = useRef<HTMLDivElement>(null);
+
+return (
+  <div
+    ref={(el) => {
+      sizeRef(el);
+      containerRef.current = el;
+    }}
+  />
+);
+```
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useElementSize</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-element-size.ts">
+    {hookSource}
+  </CodeBlock>
+</details>
