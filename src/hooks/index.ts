@@ -19,4 +19,5 @@ export * from "./use-previous";
 export * from "./use-sequential-request";
 export * from "./use-stable-callback";
 export * from "./use-throttle";
+export * from "./use-timeout";
 export * from "./use-toggle-state";

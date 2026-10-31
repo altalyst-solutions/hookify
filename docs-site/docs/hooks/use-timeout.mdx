@@ -1,0 +1,138 @@
+---
+title: useTimeout
+sidebar_position: 23
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-timeout/App";
+import autoDismissNoticeSource from "!!raw-loader!@site/src/hook-examples/use-timeout/AutoDismissNotice";
+import savedIndicatorSource from "!!raw-loader!@site/src/hook-examples/use-timeout/SavedIndicator";
+import hookSource from "!!raw-loader!../../../src/hooks/use-timeout.ts";
+
+# useTimeout
+
+A declarative `setTimeout`. It calls your callback once after `delay`
+milliseconds, pauses when `delay` is `null`, always runs the latest callback,
+and returns `start`, `cancel` and `isPending` controls for the cases where you
+need to drive the timer yourself.
+
+## When to use it
+
+- Auto-dismissing notices, toasts and banners.
+- Hiding a temporary "Saved" or "Copied" indicator after a moment.
+- Inactivity timers (log out, show a hint) that restart on every user action.
+- Any one-off delayed work that should be cleaned up with the component.
+
+## Demo
+
+Edit the code below — the preview re-runs live. Hover the notice to pause it,
+then click **Save** repeatedly and open the **Console** tab to see the timer
+start and restart.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/AutoDismissNotice.tsx": autoDismissNoticeSource,
+    "/SavedIndicator.tsx": savedIndicatorSource,
+  }}
+  activeFile="/AutoDismissNotice.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+interface UseTimeoutOptions {
+  autoStart?: boolean;
+}
+
+interface UseTimeoutControls {
+  start: () => void;
+  cancel: () => void;
+  isPending: () => boolean;
+}
+
+function useTimeout(
+  callback: () => void,
+  delay: number | null,
+  options?: UseTimeoutOptions
+): UseTimeoutControls;
+```
+
+| Parameter           | Type             | Description                                                                 |
+| ------------------- | ---------------- | --------------------------------------------------------------------------- |
+| `callback`          | `() => void`     | Called once when the timer elapses. The latest version is always used.      |
+| `delay`             | `number \| null` | Delay in milliseconds. `null` means no timer, which pauses it.              |
+| `options.autoStart` | `boolean`        | Start on mount and whenever `delay` changes. Defaults to `true`. See below. |
+
+**Returns:** an object with stable `start`, `cancel` and `isPending` functions.
+
+| Control     | Description                                                                                   |
+| ----------- | --------------------------------------------------------------------------------------------- |
+| `start`     | Starts the timer, or restarts it from the full `delay`. Does nothing while `delay` is `null`. |
+| `cancel`    | Stops the timer without calling the callback.                                                 |
+| `isPending` | Returns `true` while the timer is running and the callback has not been called yet.           |
+
+## Usage notes
+
+- Changing `callback` never resets the timer, so it is safe to close over
+  state or props.
+- With the default `autoStart: true`, changing `delay`, or switching it
+  between `null` and a number, restarts the timer from the full delay. Pausing
+  and resuming therefore does not keep the elapsed time. Switching to `null`
+  cancels a pending timer.
+- With `autoStart: false`, nothing runs until you call `start()`. A running
+  timer is left alone when `delay` changes; the new `delay` (and `callback`)
+  apply the next time `start()` is called.
+- The timer is cleared on unmount, so the callback never runs afterwards.
+- The controls keep the same identity across renders, so they are safe in
+  dependency arrays. `start` and `cancel` can be called from event handlers,
+  effects and from inside the callback itself (to re-arm the timer).
+- `isPending` is a function, not state, so reading it never causes a
+  re-render. Keep your own state if the UI must react to the timer.
+- Under React `StrictMode` in development, effects run twice, but only one
+  timer is ever active.
+- Browsers throttle timers in background tabs, so the callback may run later
+  than `delay`. The return value of `callback` is ignored.
+- Need a recurring timer? Use [`useInterval`](./use-interval.mdx). To delay a
+  value or a burst of calls, use [`useDebounce`](./use-debounce.mdx) or
+  [`useDebouncedCallback`](./use-debounced-callback.mdx).
+
+## Examples
+
+```tsx
+// Auto-dismiss after 3 seconds
+useTimeout(onDismiss, 3000);
+```
+
+```tsx
+// Pause while hovered by switching the delay to null
+const [hovered, setHovered] = useState(false);
+useTimeout(onDismiss, hovered ? null : 3000);
+```
+
+```tsx
+// Start on demand, restarting the countdown on every click
+const [saved, setSaved] = useState(false);
+const { start } = useTimeout(() => setSaved(false), 2000, {
+  autoStart: false,
+});
+
+const save = () => {
+  setSaved(true);
+  start();
+};
+```
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useTimeout</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-timeout.ts">
+    {hookSource}
+  </CodeBlock>
+</details>

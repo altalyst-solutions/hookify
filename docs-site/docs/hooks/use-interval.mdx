@@ -73,6 +73,8 @@ function useInterval(
 - The interval is cleared on unmount.
 - Browsers throttle timers in background tabs, so ticks are not exact. Use
   timestamps (for example `Date.now()`) when you need accurate elapsed time.
+- Only need to run something once after a delay? Use
+  [`useTimeout`](./use-timeout.mdx).
 - Need a pause/resume toggle? Keep a boolean in state and pass
   `running ? delay : null`.
 
