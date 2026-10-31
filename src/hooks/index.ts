@@ -7,6 +7,7 @@ export * from "./use-debounce";
 export * from "./use-debounced-callback";
 export * from "./use-doc-visible";
 export * from "./use-effect-after-mount";
+export * from "./use-element-size";
 export * from "./use-event-listener";
 export * from "./use-interval";
 export * from "./use-isomorphic-layout-effect";
