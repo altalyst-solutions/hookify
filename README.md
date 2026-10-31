@@ -106,6 +106,7 @@ export const Example = () => {
 | [`useDebouncedCallback`](https://altalyst-solutions.github.io/hookify/hooks/use-debounced-callback)            | Stable debounced callback with cancel, flush, isPending and leading/trailing options.           |
 | [`useDocVisible`](https://altalyst-solutions.github.io/hookify/hooks/use-doc-visible)                          | Track whether the current document/tab is visible via the Page Visibility API.                  |
 | [`useEffectAfterMount`](https://altalyst-solutions.github.io/hookify/hooks/use-effect-after-mount)             | Run an effect only after the initial mount, skipping the first render.                          |
+| [`useElementSize`](https://altalyst-solutions.github.io/hookify/hooks/use-element-size)                        | Track an element's width and height with a `ResizeObserver`, with box and callback options.     |
 | [`useEventListener`](https://altalyst-solutions.github.io/hookify/hooks/use-event-listener)                    | Attach a typed, auto-cleaned event listener to window, document, an element, or a ref.          |
 | [`useInterval`](https://altalyst-solutions.github.io/hookify/hooks/use-interval)                               | Declarative `setInterval` that can be paused with `null` and always calls the latest callback.  |
 | [`useIsomorphicLayoutEffect`](https://altalyst-solutions.github.io/hookify/hooks/use-isomorphic-layout-effect) | Drop-in `useLayoutEffect` that falls back to `useEffect` on the server, without SSR warnings.   |
