@@ -18,6 +18,18 @@ or the [GitHub tags](https://github.com/altalyst-solutions/hookify/tags)
 (tags from `0.5.1` and earlier have no `v` prefix, e.g. `0.4.0`; tags from
 `0.6.0` onward are named `v<version>`, e.g. `v0.6.0`).
 
+## 0.12.0
+
+### Minor Changes
+
+- [#89](https://github.com/altalyst-solutions/hookify/pull/89) [`fb19066`](https://github.com/altalyst-solutions/hookify/commit/fb19066945db7ad4858eaa620d9e47bc158ecb88) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useDebouncedCallback`, a debounced callback hook with a stable identity, `cancel`, `flush` and `isPending` controls, and `leading`, `trailing` and `flushOnUnmount` options.
+
+- [#91](https://github.com/altalyst-solutions/hookify/pull/91) [`bfbdecd`](https://github.com/altalyst-solutions/hookify/commit/bfbdecdcfa528f03a772a5cd5e2adbd0b1366889) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useIsomorphicLayoutEffect`, a drop-in replacement for `useLayoutEffect` that falls back to `useEffect` where there is no DOM, avoiding the server-rendering warning in React 18.
+
+- [#93](https://github.com/altalyst-solutions/hookify/pull/93) [`50e2650`](https://github.com/altalyst-solutions/hookify/commit/50e265088e121ade81ab4cdadb157938a6559372) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useStableCallback`, a hook that returns a function with a permanent identity that always calls the latest callback. It passes through arguments, `this` and return values, and accepts an optional (`null` or `undefined`) callback.
+
+- [#94](https://github.com/altalyst-solutions/hookify/pull/94) [`83a2844`](https://github.com/altalyst-solutions/hookify/commit/83a28441767035df2b506a11b645555a945d3cc0) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useTimeout`, a declarative `setTimeout` hook. It always calls the latest callback, pauses when the delay is `null`, clears itself on unmount, and returns stable `start`, `cancel` and `isPending` controls, with an `autoStart: false` option to start the timer on demand.
+
 ## 0.11.0
 
 ### Minor Changes
