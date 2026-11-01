@@ -108,6 +108,7 @@ export const Example = () => {
 | [`useEffectAfterMount`](https://altalyst-solutions.github.io/hookify/hooks/use-effect-after-mount)             | Run an effect only after the initial mount, skipping the first render.                          |
 | [`useElementSize`](https://altalyst-solutions.github.io/hookify/hooks/use-element-size)                        | Track an element's width and height with a `ResizeObserver`, with box and callback options.     |
 | [`useEventListener`](https://altalyst-solutions.github.io/hookify/hooks/use-event-listener)                    | Attach a typed, auto-cleaned event listener to window, document, an element, or a ref.          |
+| [`useIntersectionObserver`](https://altalyst-solutions.github.io/hookify/hooks/use-intersection-observer)      | Track an element's visibility with an `IntersectionObserver`, with a once option.               |
 | [`useInterval`](https://altalyst-solutions.github.io/hookify/hooks/use-interval)                               | Declarative `setInterval` that can be paused with `null` and always calls the latest callback.  |
 | [`useIsomorphicLayoutEffect`](https://altalyst-solutions.github.io/hookify/hooks/use-isomorphic-layout-effect) | Drop-in `useLayoutEffect` that falls back to `useEffect` on the server, without SSR warnings.   |
 | [`useLatest`](https://altalyst-solutions.github.io/hookify/hooks/use-latest)                                   | Keep a stable ref to the latest value or callback to avoid stale closures.                      |
