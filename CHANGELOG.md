@@ -18,6 +18,24 @@ or the [GitHub tags](https://github.com/altalyst-solutions/hookify/tags)
 (tags from `0.5.1` and earlier have no `v` prefix, e.g. `0.4.0`; tags from
 `0.6.0` onward are named `v<version>`, e.g. `v0.6.0`).
 
+## 0.12.0
+
+### Minor Changes
+
+- [#89](https://github.com/altalyst-solutions/hookify/pull/89) [`fb19066`](https://github.com/altalyst-solutions/hookify/commit/fb19066945db7ad4858eaa620d9e47bc158ecb88) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useDebouncedCallback`, a debounced callback hook with a stable identity, `cancel`, `flush` and `isPending` controls, and `leading`, `trailing` and `flushOnUnmount` options.
+
+- [#95](https://github.com/altalyst-solutions/hookify/pull/95) [`6c756a0`](https://github.com/altalyst-solutions/hookify/commit/6c756a0a6b5172673e713dee939072d9dc8db4de) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useElementSize`, a `ResizeObserver`-based hook that returns an element's `width` and `height` as state. It exposes a stable callback `ref` that also works with conditionally rendered elements, re-renders only when the size changes, supports `content-box` and `border-box` measurement, an `onResize` callback with the raw `ResizeObserverEntry`, and a `defaultSize` for server rendering.
+
+- [#97](https://github.com/altalyst-solutions/hookify/pull/97) [`8e60af3`](https://github.com/altalyst-solutions/hookify/commit/8e60af387fa8a1a62b8e602ec53597557d0d10fd) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useIntersectionObserver`, a hook that tracks whether an element is visible in the viewport or a scroll container using an `IntersectionObserver`. It returns `isIntersecting` and the raw `IntersectionObserverEntry` as state, with a stable callback `ref` that also works with conditionally rendered elements. It supports `root`, `rootMargin` and `threshold` (inline arrays are safe), an `onChange` callback for every raw entry, `once` for lazy-loading and reveal-once effects, `enabled` to pause, and `defaultIsIntersecting` for server rendering, and it is safe to use during server rendering.
+
+- [#91](https://github.com/altalyst-solutions/hookify/pull/91) [`bfbdecd`](https://github.com/altalyst-solutions/hookify/commit/bfbdecdcfa528f03a772a5cd5e2adbd0b1366889) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useIsomorphicLayoutEffect`, a drop-in replacement for `useLayoutEffect` that falls back to `useEffect` where there is no DOM, avoiding the server-rendering warning in React 18.
+
+- [#96](https://github.com/altalyst-solutions/hookify/pull/96) [`e255b34`](https://github.com/altalyst-solutions/hookify/commit/e255b34d07998bacb213fc32d5375e111107301f) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useResizeObserver`, a low-level `ResizeObserver` hook that runs a callback with the raw `ResizeObserverEntry` whenever an element is resized. It exposes a stable callback `ref` that also works with conditionally rendered elements, never re-renders on its own, always calls the latest callback without re-observing, supports any observed `box` (including `device-pixel-content-box`), can be paused with `enabled: false`, and is safe to use during server rendering.
+
+- [#93](https://github.com/altalyst-solutions/hookify/pull/93) [`50e2650`](https://github.com/altalyst-solutions/hookify/commit/50e265088e121ade81ab4cdadb157938a6559372) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useStableCallback`, a hook that returns a function with a permanent identity that always calls the latest callback. It passes through arguments, `this` and return values, and accepts an optional (`null` or `undefined`) callback.
+
+- [#94](https://github.com/altalyst-solutions/hookify/pull/94) [`83a2844`](https://github.com/altalyst-solutions/hookify/commit/83a28441767035df2b506a11b645555a945d3cc0) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useTimeout`, a declarative `setTimeout` hook. It always calls the latest callback, pauses when the delay is `null`, clears itself on unmount, and returns stable `start`, `cancel` and `isPending` controls, with an `autoStart: false` option to start the timer on demand.
+
 ## 0.11.0
 
 ### Minor Changes
