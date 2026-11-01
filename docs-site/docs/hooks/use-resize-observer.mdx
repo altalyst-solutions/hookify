@@ -1,0 +1,163 @@
+---
+title: useResizeObserver
+sidebar_position: 25
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-resize-observer/App";
+import resizeLogSource from "!!raw-loader!@site/src/hook-examples/use-resize-observer/ResizeLog";
+import responsiveBadgeSource from "!!raw-loader!@site/src/hook-examples/use-resize-observer/ResponsiveBadge";
+import hookSource from "!!raw-loader!../../../src/hooks/use-resize-observer.ts";
+
+# useResizeObserver
+
+Runs a callback whenever an element is resized, using a `ResizeObserver`. It
+hands you the raw
+[`ResizeObserverEntry`](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserverEntry)
+and holds no state, so it never re-renders your component by itself. It is the
+low-level building block for your own size-aware hooks.
+
+## When to use it
+
+- Reading the entry directly (`borderBoxSize`, `devicePixelContentBoxSize`, ...)
+  instead of just a width and height.
+- Updating a canvas, chart or third-party widget imperatively on resize,
+  without re-rendering React.
+- Writing to a ref, a store or analytics rather than to component state.
+- Building your own helpers on top.
+
+Only need the size as state? Use [`useElementSize`](./use-element-size.mdx),
+which is built for exactly that.
+
+## Demo
+
+Edit the code below — the preview re-runs live. Drag the bottom-right corner of
+each box to resize it, toggle **Observe** to pause the observer, and open the
+**Console** tab to see each callback.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/ResizeLog.tsx": resizeLogSource,
+    "/ResponsiveBadge.tsx": responsiveBadgeSource,
+  }}
+  activeFile="/ResizeLog.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+interface UseResizeObserverOptions {
+  box?: ResizeObserverBoxOptions;
+  enabled?: boolean;
+}
+
+type ResizeObserverHandler = (
+  entry: ResizeObserverEntry,
+  observer: ResizeObserver
+) => void;
+
+function useResizeObserver<T extends Element = HTMLElement>(
+  callback: ResizeObserverHandler,
+  options?: UseResizeObserverOptions
+): (element: T | null) => void;
+```
+
+| Argument / option | Type                                                          | Description                                                                                                      |
+| ----------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `callback`        | `(entry: ResizeObserverEntry, observer: ResizeObserver)`      | Called on every resize, including once right after observing starts. The latest callback is always used.         |
+| `box`             | `"content-box" \| "border-box" \| "device-pixel-content-box"` | Which box to observe. Defaults to `"content-box"`.                                                               |
+| `enabled`         | `boolean`                                                     | Set to `false` to pause observing. Resumes (and reports the current size) when `true` again. Defaults to `true`. |
+
+**Returns:** a callback `ref` to attach to the element. The type parameter `T`
+is the element type, for example `useResizeObserver<HTMLDivElement>(...)`.
+
+## Usage notes
+
+- `ref` is a callback ref, so it works when the element mounts later, is
+  rendered conditionally, or is swapped for another one. It has a stable
+  identity across renders.
+- A `ResizeObserver` reports once as soon as it starts observing, so the
+  callback runs with the initial size after the element mounts. Unlike
+  `useElementSize`, the callback is **not** deduplicated: it runs for every
+  entry the browser delivers.
+- The callback can change on every render without re-observing the element,
+  so inline functions are fine. Changing `box` or toggling `enabled`
+  re-observes.
+- The hook does nothing on the server, and wherever `ResizeObserver` is
+  unavailable (older browsers, some test environments) it never throws.
+- The observer is disconnected on unmount, when the element changes, when `box`
+  changes, and when `enabled` becomes `false`.
+- `device-pixel-content-box` is not supported by every browser. Check
+  `entry.devicePixelContentBoxSize` before using it and fall back to
+  `contentBoxSize`.
+- Updating state from the callback in a way that changes the observed
+  element's own size can create a loop. Browsers report this as a
+  `ResizeObserver loop` warning. Keep the observed element's size independent
+  of what you store.
+- To combine it with another ref, call both from a function ref:
+  `ref={(el) => { ref(el); myRef.current = el; }}`.
+
+## Examples
+
+```tsx
+const ref = useResizeObserver<HTMLDivElement>((entry) => {
+  console.log("width", entry.contentRect.width);
+});
+
+return <div ref={ref} />;
+```
+
+```tsx
+// Keep a canvas sharp by reading device pixels, without re-rendering
+const ref = useResizeObserver<HTMLCanvasElement>(
+  (entry) => {
+    const size = entry.devicePixelContentBoxSize?.[0];
+    if (!size) return;
+    entry.target.width = size.inlineSize;
+    entry.target.height = size.blockSize;
+  },
+  { box: "device-pixel-content-box" }
+);
+```
+
+```tsx
+// Compose your own helpers on top
+const useWidth = (enabled = true) => {
+  const [width, setWidth] = useState(0);
+  const ref = useResizeObserver<HTMLElement>(
+    (entry) => setWidth(entry.contentRect.width),
+    { enabled }
+  );
+  return { ref, width };
+};
+```
+
+```tsx
+// Share the element with another ref
+const sizeRef = useResizeObserver<HTMLDivElement>(onResize);
+const containerRef = useRef<HTMLDivElement>(null);
+
+return (
+  <div
+    ref={(el) => {
+      sizeRef(el);
+      containerRef.current = el;
+    }}
+  />
+);
+```
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useResizeObserver</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-resize-observer.ts">
+    {hookSource}
+  </CodeBlock>
+</details>

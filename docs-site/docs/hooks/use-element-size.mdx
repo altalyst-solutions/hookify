@@ -102,6 +102,8 @@ example `useElementSize<HTMLDivElement>()`.
   size independent of the measured values.
 - To combine it with another ref, call both from a function ref:
   `ref={(el) => { ref(el); myRef.current = el; }}`.
+- Want the raw `ResizeObserverEntry` and no state? Use
+  [`useResizeObserver`](./use-resize-observer.mdx).
 - Need to react to the viewport instead? Use
   [`useMediaQuery`](./use-media-query.mdx). For custom DOM events, use
   [`useEventListener`](./use-event-listener.mdx).
