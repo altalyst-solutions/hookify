@@ -1,0 +1,172 @@
+---
+title: useIntersectionObserver
+sidebar_position: 26
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-intersection-observer/App";
+import scrollTrackerSource from "!!raw-loader!@site/src/hook-examples/use-intersection-observer/ScrollTracker";
+import lazyRevealSource from "!!raw-loader!@site/src/hook-examples/use-intersection-observer/LazyReveal";
+import hookSource from "!!raw-loader!../../../src/hooks/use-intersection-observer.ts";
+
+# useIntersectionObserver
+
+Tracks whether an element is visible in the viewport, or inside a scroll
+container, using an
+[`IntersectionObserver`](https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver).
+It returns the visibility as state, plus the raw
+[`IntersectionObserverEntry`](https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserverEntry),
+so you can build lazy-loading, reveal animations, infinite scroll and more.
+
+## When to use it
+
+- Lazy-loading images, iframes or heavy components shortly before they scroll
+  into view.
+- Reveal-once animations.
+- Infinite scroll, using a sentinel element at the end of a list.
+- Pausing videos, animations or polling while an element is off-screen.
+- Reading how much of an element is visible (`intersectionRatio`).
+
+## Demo
+
+Edit the code below — the preview re-runs live. Scroll the box to see the
+target change state, toggle **Observe** to pause the observer, scroll the
+preview to reveal the cards, and open the **Console** tab to see each
+`onChange` call.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/ScrollTracker.tsx": scrollTrackerSource,
+    "/LazyReveal.tsx": lazyRevealSource,
+  }}
+  activeFile="/ScrollTracker.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+interface UseIntersectionObserverOptions {
+  root?: Element | Document | null;
+  rootMargin?: string;
+  threshold?: number | number[];
+  enabled?: boolean;
+  once?: boolean;
+  defaultIsIntersecting?: boolean;
+  onChange?: (entry: IntersectionObserverEntry) => void;
+}
+
+interface UseIntersectionObserverResult<T extends Element> {
+  ref: (element: T | null) => void;
+  isIntersecting: boolean;
+  entry: IntersectionObserverEntry | undefined;
+}
+
+function useIntersectionObserver<T extends Element = HTMLElement>(
+  options?: UseIntersectionObserverOptions
+): UseIntersectionObserverResult<T>;
+```
+
+| Option                  | Type                                       | Description                                                                                                             |
+| ----------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `root`                  | `Element \| Document \| null`              | The viewport used for the check. Defaults to the browser viewport. A new value re-observes.                             |
+| `rootMargin`            | `string`                                   | Grows or shrinks the root box, in CSS margin syntax (for example `"200px"`). Defaults to `"0px"`.                       |
+| `threshold`             | `number \| number[]`                       | Visible ratio (`0` to `1`) at which to report. An array reports at several ratios. Defaults to `0`.                     |
+| `enabled`               | `boolean`                                  | Set to `false` to pause observing. The last value is kept, and observing resumes when `true` again. Defaults to `true`. |
+| `once`                  | `boolean`                                  | Stop observing after the element first intersects and keep reporting `true`. Defaults to `false`.                       |
+| `defaultIsIntersecting` | `boolean`                                  | Value on the server and until the first notification. Only read on the first render. Defaults to `false`.               |
+| `onChange`              | `(entry: IntersectionObserverEntry): void` | Called with the raw entry for every notification, including the first. The latest callback is always used.              |
+
+**Returns:** an object with the `ref` to attach to the element, whether it
+`isIntersecting`, and its latest `entry` (`undefined` until the first
+notification). The type parameter `T` is the element type, for example
+`useIntersectionObserver<HTMLDivElement>()`.
+
+## Usage notes
+
+- `ref` is a callback ref, so it works when the element mounts later, is
+  rendered conditionally, or is swapped for another one. It has a stable
+  identity across renders.
+- The component re-renders only when the browser reports a change, which is
+  when the element crosses a `threshold` ratio. With the default threshold
+  of `0`, that is when it enters or leaves the root.
+- Inline `threshold` arrays are fine: the observer is only recreated when the
+  values change. Changing `root`, `rootMargin` or `enabled` re-observes.
+- To track visibility inside a scroll container, pass it as `root`. Store the
+  container in state (`ref={setRoot}`) so the hook sees it once it mounts.
+- The first notification arrives after the element mounts, so the first render
+  and the server render use `defaultIsIntersecting`. Set it to `true` when
+  content should render by default for crawlers or without JavaScript.
+- `once` is the right choice for lazy-loading: after the element first
+  intersects, the observer is disconnected and the result stays `true`.
+- `onChange` runs for every notification, even ones that do not change
+  `isIntersecting` (for example crossing `0.5` while already visible). Read
+  `entry.intersectionRatio` there to react to partial visibility.
+- When the element is detached, the result returns to its defaults. While
+  `enabled` is `false`, the last value is kept.
+- The hook does nothing on the server, and wherever `IntersectionObserver` is
+  unavailable (older browsers, some test environments) it never throws.
+- The observer is disconnected on unmount, when the element changes, when an
+  option changes, and when `enabled` becomes `false`.
+- To combine it with another ref, call both from a function ref:
+  `ref={(el) => { ref(el); myRef.current = el; }}`.
+
+## Examples
+
+```tsx
+const { ref, isIntersecting } = useIntersectionObserver<HTMLDivElement>();
+
+return <div ref={ref}>{isIntersecting ? "Visible" : "Hidden"}</div>;
+```
+
+```tsx
+// Lazy-load an image 200px before it scrolls into view, only once
+const { ref, isIntersecting } = useIntersectionObserver<HTMLImageElement>({
+  rootMargin: "200px",
+  once: true,
+});
+
+return <img ref={ref} src={isIntersecting ? src : undefined} alt="" />;
+```
+
+```tsx
+// Infinite scroll with a sentinel at the end of the list
+const { ref } = useIntersectionObserver<HTMLDivElement>({
+  rootMargin: "300px",
+  enabled: hasMore && !loading,
+  onChange: (entry) => {
+    if (entry.isIntersecting) loadMore();
+  },
+});
+
+return (
+  <>
+    <List items={items} />
+    <div ref={ref} />
+  </>
+);
+```
+
+```tsx
+// Compose your own helpers on top
+const useIsMostlyVisible = () => {
+  const { ref, entry } = useIntersectionObserver<HTMLElement>({
+    threshold: [0, 0.5, 1],
+  });
+  return { ref, mostlyVisible: (entry?.intersectionRatio ?? 0) >= 0.5 };
+};
+```
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useIntersectionObserver</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-intersection-observer.ts">
+    {hookSource}
+  </CodeBlock>
+</details>
