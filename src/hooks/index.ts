@@ -9,6 +9,7 @@ export * from "./use-doc-visible";
 export * from "./use-effect-after-mount";
 export * from "./use-element-size";
 export * from "./use-event-listener";
+export * from "./use-intersection-observer";
 export * from "./use-interval";
 export * from "./use-isomorphic-layout-effect";
 export * from "./use-latest";
