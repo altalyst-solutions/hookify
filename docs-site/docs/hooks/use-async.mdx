@@ -1,0 +1,160 @@
+---
+title: useAsync
+sidebar_position: 27
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-async/App";
+import saveSettingsSource from "!!raw-loader!@site/src/hook-examples/use-async/SaveSettings";
+import userLookupSource from "!!raw-loader!@site/src/hook-examples/use-async/UserLookup";
+import hookSource from "!!raw-loader!../../../src/hooks/use-async.ts";
+
+# useAsync
+
+Runs any async function and tracks its `status`, `data` and `error`. You decide
+when it runs by calling `run(...args)`, or you can run it once on mount with
+`immediate`. Only the latest run updates the state, so a slow earlier call can
+never overwrite a newer result.
+
+## When to use it
+
+- Button-triggered work such as saving a form, deleting an item or submitting an order.
+- Calling an SDK or any promise-returning function, not just `fetch`.
+- Showing pending and error UI for a call that takes arguments.
+- Loading something once on mount with a typed error and success callbacks.
+
+## Demo
+
+Edit the code below — the preview re-runs live. The requests are simulated, so
+no network is needed. Click **Load** quickly with different ids and open the
+**Console** tab to see callbacks fire.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/UserLookup.tsx": userLookupSource,
+    "/SaveSettings.tsx": saveSettingsSource,
+  }}
+  activeFile="/UserLookup.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+type AsyncStatus = "idle" | "pending" | "success" | "error";
+
+type AsyncResult<T, E = unknown> =
+  { ok: true; data: T } | { ok: false; error: E };
+
+interface UseAsyncOptions<T, A extends unknown[], E = unknown> {
+  immediate?: boolean;
+  args?: A;
+  initialData?: T;
+  onSuccess?: (data: T, args: A) => void;
+  onError?: (error: E, args: A) => void;
+}
+
+interface UseAsyncReturn<T, A extends unknown[], E = unknown> {
+  status: AsyncStatus;
+  data: T | undefined;
+  error: E | undefined;
+  isPending: boolean;
+  run: (...args: A) => Promise<AsyncResult<T, E>>;
+  reset: () => void;
+}
+
+function useAsync<T, A extends unknown[] = [], E = unknown>(
+  asyncFn: (...args: A) => Promise<T>,
+  options?: UseAsyncOptions<T, A, E>
+): UseAsyncReturn<T, A, E>;
+```
+
+| Parameter             | Type                          | Description                                                     |
+| --------------------- | ----------------------------- | --------------------------------------------------------------- |
+| `asyncFn`             | `(...args: A) => Promise<T>`  | The function to run. It receives the arguments passed to `run`. |
+| `options.immediate`   | `boolean`                     | Run once on mount, using `options.args`. Defaults to `false`.   |
+| `options.args`        | `A`                           | Arguments for the `immediate` run.                              |
+| `options.initialData` | `T`                           | The `data` before the first success and after `reset`.          |
+| `options.onSuccess`   | `(data: T, args: A) => void`  | Called when a run succeeds.                                     |
+| `options.onError`     | `(error: E, args: A) => void` | Called when a run fails.                                        |
+
+**Returns:**
+
+| Property    | Description                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------- |
+| `status`    | `idle` until the first run, then `pending`, `success` or `error`.                                 |
+| `data`      | The latest successful result. It is kept while a new run is pending, and after a later run fails. |
+| `error`     | The error of the latest run. Cleared when a new run starts.                                       |
+| `isPending` | Shorthand for `status === "pending"`.                                                             |
+| `run`       | Runs `asyncFn` with the given arguments and resolves with an `AsyncResult`. It never rejects.     |
+| `reset`     | Returns to `idle` with `initialData`, and ignores any run still in flight.                        |
+
+## Usage notes
+
+- **`run` never rejects.** It resolves with `{ ok: true, data }` or
+  `{ ok: false, error }`, so event handlers need no `try`/`catch`, and there
+  are no unhandled rejections when you ignore the result.
+- **The latest run wins.** If a newer run starts first, an earlier one still
+  resolves its own `run` promise, but it no longer updates the state or calls
+  `onSuccess` and `onError`. It does not abort the underlying work; to cancel a
+  request, use [`useSequentialRequest`](./use-sequential-request.mdx) and
+  pass its `AbortSignal` to `fetch`.
+- `asyncFn`, `onSuccess` and `onError` can be inline functions: the latest
+  version is always used. `run` and `reset` keep the same identity across
+  renders, so they are safe in dependency arrays.
+- `immediate` only runs on mount. Changing `asyncFn` or `args` later does not
+  re-run it; call `run` yourself, for example from an effect. To fetch JSON
+  from a URL that re-fetches when it changes, use [`useApi`](./use-api.mdx).
+- State is never updated after unmount, and callbacks are not called.
+- Type the error with the third type parameter if you know what is thrown
+  (`useAsync<User, [string], ApiError>(...)`). It defaults to `unknown`, and
+  the type is not checked at runtime.
+- Under React `StrictMode` in development, effects run twice, so an
+  `immediate` run calls `asyncFn` twice. Only the last call updates the state.
+- Works with React 18 and 19.
+
+## Examples
+
+```tsx
+// Run on demand with typed arguments
+const { run, isPending, error } = useAsync((id: string) => deleteItem(id));
+
+<button onClick={() => run(item.id)} disabled={isPending}>
+  Delete
+</button>;
+```
+
+```tsx
+// Branch on the outcome without try/catch
+const { run } = useAsync(submitOrder);
+
+const onSubmit = async () => {
+  const result = await run(cart);
+  if (result.ok) navigate(`/orders/${result.data.id}`);
+};
+```
+
+```tsx
+// Load once on mount, keep the old data visible while refreshing
+const { data, status, run } = useAsync(loadSettings, {
+  immediate: true,
+  initialData: defaultSettings,
+  onError: (error) => reportError(error),
+});
+
+<button onClick={() => run()}>Refresh</button>;
+```
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useAsync</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-async.ts">
+    {hookSource}
+  </CodeBlock>
+</details>
