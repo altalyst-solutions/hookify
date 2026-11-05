@@ -1,4 +1,5 @@
 export * from "./use-api";
+export * from "./use-async";
 export * from "./use-autofill-submit";
 export * from "./use-clipboard";
 export * from "./use-controlled-state";
