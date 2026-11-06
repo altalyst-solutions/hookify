@@ -1,0 +1,46 @@
+name: Dependency Audit
+
+# Scheduled so a newly published advisory turns this workflow red without
+# blocking unrelated PRs or releases.
+on:
+  schedule:
+    - cron: "0 5 * * 1" # Mondays 09:00 GMT+4 (GitHub cron is always UTC)
+  workflow_dispatch:
+
+permissions: {} # deny-all default; jobs below grant only what they need
+
+jobs:
+  audit:
+    if: ${{ github.repository == 'altalyst-solutions/hookify' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false # report both projects even if one fails
+      matrix:
+        include:
+          - name: library
+            directory: .
+            level: moderate
+          # docs-site is build-time only and not shipped, so only fail on high or critical.
+          - name: docs-site
+            directory: docs-site
+            level: high
+
+    name: audit (${{ matrix.name }})
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: ".nvmrc"
+          package-manager-cache: false
+
+      # npm audit reads package-lock.json, so no install is needed.
+      - name: Run npm audit
+        working-directory: ${{ matrix.directory }}
+        run: npm audit --audit-level=${{ matrix.level }}
