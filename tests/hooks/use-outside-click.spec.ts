@@ -90,4 +90,32 @@ describe("useOutsideClick", () => {
     addSpy.mockRestore();
     document.body.removeChild(ref.current);
   });
+
+  it("should not call the callback when tapping inside the referenced element", () => {
+    const callback = vi.fn();
+    const ref = { current: document.createElement("div") };
+
+    document.body.appendChild(ref.current);
+    renderHook(() => useOutsideClick(ref, callback));
+    fireEvent.touchStart(ref.current);
+    fireEvent.click(ref.current);
+
+    expect(callback).not.toHaveBeenCalled();
+
+    document.body.removeChild(ref.current);
+  });
+
+  it("should not ignore an outside click that follows a tap inside", () => {
+    const callback = vi.fn();
+    const ref = { current: document.createElement("div") };
+
+    document.body.appendChild(ref.current);
+    renderHook(() => useOutsideClick(ref, callback));
+    fireEvent.touchStart(ref.current);
+    fireEvent.click(document.body);
+
+    expect(callback).toHaveBeenCalledTimes(1);
+
+    document.body.removeChild(ref.current);
+  });
 });

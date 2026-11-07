@@ -1,6 +1,6 @@
 import { defineConfig, mergeConfig } from "vitest/config";
 
-import coverageThresholds from "./tests/coverage-thresholds.json";
+import coverageThresholds from "./tests/coverage-thresholds.json" with { type: "json" };
 import viteConfig from "./vite.config.ts";
 
 export default mergeConfig(
