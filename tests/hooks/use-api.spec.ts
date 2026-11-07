@@ -140,4 +140,100 @@ describe("useApi", () => {
     expect(result.current.loading).toBe(false);
     expect(result.current.error).toBeNull();
   });
+
+  it("should ignore a stale response when the url changes mid-flight", async () => {
+    let resolveFirst!: (value: unknown) => void;
+    (fetch as Mock)
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveFirst = resolve;
+          })
+      )
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ url: "b" }) });
+
+    const { result, rerender } = renderHook(
+      ({ url }) => useApi<{ url: string }>(url),
+      { initialProps: { url: "https://api.example.com/a" } }
+    );
+
+    rerender({ url: "https://api.example.com/b" });
+    await act(async () => {});
+
+    expect(result.current.data).toEqual({ url: "b" });
+
+    await act(async () => {
+      resolveFirst({ ok: true, json: async () => ({ url: "a" }) });
+    });
+
+    expect(result.current.data).toEqual({ url: "b" });
+    expect(result.current.loading).toBe(false);
+  });
+
+  it("should abort the previous request when the url changes", async () => {
+    (fetch as Mock).mockResolvedValue({ ok: true, json: async () => mockData });
+
+    const { rerender } = renderHook(({ url }) => useApi(url), {
+      initialProps: { url: "https://api.example.com/a" },
+    });
+    const firstSignal = (fetch as Mock).mock.calls[0][1].signal as AbortSignal;
+
+    rerender({ url: "https://api.example.com/b" });
+    await act(async () => {});
+
+    expect(firstSignal.aborted).toBe(true);
+  });
+
+  it("should abort the request in flight on unmount", async () => {
+    (fetch as Mock).mockReturnValueOnce(new Promise(() => {}));
+
+    const { unmount } = renderHook(() => useApi(mockUrl));
+    const signal = (fetch as Mock).mock.calls[0][1].signal as AbortSignal;
+
+    unmount();
+
+    expect(signal.aborted).toBe(true);
+  });
+
+  it("should let refetch supersede the request in flight", async () => {
+    let resolveFirst!: (value: unknown) => void;
+    (fetch as Mock)
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveFirst = resolve;
+          })
+      )
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ n: 2 }) });
+
+    const { result } = renderHook(() => useApi<{ n: number }>(mockUrl));
+
+    await act(async () => {
+      await result.current.refetch();
+    });
+    await act(async () => {
+      resolveFirst({ ok: true, json: async () => ({ n: 1 }) });
+    });
+
+    expect(result.current.data).toEqual({ n: 2 });
+  });
+
+  it("should resolve a 204 response to null without parsing the body", async () => {
+    const json = vi.fn();
+    (fetch as Mock).mockResolvedValueOnce({ ok: true, status: 204, json });
+
+    const { result } = renderHook(() =>
+      useApi(mockUrl, { method: "PATCH", body: "{}" })
+    );
+    await act(async () => {});
+
+    expect(json).not.toHaveBeenCalled();
+    expect(result.current.data).toBeNull();
+    expect(result.current.error).toBeNull();
+    expect(result.current.loading).toBe(false);
+    expect(fetch).toHaveBeenCalledWith(
+      mockUrl,
+      expect.objectContaining({ method: "PATCH" })
+    );
+  });
 });
