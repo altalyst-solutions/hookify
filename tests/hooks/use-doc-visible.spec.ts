@@ -1,4 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
+import { createElement } from "react";
+import { renderToString } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useDocVisible } from "@/hooks";
@@ -241,5 +243,13 @@ describe("useDocVisible", () => {
     });
 
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("reports the document as visible when rendering on the server", () => {
+    // The client snapshot would be `false`; the server snapshot must win.
+    visibilityState = "hidden";
+    const Comp = () => createElement("span", null, String(useDocVisible()));
+
+    expect(renderToString(createElement(Comp))).toContain("true");
   });
 });
