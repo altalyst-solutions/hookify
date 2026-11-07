@@ -1,5 +1,22 @@
 name: Deploy Docs
 
+# Publishes the docs as two channels on one GitHub Pages site:
+#
+# - stable, at /hookify/: built from the latest GitHub release, once per
+#   release. The built site is attached to the release as docs-stable.tar.gz
+#   and reused by every later deploy, so it is never rebuilt needlessly.
+# - next, at /hookify/next/: built from main on every run, with demos running
+#   the library built from the same commit.
+#
+# GitHub Pages replaces the whole site on each deploy, so every deploy uploads
+# both channels together.
+#
+# Triggers:
+# - push to main (docs or library changes): rebuilds next, reuses stable.
+# - workflow_call from ci.yml right after a release is published: builds the
+#   new stable (the new release has no docs-stable.tar.gz yet) and next.
+# - workflow_dispatch: manual run; optionally force a stable rebuild.
+
 on:
   push:
     branches:
@@ -8,40 +25,98 @@ on:
       - "docs-site/**"
       - "src/**"
       - ".github/workflows/docs-deploy.yml"
+  workflow_call:
   workflow_dispatch:
+    inputs:
+      rebuild-stable:
+        description: Rebuild the stable docs from the latest release tag instead of reusing the attached build
+        type: boolean
+        default: false
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+permissions: {} # deny-all default; jobs below grant only what they need
 
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+env:
+  STABLE_ASSET: docs-stable.tar.gz
 
 jobs:
-  build:
+  # Finds the latest release and whether its stable docs are already built.
+  release:
     if: ${{ github.repository == 'altalyst-solutions/hookify' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read # read releases
+    outputs:
+      tag: ${{ steps.latest.outputs.tag }}
+      version: ${{ steps.latest.outputs.version }}
+      has-stable-build: ${{ steps.latest.outputs.has-stable-build }}
+    steps:
+      - name: Find the latest release
+        id: latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FORCE_REBUILD: ${{ inputs.rebuild-stable == true }}
+        run: |
+          release=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName,assets)
+          tag=$(jq -r '.tagName' <<<"$release")
+          has_build=$(jq --arg name "$STABLE_ASSET" '[.assets[].name] | index($name) != null' <<<"$release")
+          if [ "$FORCE_REBUILD" = "true" ]; then has_build=false; fi
+
+          {
+            echo "tag=$tag"
+            echo "version=${tag#v}"
+            echo "has-stable-build=$has_build"
+          } >> "$GITHUB_OUTPUT"
+          echo "Latest release: $tag (stable docs already built: $has_build)"
+
+  # Builds stable from the release tag, once, and attaches it to the release.
+  build-stable:
+    needs: release
+    if: ${{ needs.release.outputs.has-stable-build != 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # attach the built docs to the release
+    steps:
+      - name: Check out the release tag
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.release.outputs.tag }}
+          persist-credentials: false
+
+      - name: Set up Node and install dependencies
+        uses: ./.github/actions/setup-deps
+
+      - name: Install docs dependencies
+        run: cd docs-site && npm ci
+
+      - name: Build stable docs
+        run: npm run docs:build
+        env:
+          DOCS_CHANNEL: stable
+          HOOKIFY_STABLE_VERSION: ${{ needs.release.outputs.version }}
+
+      - name: Attach the build to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.release.outputs.tag }}
+        run: |
+          tar -czf "$STABLE_ASSET" -C docs-site/build .
+          gh release upload "$TAG" "$STABLE_ASSET" --clobber --repo "$GITHUB_REPOSITORY"
+
+  # Builds next from the commit that triggered the run (main).
+  build-next:
+    needs: release
+    if: ${{ github.repository == 'altalyst-solutions/hookify' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v5
         with:
-          node-version-file: ".nvmrc"
-          package-manager-cache: false
+          persist-credentials: false
 
-      - name: Cache node_modules
-        uses: actions/cache@v6
-        with:
-          path: |
-            ~/.npm
-            node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+      - name: Set up Node and install dependencies
+        uses: ./.github/actions/setup-deps
 
       - name: Cache docs node_modules
         uses: actions/cache@v6
@@ -53,30 +128,69 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-docs-node-
 
-      - name: Install library dependencies
-        run: npm ci
-
       - name: Install docs dependencies
         run: cd docs-site && npm ci
 
-      - name: Build docs site
+      # The next channel's demos run this build instead of the npm package.
+      - name: Build library
+        run: npm run build
+
+      - name: Build next docs
         run: npm run docs:build
+        env:
+          DOCS_CHANNEL: next
+          HOOKIFY_STABLE_VERSION: ${{ needs.release.outputs.version }}
+
+      - name: Upload next docs
+        uses: actions/upload-artifact@v7
+        with:
+          name: docs-next
+          path: docs-site/build
+          retention-days: 1
+
+  deploy:
+    needs: [release, build-stable, build-next]
+    # build-stable is skipped when the release already has its build.
+    if: ${{ !cancelled() && needs.build-next.result == 'success' && (needs.build-stable.result == 'success' || needs.build-stable.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # download the release asset
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # One deploy at a time, in order, so a release deploy is never overwritten
+    # by an older run.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - name: Download stable docs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.release.outputs.tag }}
+        run: |
+          gh release download "$TAG" --pattern "$STABLE_ASSET" --repo "$GITHUB_REPOSITORY"
+          mkdir site
+          tar -xzf "$STABLE_ASSET" -C site
+          # The next channel owns /next/; never let a stable build shadow it.
+          rm -rf site/next
+
+      - name: Download next docs
+        uses: actions/download-artifact@v8
+        with:
+          name: docs-next
+          path: site/next
 
       - name: Setup Pages
         uses: actions/configure-pages@v6
 
-      - name: Upload artifact
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: docs-site/build
+          path: site
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
