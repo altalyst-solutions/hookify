@@ -269,4 +269,173 @@ describe("usePersistedState", () => {
 
     expect(result.current[1]).toBe(setter);
   });
+
+  describe("with a custom storage", () => {
+    afterEach(() => {
+      window.sessionStorage.clear();
+    });
+
+    it("reads the initial value from the given storage", () => {
+      window.sessionStorage.setItem("draft", JSON.stringify("from session"));
+      localStorage.setItem("draft", JSON.stringify("from local"));
+
+      const { result } = renderHook(() =>
+        usePersistedState("draft", "", { storage: window.sessionStorage })
+      );
+
+      expect(result.current[0]).toBe("from session");
+    });
+
+    it("writes to the given storage only", () => {
+      const { result } = renderHook(() =>
+        usePersistedState("draft", "", { storage: window.sessionStorage })
+      );
+
+      act(() => {
+        result.current[1]("hello");
+      });
+
+      expect(window.sessionStorage.getItem("draft")).toBe(
+        JSON.stringify("hello")
+      );
+      expect(localStorage.getItem("draft")).toBeNull();
+    });
+
+    it("works with any object that has getItem and setItem", () => {
+      const store = new Map<string, string>([["count", "2"]]);
+      const storage = {
+        getItem: (key: string) => store.get(key) ?? null,
+        setItem: (key: string, value: string) => {
+          store.set(key, value);
+        },
+      };
+
+      const { result } = renderHook(() =>
+        usePersistedState("count", 0, { storage })
+      );
+      expect(result.current[0]).toBe(2);
+
+      act(() => {
+        result.current[1]((prev) => prev + 1);
+      });
+
+      expect(store.get("count")).toBe("3");
+    });
+
+    it("does not re-write the value when an inline storage object changes identity", () => {
+      const store = new Map<string, string>();
+      const setItem = vi.fn((key: string, value: string) => {
+        store.set(key, value);
+      });
+      const makeStorage = () => ({
+        getItem: (key: string) => store.get(key) ?? null,
+        setItem,
+      });
+
+      const { result, rerender } = renderHook(() =>
+        usePersistedState("k", "a", { storage: makeStorage() })
+      );
+      act(() => {
+        result.current[1]("b");
+      });
+      rerender();
+      rerender();
+
+      expect(setItem).toHaveBeenCalledTimes(1);
+    });
+
+    it("applies storage events from its own storage area", () => {
+      const { result } = renderHook(() =>
+        usePersistedState("draft", "", { storage: window.sessionStorage })
+      );
+
+      act(() => {
+        window.dispatchEvent(
+          new StorageEvent("storage", {
+            key: "draft",
+            newValue: JSON.stringify("other tab"),
+            storageArea: window.sessionStorage,
+          })
+        );
+      });
+
+      expect(result.current[0]).toBe("other tab");
+    });
+
+    it("ignores storage events from a different storage area", () => {
+      const store = new Map<string, string>();
+      const storage = {
+        getItem: (key: string) => store.get(key) ?? null,
+        setItem: (key: string, value: string) => {
+          store.set(key, value);
+        },
+      };
+      const { result } = renderHook(() =>
+        usePersistedState("draft", "", { storage })
+      );
+
+      act(() => {
+        window.dispatchEvent(
+          new StorageEvent("storage", {
+            key: "draft",
+            newValue: JSON.stringify("from session"),
+            storageArea: window.sessionStorage,
+          })
+        );
+      });
+
+      expect(result.current[0]).toBe("");
+    });
+
+    it("syncs same-tab instances only when key and storage both match", () => {
+      const { result: session } = renderHook(() =>
+        usePersistedState("shared", "initial", {
+          storage: window.sessionStorage,
+        })
+      );
+      const { result: otherSession } = renderHook(() =>
+        usePersistedState("shared", "initial", {
+          storage: window.sessionStorage,
+        })
+      );
+      const { result: local } = renderHook(() =>
+        usePersistedState("shared", "initial")
+      );
+
+      act(() => {
+        session.current[1]("updated");
+      });
+
+      expect(otherSession.current[0]).toBe("updated");
+      expect(local.current[0]).toBe("initial");
+    });
+  });
+
+  describe("without an available storage", () => {
+    it("keeps the value in memory when localStorage access throws", () => {
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      const blocked = vi
+        .spyOn(window, "localStorage", "get")
+        .mockImplementation(() => {
+          throw new DOMException("Blocked", "SecurityError");
+        });
+
+      const { result } = renderHook(() =>
+        usePersistedState("blocked", "initial")
+      );
+      expect(result.current[0]).toBe("initial");
+
+      act(() => {
+        result.current[1]("next");
+      });
+
+      expect(result.current[0]).toBe("next");
+      expect(error).not.toHaveBeenCalled();
+      // The hook really hit the blocked getter, and recovered from it.
+      expect(blocked).toHaveBeenCalled();
+
+      // Restore before the file's afterEach, which clears localStorage.
+      blocked.mockRestore();
+    });
+  });
 });

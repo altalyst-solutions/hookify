@@ -43,16 +43,24 @@ second tab to see cross-tab sync in action.
 ## Signature
 
 ```ts
+type PersistedStateStorage = Pick<Storage, "getItem" | "setItem">;
+
+interface UsePersistedStateOptions {
+  storage?: PersistedStateStorage;
+}
+
 function usePersistedState<T>(
   key: string,
-  initialValue: T
+  initialValue: T,
+  options?: UsePersistedStateOptions
 ): [T, (value: T | ((prevState: T) => T)) => void];
 ```
 
-| Parameter      | Type     | Description                                        |
-| -------------- | -------- | -------------------------------------------------- |
-| `key`          | `string` | The `localStorage` key used to persist the value.  |
-| `initialValue` | `T`      | The value used when no persisted value exists yet. |
+| Parameter         | Type                    | Description                                                                                                           |
+| ----------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `key`             | `string`                | The storage key used to persist the value.                                                                            |
+| `initialValue`    | `T`                     | The value used when no persisted value exists yet.                                                                    |
+| `options.storage` | `PersistedStateStorage` | Where to persist the value: `sessionStorage`, or any object with `getItem` and `setItem`. Defaults to `localStorage`. |
 
 **Returns:** a tuple of `[value, setValue]`, just like `useState`.
 
@@ -60,17 +68,33 @@ function usePersistedState<T>(
 
 - The state is serialized with `JSON.stringify`/`JSON.parse`, so it must be
   JSON-serializable.
-- Reading/writing `localStorage` is wrapped in `try`/`catch` so the hook
+- Reading and writing storage is wrapped in `try`/`catch`, so the hook
   degrades gracefully (falls back to `initialValue`) if storage is
-  unavailable (e.g. private browsing).
+  unavailable (e.g. private browsing). If the browser blocks `localStorage`
+  entirely, or during server rendering, the value is kept in memory only.
+- Pass `{ storage: sessionStorage }` to keep the value for the current tab
+  session only: it survives reloads but is cleared when the tab closes. Pass
+  the same storage on every render.
 - Listens for the `storage` event, so updates made in one tab automatically
   propagate to other open tabs. Instances that share a key in the same tab
-  stay in sync too.
+  stay in sync too. Syncing only links instances that use the same key **and**
+  the same storage.
 - If the key is removed (or storage is cleared) in another tab, the value
   falls back to `initialValue`.
 - Changing `key` loads the value stored under the new key (or
   `initialValue`); the previous value is never written under the new key.
 - `setValue` keeps a stable identity across renders, just like `useState`.
+
+## Example
+
+```tsx
+// A comment draft that survives reloads but not closing the tab.
+const [draft, setDraft] = usePersistedState("comment-draft", "", {
+  storage: sessionStorage,
+});
+
+return <textarea value={draft} onChange={(e) => setDraft(e.target.value)} />;
+```
 
 ## Hook source
 
