@@ -1,82 +1,35 @@
 ---
 title: useDebounce
-sidebar_position: 7
+sidebar_label: useDebounce (deprecated)
+sidebar_position: 29
 ---
-
-import HookDemo from "@site/src/components/HookDemo";
-import CodeBlock from "@theme/CodeBlock";
-
-import appSource from "!!raw-loader!@site/src/hook-examples/use-debounce/App";
-import searchInputSource from "!!raw-loader!@site/src/hook-examples/use-debounce/SearchInput";
-import windowResizeSource from "!!raw-loader!@site/src/hook-examples/use-debounce/WindowResize";
-import debouncedButtonSource from "!!raw-loader!@site/src/hook-examples/use-debounce/DebouncedButton";
-import hookSource from "!!raw-loader!../../../src/hooks/use-debounce.ts";
 
 # useDebounce
 
-Debounces a callback so it only runs after a specified delay has passed since
-its last invocation. Useful for reducing frequent function calls in scenarios
-like search input, resize handlers, or rapid button clicks.
+:::warning Deprecated
 
-## When to use it
+`useDebounce` is deprecated and will be removed in a future release. It is now
+an alias of [`useDebouncedCallback`](./use-debounced-callback.mdx), which
+takes the same arguments.
 
-- Delaying an API call until a user stops typing in a search field.
-- Throttling expensive work triggered by high-frequency events (`resize`,
-  `scroll`, `input`).
-- Coalescing rapid, repeated user actions into a single call.
+:::
 
-## Demo
+## Migrating
 
-Edit the delay or the code below — the preview re-runs live. Open the
-**Console** tab to see the debounced log calls.
-
-<HookDemo
-  files={{
-    "/App.tsx": appSource,
-    "/SearchInput.tsx": searchInputSource,
-    "/WindowResize.tsx": windowResizeSource,
-    "/DebouncedButton.tsx": debouncedButtonSource,
-  }}
-  activeFile="/SearchInput.tsx"
-  showConsole
-/>
-
-## Signature
+Replace the import and the call. The arguments are the same, and the returned
+function behaves the same way: it keeps a stable identity, always calls the
+latest callback, and drops a pending call on unmount. It also gains `cancel`,
+`flush` and `isPending`.
 
 ```ts
-function useDebounce<T extends (...args: any[]) => void>(
-  callback: T,
-  delay: number
-): (...args: Parameters<T>) => void;
+// Before
+import { useDebounce } from "@altalyst/hookify";
+const debouncedSearch = useDebounce(search, 300);
+
+// After
+import { useDebouncedCallback } from "@altalyst/hookify";
+const debouncedSearch = useDebouncedCallback(search, 300);
 ```
 
-| Parameter  | Type     | Description                          |
-| ---------- | -------- | ------------------------------------ |
-| `callback` | `T`      | The function to debounce.            |
-| `delay`    | `number` | The debounce delay, in milliseconds. |
-
-**Returns:** a debounced version of `callback` with the same parameters.
-
-## Usage notes
-
-- The returned function keeps a stable identity across re-renders and always
-  calls the latest `callback`, so an inline callback never runs with stale
-  props or state.
-- Any pending timeout is cleared automatically when the component unmounts,
-  so it's safe to use inside effects and event handlers without manual
-  cleanup.
-- A new `delay` applies from the next call; a call already waiting keeps its
-  original delay.
-- Need `cancel`, `flush`, or leading-edge calls? Use
-  [`useDebouncedCallback`](./use-debounced-callback.mdx).
-
-## Hook source
-
-<details>
-  <summary>
-    View <code>useDebounce</code> source
-  </summary>
-  <CodeBlock language="tsx" title="use-debounce.ts">
-    {hookSource}
-  </CodeBlock>
-</details>
+To debounce a _value_ (for example a search query held in state) rather than a
+function call, use [`useDebouncedValue`](./use-debounced-value.mdx).

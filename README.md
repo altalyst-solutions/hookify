@@ -103,8 +103,8 @@ export const Example = () => {
 | [`useClipboard`](https://altalyst-solutions.github.io/hookify/hooks/use-clipboard)                             | Copy text to the clipboard with a temporary `copied` state, error handling, and callbacks.         |
 | [`useControlledState`](https://altalyst-solutions.github.io/hookify/hooks/use-controlled-state)                | Manage a value that works in both controlled and uncontrolled modes, like native inputs.           |
 | [`useCooldown`](https://altalyst-solutions.github.io/hookify/hooks/use-cooldown)                               | Whole-second countdown with start, restart and reset controls for resend and retry buttons.        |
-| [`useDebounce`](https://altalyst-solutions.github.io/hookify/hooks/use-debounce)                               | Debounce a callback so it only runs after a delay has passed since its last invocation.            |
 | [`useDebouncedCallback`](https://altalyst-solutions.github.io/hookify/hooks/use-debounced-callback)            | Stable debounced callback with cancel, flush, isPending and leading/trailing options.              |
+| [`useDebouncedValue`](https://altalyst-solutions.github.io/hookify/hooks/use-debounced-value)                  | Debounce a value so it only updates once it stops changing for a delay.                            |
 | [`useDocVisible`](https://altalyst-solutions.github.io/hookify/hooks/use-doc-visible)                          | Track whether the current document/tab is visible via the Page Visibility API.                     |
 | [`useEffectAfterMount`](https://altalyst-solutions.github.io/hookify/hooks/use-effect-after-mount)             | Run an effect only after the initial mount, skipping the first render.                             |
 | [`useElementSize`](https://altalyst-solutions.github.io/hookify/hooks/use-element-size)                        | Track an element's width and height with a `ResizeObserver`, with box and callback options.        |
@@ -121,9 +121,13 @@ export const Example = () => {
 | [`useResizeObserver`](https://altalyst-solutions.github.io/hookify/hooks/use-resize-observer)                  | Run a callback with the raw `ResizeObserverEntry` when an element resizes, without re-renders.     |
 | [`useSequentialRequest`](https://altalyst-solutions.github.io/hookify/hooks/use-sequential-request)            | Ensure only the latest of several in-flight async requests resolves; stale ones are ignored.       |
 | [`useStableCallback`](https://altalyst-solutions.github.io/hookify/hooks/use-stable-callback)                  | Stable function identity that always calls the latest callback, with optional-callback support.    |
-| [`useThrottle`](https://altalyst-solutions.github.io/hookify/hooks/use-throttle)                               | Throttle a value so it updates at most once per interval, with leading/trailing options.           |
+| [`useThrottledValue`](https://altalyst-solutions.github.io/hookify/hooks/use-throttled-value)                  | Throttle a value so it updates at most once per interval, with leading/trailing options.           |
 | [`useTimeout`](https://altalyst-solutions.github.io/hookify/hooks/use-timeout)                                 | Declarative `setTimeout` that pauses on `null`, with start, cancel and isPending controls.         |
-| [`useToggleState`](https://altalyst-solutions.github.io/hookify/hooks/use-toggle-state)                        | Toggle a boolean state with a simple, memoized setter.                                             |
+| [`useToggleState`](https://altalyst-solutions.github.io/hookify/hooks/use-toggle-state)                        | Toggle a boolean state, with a stable toggle and an explicit setter.                               |
+
+`useDebounce` and `useThrottle` are deprecated aliases of `useDebouncedCallback`
+and `useThrottledValue`, kept for compatibility and due to be removed in a future
+release.
 
 Browse the [hooks documentation](https://altalyst-solutions.github.io/hookify/hooks)
 for live, editable demos and the full API of each hook.

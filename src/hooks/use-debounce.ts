@@ -1,56 +1,20 @@
 import { useDebouncedCallback } from "./use-debounced-callback";
 
 /**
- * A custom React hook that debounce a function, ensuring it is only called after a specified delay has passed
- * since the last invocation.
+ * Debounces a function so it only runs after `delay` milliseconds have passed
+ * since its last call.
  *
- * This hook is useful for optimizing performance in scenarios where frequent function calls need to be reduced,
- * such as handling search input, resize events, or button clicks.
- *
- * The returned function keeps a stable identity and always calls the latest `callback`, so an
- * inline callback never runs with stale props or state. Pending calls are dropped on unmount.
- * For `leading`/`trailing` options or `cancel`/`flush` controls, use `useDebouncedCallback`.
- *
- * @typeParam T - The type of the callback function to debounce.
- * @param callback - The function to be debounced.
- * @param delay - The debounce delay in milliseconds.
- * @returns A debounced version of the provided callback function.
+ * @deprecated Use `useDebouncedCallback`, which takes the same arguments and
+ * returns the same stable function (plus `cancel`, `flush` and `isPending`),
+ * or `useDebouncedValue` to debounce a value instead. This alias will be
+ * removed in a future release.
  *
  * @example
- * ```tsx
- * const [query, setQuery] = useState("");
- *
- * const fetchData = (searchTerm: string) => {
- *   console.log(`Fetching data for ${searchTerm}`);
- * };
- *
- * const debouncedFetchData = useDebounce(fetchData, 300);
- *
- * const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
- *   setQuery(event.target.value);
- *   debouncedFetchData(event.target.value);
- * };
- *
- * return <input type="text" value={query} onChange={handleInputChange} />;
+ * ```ts
+ * // Before
+ * const debouncedSearch = useDebounce(search, 300);
+ * // After
+ * const debouncedSearch = useDebouncedCallback(search, 300);
  * ```
- *
- * @example
- * ```tsx
- * const logMessage = (message: string) => {
- *   console.log(message);
- * };
- *
- * const debouncedLog = useDebounce(logMessage, 500);
- *
- * return <button onClick={() => debouncedLog("Button clicked!")}>Click Me</button>;
- * ```
- *
- * For a live, editable example, see the [useDebounce docs page](https://altalyst-solutions.github.io/hookify/hooks/use-debounce).
- *
- * @see [Debouncing in JavaScript](https://www.freecodecamp.org/news/javascript-debounce-example)
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- `any[]` is required here (not `unknown[]`) so narrower callback signatures remain assignable to `T`, matching the pattern used by TS's own `Parameters<T>`.
-export const useDebounce = <T extends (...args: any[]) => void>(
-  callback: T,
-  delay: number
-): ((...args: Parameters<T>) => void) => useDebouncedCallback(callback, delay);
+export const useDebounce = useDebouncedCallback;

@@ -4,7 +4,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   useApi,
-  useDebounce,
+  useDebouncedCallback,
+  useDebouncedValue,
   useDocVisible,
   useEffectAfterMount,
   useIsomorphicLayoutEffect,
@@ -70,9 +71,12 @@ describe("hooks under StrictMode", () => {
     expect(onMount.mock.calls.length).toBe(onUnmount.mock.calls.length);
   });
 
-  it("useDebounce still fires the callback once after the delay", () => {
+  it("useDebouncedCallback still fires the callback once after the delay", () => {
     const callback = vi.fn();
-    const { result } = renderHook(() => useDebounce(callback, 100), strict);
+    const { result } = renderHook(
+      () => useDebouncedCallback(callback, 100),
+      strict
+    );
 
     act(() => {
       result.current("a");
@@ -84,6 +88,23 @@ describe("hooks under StrictMode", () => {
 
     expect(callback).toHaveBeenCalledTimes(1);
     expect(callback).toHaveBeenCalledWith("b");
+  });
+
+  it("useDebouncedValue emits the latest value once after the delay", () => {
+    const { result, rerender } = renderHook(
+      ({ value }) => useDebouncedValue(value, 100),
+      { ...strict, initialProps: { value: "a" } }
+    );
+
+    rerender({ value: "b" });
+    rerender({ value: "c" });
+    expect(result.current).toBe("a");
+
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+
+    expect(result.current).toBe("c");
   });
 
   it("useToggleState toggles correctly", () => {

@@ -36,7 +36,7 @@ export interface DebouncedFunction<
  * `delay` milliseconds have passed since its last call, along with `cancel`,
  * `flush` and `isPending` controls.
  *
- * Unlike `useDebounce`, the returned function keeps the same identity for the
+ * The returned function keeps the same identity for the
  * lifetime of the component and always invokes the latest `callback` and
  * `delay`, so it is safe in dependency arrays and long-lived listeners. A new
  * `delay` applies from the next call; a pending timer is not rescheduled.
@@ -47,7 +47,8 @@ export interface DebouncedFunction<
  * further calls during the burst. With both set to `false` the callback is
  * never invoked. The return value of `callback` is ignored. A pending call is
  * discarded on unmount, or flushed when `flushOnUnmount` is set. For
- * rate-limiting a continuously changing value, see `useThrottle`.
+ * debouncing a value instead of a function call, see `useDebouncedValue`; for
+ * rate-limiting a continuously changing value, see `useThrottledValue`.
  *
  * @typeParam T - The type of the callback function to debounce.
  * @param callback - The function to debounce.

@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { useSequentialRequest } from "@/hooks";
+import { isAbortError, useSequentialRequest } from "@/hooks";
 
 // Mock request function
 const mockRequest = vi.fn();
@@ -33,7 +33,7 @@ describe("useSequentialRequest", () => {
         (signal: AbortSignal) =>
           new Promise((_, reject) => {
             signal.addEventListener("abort", () =>
-              reject(new Error("CanceledError"))
+              reject(new Error("request-specific abort error"))
             );
           })
       )
@@ -53,7 +53,10 @@ describe("useSequentialRequest", () => {
     firstPromise.catch(() => {});
 
     // Verify first request was canceled
-    await expect(firstPromise).rejects.toThrow("CanceledError");
+    const firstError = await firstPromise.catch((error: unknown) => error);
+    expect(isAbortError(firstError)).toBe(true);
+    expect(firstError).toBeInstanceOf(DOMException);
+    expect((firstError as DOMException).name).toBe("AbortError");
 
     // Verify second request succeeded
     await expect(secondPromise).resolves.toBe("second response");
@@ -113,5 +116,64 @@ describe("useSequentialRequest", () => {
     });
 
     expect(mockRequest).toHaveBeenCalledTimes(1);
+  });
+
+  it("should abort the signal with the same AbortError it rejects with", async () => {
+    let seenSignal: AbortSignal | undefined;
+    mockRequest
+      .mockImplementationOnce(
+        (signal: AbortSignal) =>
+          new Promise((_, reject) => {
+            seenSignal = signal;
+            signal.addEventListener("abort", () => reject(signal.reason));
+          })
+      )
+      .mockResolvedValueOnce("second");
+
+    const { result } = renderHook(() =>
+      useSequentialRequest((signal) => mockRequest(signal))
+    );
+
+    const first = result.current().catch((error: unknown) => error);
+    await result.current();
+
+    expect(await first).toBe(seenSignal?.reason);
+  });
+
+  it("should reject an unmounted request with an AbortError", async () => {
+    mockRequest.mockImplementationOnce(
+      (signal: AbortSignal) =>
+        new Promise((_, reject) => {
+          signal.addEventListener("abort", () => reject(new Error("aborted")));
+        })
+    );
+
+    const { result, unmount } = renderHook(() =>
+      useSequentialRequest((signal) => mockRequest(signal))
+    );
+
+    const pending = result.current().catch((error: unknown) => error);
+    unmount();
+
+    expect(isAbortError(await pending)).toBe(true);
+  });
+});
+
+describe("isAbortError", () => {
+  it("recognizes a DOMException AbortError", () => {
+    expect(isAbortError(new DOMException("x", "AbortError"))).toBe(true);
+  });
+
+  it("recognizes an Error named AbortError", () => {
+    const error = Object.assign(new Error("x"), { name: "AbortError" });
+    expect(isAbortError(error)).toBe(true);
+  });
+
+  it("rejects other errors and non-objects", () => {
+    expect(isAbortError(new Error("CanceledError"))).toBe(false);
+    expect(isAbortError(new DOMException("x", "TimeoutError"))).toBe(false);
+    expect(isAbortError("AbortError")).toBe(false);
+    expect(isAbortError(null)).toBe(false);
+    expect(isAbortError(undefined)).toBe(false);
   });
 });
