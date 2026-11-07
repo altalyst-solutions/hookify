@@ -51,7 +51,10 @@ function useOutsideClick(
 ## Usage notes
 
 - Listens for both `click` and `touchstart` events, so it works well on
-  touch devices too.
+  touch devices too. A single tap fires the callback once, even though the
+  browser also sends an emulated `click` after the touch.
+- Always calls the latest `callback`, so an inline function is fine and does
+  not re-subscribe the listeners on every render.
 - Automatically removes its event listeners on unmount.
 - The callback fires only when the event target is outside the referenced
   element (clicks inside it are ignored).
