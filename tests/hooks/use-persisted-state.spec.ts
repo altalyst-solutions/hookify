@@ -130,4 +130,143 @@ describe("usePersistedState", () => {
     expect(value1).toBe("updatedValue1");
     expect(value2).toBe("updatedValue2");
   });
+
+  it("should read the new key's stored value when the key changes", () => {
+    localStorage.setItem("b", JSON.stringify("stored-b"));
+
+    const { result, rerender } = renderHook(
+      ({ storageKey }) => usePersistedState(storageKey, "initial"),
+      { initialProps: { storageKey: "a" } }
+    );
+
+    act(() => {
+      result.current[1]("value-a");
+    });
+    rerender({ storageKey: "b" });
+
+    expect(result.current[0]).toBe("stored-b");
+    expect(localStorage.getItem("b")).toBe(JSON.stringify("stored-b"));
+    expect(localStorage.getItem("a")).toBe(JSON.stringify("value-a"));
+  });
+
+  it("should fall back to the initial value when the new key is empty", () => {
+    const { result, rerender } = renderHook(
+      ({ storageKey }) => usePersistedState(storageKey, "initial"),
+      { initialProps: { storageKey: "a" } }
+    );
+
+    act(() => {
+      result.current[1]("value-a");
+    });
+    rerender({ storageKey: "b" });
+
+    expect(result.current[0]).toBe("initial");
+    expect(localStorage.getItem("b")).toBeNull();
+  });
+
+  it("should write updates to the current key after a key change", () => {
+    const { result, rerender } = renderHook(
+      ({ storageKey }) => usePersistedState(storageKey, 0),
+      { initialProps: { storageKey: "a" } }
+    );
+
+    rerender({ storageKey: "b" });
+    act(() => {
+      result.current[1]((prev) => prev + 1);
+    });
+
+    expect(localStorage.getItem("b")).toBe("1");
+    expect(localStorage.getItem("a")).toBeNull();
+  });
+
+  it("should reset to the initial value when the key is removed in another tab", () => {
+    localStorage.setItem("testKey", JSON.stringify("storedValue"));
+    const { result } = renderHook(() =>
+      usePersistedState("testKey", "defaultValue")
+    );
+
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent("storage", { key: "testKey", newValue: null })
+      );
+    });
+
+    expect(result.current[0]).toBe("defaultValue");
+  });
+
+  it("should reset to the initial value when storage is cleared in another tab", () => {
+    localStorage.setItem("testKey", JSON.stringify("storedValue"));
+    const { result } = renderHook(() =>
+      usePersistedState("testKey", "defaultValue")
+    );
+
+    act(() => {
+      window.dispatchEvent(new StorageEvent("storage", { key: null }));
+    });
+
+    expect(result.current[0]).toBe("defaultValue");
+  });
+
+  it("should ignore storage events from sessionStorage", () => {
+    const { result } = renderHook(() =>
+      usePersistedState("testKey", "defaultValue")
+    );
+
+    act(() => {
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: "testKey",
+          newValue: JSON.stringify("fromSession"),
+          storageArea: window.sessionStorage,
+        })
+      );
+    });
+
+    expect(result.current[0]).toBe("defaultValue");
+  });
+
+  it("should sync instances that share a key in the same tab", () => {
+    const { result: first } = renderHook(() =>
+      usePersistedState("shared", "initial")
+    );
+    const { result: second } = renderHook(() =>
+      usePersistedState("shared", "initial")
+    );
+
+    act(() => {
+      first.current[1]("updated");
+    });
+
+    expect(first.current[0]).toBe("updated");
+    expect(second.current[0]).toBe("updated");
+  });
+
+  it("should not write back a value received from another instance", () => {
+    const setItemSpy = vi.spyOn(localStorage, "setItem");
+    const { result: first } = renderHook(() =>
+      usePersistedState("shared", { count: 0 })
+    );
+    renderHook(() => usePersistedState("shared", { count: 0 }));
+
+    act(() => {
+      first.current[1]({ count: 1 });
+    });
+
+    expect(setItemSpy).toHaveBeenCalledTimes(1);
+    setItemSpy.mockRestore();
+  });
+
+  it("should keep the setter stable across renders", () => {
+    const { result, rerender } = renderHook(() =>
+      usePersistedState("testKey", "defaultValue")
+    );
+    const setter = result.current[1];
+
+    act(() => {
+      setter("next");
+    });
+    rerender();
+
+    expect(result.current[1]).toBe(setter);
+  });
 });
