@@ -62,6 +62,11 @@ docs-site/         # Docusaurus documentation site
    `docs-site/tsconfig.json`), so run `npm run build` once if your editor
    reports that `@altalyst/hookify` can't be resolved.
 
+   Once your PR merges, you can also check the page online in the
+   [unreleased docs](https://altalyst-solutions.github.io/hookify/next/),
+   where demos already run the code from `main`. See
+   [Where docs changes appear](#where-docs-changes-appear).
+
 ## Development workflow
 
 ```bash
@@ -106,7 +111,24 @@ the actual npm publish — you don't need to (and shouldn't) edit
 
 If a change genuinely doesn't need a release (e.g. a docs typo fix), run
 `npx changeset add --empty` or simply skip adding a changeset — CI won't
-block the PR, but please don't skip it for anything user-facing.
+block the PR, but please don't skip it for anything user-facing. Note that
+docs changes only reach the stable docs with a release; see below.
+
+### Where docs changes appear
+
+The docs site has two versions, deployed by
+`.github/workflows/docs-deploy.yml`:
+
+| Version | URL                                                                                   | Shows                                         | Updated                                                 |
+| ------- | ------------------------------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------- |
+| Stable  | [altalyst-solutions.github.io/hookify](https://altalyst-solutions.github.io/hookify/) | The latest release, with demos from npm       | When a release is published                             |
+| Next    | […/hookify/next](https://altalyst-solutions.github.io/hookify/next/)                  | `main`, with demos running the code on `main` | On every push to `main` that touches the docs or `src/` |
+
+So a docs change, including a typo fix, shows up on next as soon as it merges,
+but on stable only with the next release. Stable is always built from the
+release tag, so re-running the docs workflow won't pick it up either. If a
+docs fix should reach stable sooner, add a `patch` changeset so it ships with
+a release.
 
 A local `pre-push` git hook (`.githooks/pre-push`, wired up automatically
 by `npm run setup` via the `prepare` script) blocks pushes that change

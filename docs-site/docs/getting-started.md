@@ -9,6 +9,14 @@ Hookify is a lightweight collection of framework-agnostic React hooks for
 common, everyday problems: debouncing, API calls, toggling state, syncing
 state to storage, detecting outside clicks, and more.
 
+:::tip Docs versions
+
+These docs come in two versions: the **latest release**, which matches what
+`npm install` gives you, and **next**, which shows unreleased changes from
+`main`. Use the version menu in the top right to switch between them.
+
+:::
+
 ## Installation
 
 Hookify has `react` and `react-dom` as peer dependencies (v18+).

@@ -136,6 +136,10 @@ for live, editable demos and the full API of each hook.
 
 Full guides, live demos, and the generated API reference live at
 **[altalyst-solutions.github.io/hookify](https://altalyst-solutions.github.io/hookify/getting-started)**.
+They match the latest release on npm. To see what's coming in the next
+release, browse the
+[unreleased docs](https://altalyst-solutions.github.io/hookify/next/getting-started),
+built from `main`; the version menu in the top right switches between the two.
 
 ## Local development
 
