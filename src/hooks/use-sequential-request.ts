@@ -1,24 +1,6 @@
-import type { MutableRefObject } from "react";
 import { useCallback, useEffect, useRef } from "react";
 
-/**
- * A utility hook that keeps a reference to the latest value without triggering re-renders.
- *
- * This hook ensures that the reference always points to the most current value,
- * which is useful for accessing the latest state or props in callbacks without
- * needing to include them as dependencies.
- *
- * @typeParam T - The type of the value to track.
- * @param value - The value to keep a reference to.
- * @returns A ref object containing the latest value.
- */
-const useLatest = <T>(value: T): MutableRefObject<T> => {
-  const ref = useRef(value);
-  useEffect(() => {
-    ref.current = value;
-  });
-  return ref;
-};
+import { useLatest } from "./use-latest";
 
 /**
  * Creates a cancelable fetch operation with an AbortController.
