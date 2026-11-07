@@ -32,6 +32,10 @@ jobs:
         env:
           CI: true
 
+      - name: Write coverage summary
+        if: ${{ !cancelled() }}
+        run: node .github/scripts/coverage-summary.mjs >> "$GITHUB_STEP_SUMMARY"
+
       - name: Build library
         run: npm run build
 

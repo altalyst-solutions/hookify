@@ -1,5 +1,6 @@
 import { defineConfig, mergeConfig } from "vitest/config";
 
+import coverageThresholds from "./tests/coverage-thresholds.json";
 import viteConfig from "./vite.config.ts";
 
 export default mergeConfig(
@@ -14,13 +15,9 @@ export default mergeConfig(
         provider: "v8",
         include: ["src/**/*.ts"],
         exclude: ["src/index.ts", "src/**/index.ts"],
-        reporter: ["text", "html", "lcov"],
-        thresholds: {
-          lines: 95,
-          statements: 95,
-          functions: 95,
-          branches: 90,
-        },
+        // `json-summary` feeds the coverage table in the PR check job summary.
+        reporter: ["text", "html", "lcov", "json-summary"],
+        thresholds: coverageThresholds,
       },
     },
   })
