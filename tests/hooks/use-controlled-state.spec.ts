@@ -155,7 +155,7 @@ describe("useControlledState", () => {
   });
 
   describe("Performance", () => {
-    it("should recreate setValue when onChange changes", () => {
+    it("should keep setValue stable and call the latest onChange", () => {
       const onChange1 = vi.fn();
       const onChange2 = vi.fn();
 
@@ -170,7 +170,44 @@ describe("useControlledState", () => {
       rerender({ onChange: onChange2 });
       const secondSetter = result.current[1];
 
-      expect(firstSetter).not.toBe(secondSetter);
+      expect(firstSetter).toBe(secondSetter);
+
+      act(() => {
+        secondSetter("next");
+      });
+
+      expect(onChange1).not.toHaveBeenCalled();
+      expect(onChange2).toHaveBeenCalledWith("next");
+    });
+
+    it("should keep setValue stable when the controlled value changes", () => {
+      const { result, rerender } = renderHook(
+        ({ value }) => useControlledState<number>(value, 0),
+        { initialProps: { value: 1 } }
+      );
+
+      const firstSetter = result.current[1];
+      rerender({ value: 2 });
+
+      expect(result.current[1]).toBe(firstSetter);
+    });
+  });
+
+  describe("Consecutive updates", () => {
+    it("should apply several updater calls in one event in uncontrolled mode", () => {
+      const onChange = vi.fn();
+      const { result } = renderHook(() =>
+        useControlledState<number>(undefined, 0, onChange)
+      );
+
+      act(() => {
+        result.current[1]((prev) => prev + 1);
+        result.current[1]((prev) => prev + 1);
+        result.current[1]((prev) => prev + 1);
+      });
+
+      expect(result.current[0]).toBe(3);
+      expect(onChange.mock.calls).toEqual([[1], [2], [3]]);
     });
   });
 
