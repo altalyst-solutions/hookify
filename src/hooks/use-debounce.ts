@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useDebouncedCallback } from "./use-debounced-callback";
 
 /**
  * A custom React hook that debounce a function, ensuring it is only called after a specified delay has passed
@@ -6,6 +6,10 @@ import { useCallback, useEffect, useRef } from "react";
  *
  * This hook is useful for optimizing performance in scenarios where frequent function calls need to be reduced,
  * such as handling search input, resize events, or button clicks.
+ *
+ * The returned function keeps a stable identity and always calls the latest `callback`, so an
+ * inline callback never runs with stale props or state. Pending calls are dropped on unmount.
+ * For `leading`/`trailing` options or `cancel`/`flush` controls, use `useDebouncedCallback`.
  *
  * @typeParam T - The type of the callback function to debounce.
  * @param callback - The function to be debounced.
@@ -49,28 +53,4 @@ import { useCallback, useEffect, useRef } from "react";
 export const useDebounce = <T extends (...args: any[]) => void>(
   callback: T,
   delay: number
-): ((...args: Parameters<T>) => void) => {
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const debouncedCallback = useCallback(
-    (...args: Parameters<T>) => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      timeoutRef.current = setTimeout(() => {
-        callback(...args);
-      }, delay);
-    },
-    [callback, delay]
-  );
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
-  return debouncedCallback;
-};
+): ((...args: Parameters<T>) => void) => useDebouncedCallback(callback, delay);

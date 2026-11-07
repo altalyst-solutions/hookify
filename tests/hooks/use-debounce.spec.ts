@@ -55,4 +55,32 @@ describe("useDebounce", () => {
 
     expect(callback).not.toHaveBeenCalled();
   });
+
+  it("should call the latest callback when the timer fires", () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    const { result, rerender } = renderHook(({ cb }) => useDebounce(cb, 200), {
+      initialProps: { cb: first },
+    });
+
+    act(() => {
+      result.current("value");
+    });
+    rerender({ cb: second });
+    vi.advanceTimersByTime(200);
+
+    expect(first).not.toHaveBeenCalled();
+    expect(second).toHaveBeenCalledWith("value");
+  });
+
+  it("should keep a stable identity across renders", () => {
+    const { result, rerender } = renderHook(({ cb }) => useDebounce(cb, 200), {
+      initialProps: { cb: vi.fn() },
+    });
+    const debounced = result.current;
+
+    rerender({ cb: vi.fn() });
+
+    expect(result.current).toBe(debounced);
+  });
 });
