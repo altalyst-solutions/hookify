@@ -18,7 +18,7 @@ export default function App() {
   if (error) {
     return (
       <div>
-        <p>Error fetching users: {error}</p>
+        <p>Error fetching users: {error.message}</p>
         <button onClick={refetch}>Retry</button>
       </div>
     );

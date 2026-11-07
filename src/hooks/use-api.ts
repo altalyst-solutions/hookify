@@ -13,6 +13,36 @@ export interface UseApiOptions {
 }
 
 /**
+ * The error `useApi` reports when the server responds with a non-2xx status.
+ *
+ * It keeps the `status` and the raw `response`, so callers can branch on the
+ * status code or read an error body (for example `await error.response.json()`).
+ * Network failures and JSON parse errors are reported as the original `Error`.
+ *
+ * @example
+ * ```ts
+ * const { error } = useApi<User>("/api/user");
+ *
+ * if (error instanceof ApiError && error.status === 401) {
+ *   redirectToLogin();
+ * }
+ * ```
+ */
+export class ApiError extends Error {
+  /** The HTTP status code of the response. */
+  readonly status: number;
+  /** The response that failed. Its body has not been read. */
+  readonly response: Response;
+
+  constructor(response: Response) {
+    super(`Request failed with status ${response.status}`);
+    this.name = "ApiError";
+    this.status = response.status;
+    this.response = response;
+  }
+}
+
+/**
  * The return type of the useApi hook.
  * @typeParam T - The type of data expected in the response.
  */
@@ -21,8 +51,12 @@ export interface UseApiReturn<T> {
   data: T | null;
   /** Indicates whether the request is currently being processed. */
   loading: boolean;
-  /** Contains any error message if the request fails, or null if no error occurred. */
-  error: string | null;
+  /**
+   * The error if the request failed, or null if no error occurred. Non-2xx
+   * responses are reported as an {@link ApiError} with the `status` and
+   * `response`; other failures (network, JSON parsing) as the thrown `Error`.
+   */
+  error: Error | null;
   /** Function to manually refetch the data. */
   refetch: () => Promise<void>;
 }
@@ -31,7 +65,7 @@ export interface UseApiReturn<T> {
  * The outcome of a request, reported as a value instead of a thrown error.
  * @typeParam T - The type of data returned on success.
  */
-type RequestResult<T> = { ok: true; data: T } | { ok: false; error: string };
+type RequestResult<T> = { ok: true; data: T } | { ok: false; error: Error };
 
 /** Performs the request and reports the outcome as a value, so it never throws. */
 const requestJson = async <T>(
@@ -42,7 +76,7 @@ const requestJson = async <T>(
     const response = await fetch(url, init);
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status}`);
+      throw new ApiError(response);
     }
 
     // "No Content" responses have no body to parse.
@@ -52,7 +86,10 @@ const requestJson = async <T>(
 
     return { ok: true, data: (await response.json()) as T };
   } catch (err) {
-    return { ok: false, error: (err as Error).message };
+    return {
+      ok: false,
+      error: err instanceof Error ? err : new Error(String(err)),
+    };
   }
 };
 
@@ -89,7 +126,7 @@ const requestJson = async <T>(
  * @returns The result of the API request, including:
  * - `data`: The fetched data, or null if there’s no data yet.
  * - `loading`: Indicates whether the request is currently being processed.
- * - `error`: Contains any error message if the request fails, or null if no error occurred.
+ * - `error`: The `Error` if the request failed (an `ApiError` with `status` and `response` for non-2xx responses), or null if no error occurred.
  * - `refetch`: Function to manually refetch the data, useful for refreshing data in UI.
  *
  * @example
@@ -103,7 +140,7 @@ export const useApi = <T = unknown>(
 ): UseApiReturn<T> => {
   const [loading, setLoading] = useState<boolean>(true);
   const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
 
   const { method, headers, body } = options ?? {};
 

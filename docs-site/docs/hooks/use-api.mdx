@@ -47,8 +47,13 @@ interface UseApiOptions {
 interface UseApiReturn<T> {
   data: T | null;
   loading: boolean;
-  error: string | null;
+  error: Error | null;
   refetch: () => Promise<void>;
+}
+
+class ApiError extends Error {
+  readonly status: number;
+  readonly response: Response;
 }
 ```
 
@@ -69,8 +74,32 @@ interface UseApiReturn<T> {
   `refetch` runs again, or the component unmounts, the request in flight is
   aborted with an `AbortSignal` and its result is ignored, so a slow,
   outdated response never overwrites a newer one.
-- `UseApiOptions` and `UseApiReturn` are exported for typing your own
-  wrappers.
+- `error` is an `Error`. A non-2xx response is reported as an `ApiError`
+  with the `status` and the unread `response`, so you can branch on the status
+  code or read an error body. Network failures and JSON parse errors are
+  reported as the original `Error`.
+- `UseApiOptions`, `UseApiReturn` and `ApiError` are exported for typing your
+  own wrappers.
+
+## Handling errors
+
+```tsx
+const { data, error } = useApi<User>("/api/user");
+
+if (error instanceof ApiError && error.status === 401) {
+  return <SignInPrompt />;
+}
+if (error) {
+  return <p>Something went wrong: {error.message}</p>;
+}
+```
+
+### Migrating from 0.11
+
+`error` used to be a `string` such as `"Error: 404"`. Render `error.message`
+instead of `error`, and check `error instanceof ApiError` with `error.status`
+instead of parsing the status out of the string.
+
 - `refetch` re-triggers the same request on demand — handy for "Retry" or
   "Refresh" buttons.
 

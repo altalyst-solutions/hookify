@@ -2,7 +2,7 @@ import { act, renderHook } from "@testing-library/react";
 import type { Mock } from "vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useApi } from "@/hooks";
+import { ApiError, useApi } from "@/hooks";
 
 interface MockResponse {
   success: boolean;
@@ -64,7 +64,49 @@ describe("useApi", () => {
 
     expect(result.current.loading).toBe(false);
     expect(result.current.data).toBeNull();
-    expect(result.current.error).toBe("Error: 404");
+    expect(result.current.error).toBeInstanceOf(ApiError);
+    expect(result.current.error?.message).toBe(
+      "Request failed with status 404"
+    );
+    expect((result.current.error as ApiError).status).toBe(404);
+  });
+
+  it("should expose the failed response on ApiError", async () => {
+    const failed = {
+      ok: false,
+      status: 422,
+      json: async () => ({ field: "x" }),
+    };
+    (fetch as Mock).mockResolvedValueOnce(failed);
+
+    const { result } = renderHook(() => useApi(mockUrl));
+    await act(async () => {});
+
+    const error = result.current.error as ApiError;
+    expect(error.name).toBe("ApiError");
+    expect(error.response).toBe(failed);
+    expect(await error.response.json()).toEqual({ field: "x" });
+  });
+
+  it("should report network failures as the original Error", async () => {
+    const networkError = new TypeError("Failed to fetch");
+    (fetch as Mock).mockRejectedValueOnce(networkError);
+
+    const { result } = renderHook(() => useApi(mockUrl));
+    await act(async () => {});
+
+    expect(result.current.error).toBe(networkError);
+    expect(result.current.loading).toBe(false);
+  });
+
+  it("should wrap non-Error rejections in an Error", async () => {
+    (fetch as Mock).mockRejectedValueOnce("offline");
+
+    const { result } = renderHook(() => useApi(mockUrl));
+    await act(async () => {});
+
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect(result.current.error?.message).toBe("offline");
   });
 
   it("should not refetch when inline headers keep the same values", async () => {
