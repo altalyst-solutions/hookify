@@ -27,8 +27,8 @@ jobs:
       - name: Lint library
         run: npm run lint
 
-      - name: Run library tests
-        run: npm run test
+      - name: Run library tests with coverage
+        run: npm run coverage
         env:
           CI: true
 
@@ -41,7 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        react: ["18.0.0"]
+        react: ["18.0.0", "18"]
 
     steps:
       - name: Checkout code
