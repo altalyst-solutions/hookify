@@ -50,9 +50,26 @@ function useSequentialRequest<T>(
 
 ## Usage notes
 
-- If a request is superseded before completing, it rejects with an error
-  whose message is `"CanceledError"` — check for this to distinguish a
-  cancellation from a real failure.
+- If a request is superseded before completing, it rejects with a standard
+  `AbortError` (a `DOMException`), the same reason its signal was aborted
+  with. Use the exported `isAbortError(error)` to tell a cancellation from a
+  real failure; it also recognizes the `AbortError` that `fetch` throws.
+
+### Migrating from 0.11
+
+Canceled requests used to reject with `new Error("CanceledError")`. Replace
+`error.message !== "CanceledError"` checks with `!isAbortError(error)`:
+
+```ts
+import { isAbortError, useSequentialRequest } from "@altalyst/hookify";
+
+try {
+  setResults(await search());
+} catch (error) {
+  if (!isAbortError(error)) console.error("Search failed:", error);
+}
+```
+
 - Any still-pending request is also canceled automatically on unmount.
 - Because `requestFn` is accessed through a ref internally, you can safely
   pass an inline function without worrying about stale closures.
