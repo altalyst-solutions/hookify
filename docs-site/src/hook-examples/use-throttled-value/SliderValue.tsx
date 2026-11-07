@@ -1,11 +1,11 @@
-import { useThrottle } from "@altalyst/hookify";
+import { useThrottledValue } from "@altalyst/hookify";
 import { useEffect, useState } from "react";
 
 export const SliderValue = () => {
   const [value, setValue] = useState(50);
   const [leading, setLeading] = useState(true);
   const [trailing, setTrailing] = useState(true);
-  const throttled = useThrottle(value, 1000, { leading, trailing });
+  const throttled = useThrottledValue(value, 1000, { leading, trailing });
 
   useEffect(() => {
     console.log(`Throttled value: ${throttled}`);

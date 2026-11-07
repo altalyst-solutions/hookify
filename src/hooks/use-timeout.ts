@@ -38,7 +38,7 @@ export interface UseTimeoutControls {
  * timer is left alone when `delay` changes; the new `delay` applies the next
  * time `start` is called. The return value of `callback` is ignored. For a
  * recurring timer, see `useInterval`; for delaying a value or a burst of
- * calls, see `useDebounce` and `useDebouncedCallback`.
+ * calls, see `useDebouncedValue` and `useDebouncedCallback`.
  *
  * @param callback - The function to call when the timer elapses.
  * @param delay - The delay in milliseconds, or `null` for no timer.

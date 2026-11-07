@@ -1,0 +1,86 @@
+---
+title: useDebouncedValue
+sidebar_position: 28
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-debounced-value/App";
+import searchPreviewSource from "!!raw-loader!@site/src/hook-examples/use-debounced-value/SearchPreview";
+import hookSource from "!!raw-loader!../../../src/hooks/use-debounced-value.ts";
+
+# useDebouncedValue
+
+Returns a debounced copy of a value that only updates once the value has
+stopped changing for a given delay. It is the debounce counterpart to
+[`useThrottledValue`](./use-throttled-value.mdx): debouncing waits for a
+pause, throttling guarantees regular updates while the value keeps changing.
+To debounce a function call instead, use
+[`useDebouncedCallback`](./use-debounced-callback.mdx).
+
+## When to use it
+
+- Running a search or fetch only once the user stops typing.
+- Validating a field after the user pauses, instead of on every keystroke.
+- Deferring expensive filtering or rendering driven by fast-changing input.
+
+## Demo
+
+Type in the field and compare the live and debounced values. Open the
+**Console** tab to see when the search effect runs.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/SearchPreview.tsx": searchPreviewSource,
+  }}
+  activeFile="/SearchPreview.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+function useDebouncedValue<T>(value: T, delay: number): T;
+```
+
+| Parameter | Type     | Description                                            |
+| --------- | -------- | ------------------------------------------------------ |
+| `value`   | `T`      | The value to debounce.                                 |
+| `delay`   | `number` | How long `value` must stay unchanged, in milliseconds. |
+
+**Returns:** the debounced value. On the first render it equals `value`.
+
+## Usage notes
+
+- Every change restarts the wait, so while the value keeps changing faster
+  than `delay`, the returned value stays the same.
+- Values are compared with `Object.is`. Pass a stable reference (for example
+  memoized objects) to avoid treating equal content as a change.
+- Changing `delay` restarts the current wait with the new delay.
+- Function values are stored as-is, never called.
+- The pending update is dropped on unmount, and the hook is safe under
+  React `StrictMode`.
+
+## Example
+
+```tsx
+const [query, setQuery] = useState("");
+const debouncedQuery = useDebouncedValue(query, 300);
+
+const { data } = useApi<Result[]>(
+  `/api/search?q=${encodeURIComponent(debouncedQuery)}`
+);
+```
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useDebouncedValue</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-debounced-value.ts">
+    {hookSource}
+  </CodeBlock>
+</details>

@@ -1,9 +1,9 @@
-import { useThrottle } from "@altalyst/hookify";
+import { useThrottledValue } from "@altalyst/hookify";
 import { useState } from "react";
 
 export const PointerTracker = () => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const throttled = useThrottle(position, 500);
+  const throttled = useThrottledValue(position, 500);
 
   return (
     <div>

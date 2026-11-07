@@ -15,9 +15,9 @@ import hookSource from "!!raw-loader!../../../src/hooks/use-debounced-callback.t
 # useDebouncedCallback
 
 Returns a stable, debounced version of a callback, with `cancel`, `flush` and
-`isPending` controls and optional leading/trailing behavior. It builds on
-[`useDebounce`](./use-debounce.mdx) for cases where you need to control the
-pending call, not just delay it.
+`isPending` controls and optional leading/trailing behavior. To debounce a
+value instead of a function call, use
+[`useDebouncedValue`](./use-debounced-value.mdx).
 
 ## When to use it
 
@@ -88,8 +88,7 @@ plus:
 
 - **Stable identity.** The returned function (and its `cancel`, `flush` and
   `isPending`) never changes between renders, so it is safe in dependency
-  arrays. This differs from `useDebounce`, whose function changes with
-  `callback` and `delay`.
+  arrays.
 - **Always the latest callback.** Changing `callback` or `delay` does not
   reset a running timer. The pending call runs the newest `callback`, and a
   new `delay` applies from the next call. The callback is read after each
@@ -108,7 +107,8 @@ plus:
 - **Return value.** The callback's return value is ignored; the debounced
   function returns `void`.
 - **Rate-limiting values.** To limit how often a changing _value_ updates, use
-  [`useThrottle`](./use-throttle.mdx).
+  [`useThrottledValue`](./use-throttled-value.mdx), or
+  [`useDebouncedValue`](./use-debounced-value.mdx) to wait for a pause.
 - Safe under React `StrictMode`.
 
 ## Example

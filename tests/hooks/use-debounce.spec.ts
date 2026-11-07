@@ -1,9 +1,13 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { useDebounce } from "@/hooks";
+import { useDebounce, useDebouncedCallback } from "@/hooks";
 
-describe("useDebounce", () => {
+describe("useDebounce (deprecated)", () => {
+  it("is an alias of useDebouncedCallback", () => {
+    expect(useDebounce).toBe(useDebouncedCallback);
+  });
+
   it("should delay the callback execution by the specified delay", () => {
     const callback = vi.fn();
     const delay = 200;
