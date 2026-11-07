@@ -84,4 +84,35 @@ describe("useToggleState", () => {
     const [state] = result.current;
     expect(state).toBe(true);
   });
+
+  it("should expose a setter for explicit values", () => {
+    const { result } = renderHook(() => useToggleState(false));
+
+    act(() => {
+      result.current[2](true);
+    });
+    expect(result.current[0]).toBe(true);
+
+    act(() => {
+      result.current[2](true);
+    });
+    expect(result.current[0]).toBe(true);
+
+    act(() => {
+      result.current[2]((prev) => !prev);
+    });
+    expect(result.current[0]).toBe(false);
+  });
+
+  it("should keep toggle and setter stable across renders", () => {
+    const { result } = renderHook(() => useToggleState());
+    const [, toggle, setState] = result.current;
+
+    act(() => {
+      toggle();
+    });
+
+    expect(result.current[1]).toBe(toggle);
+    expect(result.current[2]).toBe(setState);
+  });
 });

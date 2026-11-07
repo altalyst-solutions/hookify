@@ -1,3 +1,4 @@
+import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useState } from "react";
 
 /**
@@ -6,7 +7,7 @@ import { useCallback, useState } from "react";
  * This hook is useful for managing binary states, such as showing/hiding elements, toggling themes, or activating/deactivating features.
  *
  * @param initialState - The initial state of the toggle (default is `false`).
- * @returns An array containing the current state and a function to toggle it.
+ * @returns A tuple of the current state, a stable `toggle` function, and a stable `setState` for setting an explicit value (for example `setOpen(false)` to close).
  *
  * @example
  * ```tsx
@@ -22,11 +23,23 @@ import { useCallback, useState } from "react";
  * );
  * ```
  *
+ * @example
+ * ```tsx
+ * const [isOpen, toggleOpen, setOpen] = useToggleState();
+ *
+ * return (
+ *   <>
+ *     <button onClick={toggleOpen}>Menu</button>
+ *     {isOpen && <Menu onSelect={() => setOpen(false)} />}
+ *   </>
+ * );
+ * ```
+ *
  * For a live, editable example, see the [useToggleState docs page](https://altalyst-solutions.github.io/hookify/hooks/use-toggle-state).
  */
 export const useToggleState = (
   initialState: boolean = false
-): [boolean, () => void] => {
+): [boolean, () => void, Dispatch<SetStateAction<boolean>>] => {
   const [state, setState] = useState(initialState);
 
   /**
@@ -36,5 +49,5 @@ export const useToggleState = (
     setState((prev) => !prev);
   }, []);
 
-  return [state, toggle] as const;
+  return [state, toggle, setState];
 };
