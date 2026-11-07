@@ -1,4 +1,5 @@
 {
+  "perFile": true,
   "lines": 95,
   "statements": 95,
   "functions": 95,

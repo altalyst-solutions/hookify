@@ -18,6 +18,11 @@
  * - a collapsible table of the files that are not fully covered, least covered
  *   (by lines) first. It is left out when every file is at 100%.
  *
+ * When the thresholds set `perFile: true`, Vitest also fails the run if any
+ * single file is below a threshold. The report then marks those cells with ❌,
+ * says how many files are below, and expands the file table so they are
+ * visible without a click.
+ *
  * The thresholds come from `tests/coverage-thresholds.json`, the same file
  * `vitest.config.ts` uses to fail the run, so the report and the check always
  * agree. This script only reports: it always exits with code 0 and never fails
@@ -70,10 +75,11 @@ import { relative, resolve } from "node:path";
  */
 
 /**
- * Minimum percentage per metric, as stored in `tests/coverage-thresholds.json`.
- * A metric without a threshold is reported but never marked as failing.
+ * The contents of `tests/coverage-thresholds.json`: the minimum percentage per
+ * metric, and whether each file must meet them too. A metric without a
+ * threshold is reported but never marked as failing.
  *
- * @typedef {Partial<Record<MetricKey, number>>} CoverageThresholds
+ * @typedef {Partial<Record<MetricKey, number>> & { perFile?: boolean }} CoverageThresholds
  */
 
 /**
@@ -91,6 +97,7 @@ import { relative, resolve } from "node:path";
  * @typedef {object} PartialFile
  * @property {string} file - Path relative to the repository root, such as `src/hooks/use-api.ts`.
  * @property {FileCoverage} data - The file's coverage.
+ * @property {boolean} failing - `true` if `perFile` is on and any metric is below its threshold.
  */
 
 /** Absolute path of the repository root (two levels above this script). */
@@ -132,6 +139,17 @@ const readJson = (path) => JSON.parse(readFileSync(path, "utf8"));
 const formatPercent = (value) => `${value.toFixed(2)}%`;
 
 /**
+ * Returns whether a percentage meets a threshold. A missing threshold always
+ * passes.
+ *
+ * @param {number} pct - The measured percentage, from 0 to 100.
+ * @param {number | undefined} threshold - The minimum percentage, if any.
+ * @returns {boolean} `true` if `pct` is at least `threshold`, or there is no threshold.
+ */
+const meetsThreshold = (pct, threshold) =>
+  threshold === undefined || pct >= threshold;
+
+/**
  * Builds one row of the totals table per metric, comparing each total against
  * its threshold.
  *
@@ -143,7 +161,7 @@ const buildTotalRows = (total, thresholds) =>
   METRICS.map(([label, key]) => {
     const { pct, covered, total: count } = total[key];
     const threshold = thresholds[key];
-    const passed = threshold === undefined || pct >= threshold;
+    const passed = meetsThreshold(pct, threshold);
     const thresholdCell = threshold === undefined ? "–" : `${threshold}%`;
 
     return {
@@ -155,41 +173,93 @@ const buildTotalRows = (total, thresholds) =>
   });
 
 /**
- * Finds the files where any metric is below 100%.
+ * Finds the files where any metric is below 100%, and flags the ones that fail
+ * the per-file thresholds.
  *
  * @param {CoverageSummary} summary - The parsed coverage summary.
+ * @param {CoverageThresholds} thresholds - The thresholds, including `perFile`.
  * @returns {PartialFile[]} The files, sorted by line coverage, lowest first.
  */
-const findPartialFiles = (summary) =>
+const findPartialFiles = (summary, thresholds) =>
   Object.entries(summary)
     .filter(([file]) => file !== "total")
-    .map(([file, data]) => ({ file: relative(ROOT, file), data }))
-    .filter(({ data }) => METRICS.some(([, key]) => data[key].pct < 100))
+    .filter(([, data]) => METRICS.some(([, key]) => data[key].pct < 100))
+    .map(([file, data]) => ({
+      file: relative(ROOT, file),
+      data,
+      failing:
+        thresholds.perFile === true &&
+        METRICS.some(
+          ([, key]) => !meetsThreshold(data[key].pct, thresholds[key])
+        ),
+    }))
     .sort((a, b) => a.data.lines.pct - b.data.lines.pct);
 
 /**
- * Renders the collapsible table of files that are not fully covered.
+ * Renders the table of files that are not fully covered. It is collapsed,
+ * unless some files fail the per-file thresholds; then it starts expanded and
+ * their failing cells are marked with ❌.
  *
  * @param {PartialFile[]} files - The files to list; must not be empty.
+ * @param {CoverageThresholds} thresholds - The thresholds, including `perFile`.
  * @returns {string[]} The Markdown lines of the `<details>` block.
  */
-const renderPartialFiles = (files) => [
-  "",
-  `<details><summary>${files.length} file${
+const renderPartialFiles = (files, thresholds) => {
+  const failingCount = files.filter(({ failing }) => failing).length;
+  const label = `${files.length} file${
     files.length === 1 ? "" : "s"
-  } not fully covered</summary>`,
-  "",
-  "| File | Lines | Statements | Functions | Branches |",
-  "| --- | --- | --- | --- | --- |",
-  ...files.map(
-    ({ file, data }) =>
-      `| \`${file}\` | ${METRICS.map(([, key]) =>
-        formatPercent(data[key].pct)
-      ).join(" | ")} |`
-  ),
-  "",
-  "</details>",
-];
+  } not fully covered${
+    failingCount > 0 ? `, ${failingCount} below the per-file thresholds` : ""
+  }`;
+
+  /**
+   * Renders one percentage cell, marked with ❌ when it fails its per-file
+   * threshold.
+   *
+   * @param {FileCoverage} data - The file's coverage.
+   * @param {MetricKey} key - The metric to render.
+   * @returns {string} The cell's contents.
+   */
+  const cell = (data, key) => {
+    const { pct } = data[key];
+    const failing =
+      thresholds.perFile === true && !meetsThreshold(pct, thresholds[key]);
+    return `${formatPercent(pct)}${failing ? " ❌" : ""}`;
+  };
+
+  return [
+    "",
+    `<details${failingCount > 0 ? " open" : ""}><summary>${label}</summary>`,
+    "",
+    "| File | Lines | Statements | Functions | Branches |",
+    "| --- | --- | --- | --- | --- |",
+    ...files.map(
+      ({ file, data }) =>
+        `| \`${file}\` | ${METRICS.map(([, key]) => cell(data, key)).join(
+          " | "
+        )} |`
+    ),
+    "",
+    "</details>",
+  ];
+};
+
+/**
+ * Picks the one-line verdict at the top of the report.
+ *
+ * @param {TotalRow[]} totalRows - The rows of the totals table.
+ * @param {PartialFile[]} partialFiles - The files that are not fully covered.
+ * @returns {string} The verdict as Markdown.
+ */
+const renderVerdict = (totalRows, partialFiles) => {
+  if (!totalRows.every(({ passed }) => passed)) {
+    return "**Coverage is below the threshold.** See ❌ below.";
+  }
+  if (partialFiles.some(({ failing }) => failing)) {
+    return "**Some files are below the per-file thresholds.** See ❌ in the file list below.";
+  }
+  return "All coverage thresholds are met.";
+};
 
 /**
  * Renders the full report: the verdict, the totals table and, when some files
@@ -201,14 +271,12 @@ const renderPartialFiles = (files) => [
  */
 const renderReport = (summary, thresholds) => {
   const totalRows = buildTotalRows(summary.total, thresholds);
-  const partialFiles = findPartialFiles(summary);
+  const partialFiles = findPartialFiles(summary, thresholds);
 
   const lines = [
     "## Coverage",
     "",
-    totalRows.every(({ passed }) => passed)
-      ? "All coverage thresholds are met."
-      : "**Coverage is below the threshold.** See ❌ below.",
+    renderVerdict(totalRows, partialFiles),
     "",
     "| Metric | Coverage | Threshold | |",
     "| --- | --- | --- | --- |",
@@ -216,7 +284,7 @@ const renderReport = (summary, thresholds) => {
   ];
 
   if (partialFiles.length > 0) {
-    lines.push(...renderPartialFiles(partialFiles));
+    lines.push(...renderPartialFiles(partialFiles, thresholds));
   }
 
   return lines.join("\n");
