@@ -9,6 +9,10 @@ export default mergeConfig(
     test: {
       environment: "jsdom",
       pool: "threads",
+      isolate: false,
+      unstubGlobals: true,
+      unstubEnvs: true,
+      restoreMocks: true,
       globals: true,
       setupFiles: "./tests/setup.ts",
       coverage: {
