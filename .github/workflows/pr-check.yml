@@ -55,12 +55,13 @@ jobs:
         uses: ./.github/actions/setup-deps
 
       - name: Install React ${{ matrix.react }}
+        env:
+          REACT_VERSION: ${{ matrix.react }}
         run: |
-          TYPES="${{ matrix.react }}"
-          TYPES="${TYPES%%.*}"
+          TYPES="${REACT_VERSION%%.*}"
           npm install --no-save \
-            react@${{ matrix.react }} react-dom@${{ matrix.react }} \
-            @types/react@$TYPES @types/react-dom@$TYPES
+            "react@$REACT_VERSION" "react-dom@$REACT_VERSION" \
+            "@types/react@$TYPES" "@types/react-dom@$TYPES"
 
       - name: Type-check
         run: npx tsc -b
@@ -93,6 +94,14 @@ jobs:
 
       - name: Install docs dependencies
         run: cd docs-site && npm ci
+
+      # The docs' editor types for @altalyst/hookify come from ../dist (see
+      # docs-site/tsconfig.json), so build the library before type-checking.
+      - name: Build library
+        run: npm run build
+
+      - name: Type-check docs
+        run: cd docs-site && npm run typecheck
 
       - name: Build docs site
         run: npm run docs:build
