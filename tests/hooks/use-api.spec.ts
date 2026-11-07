@@ -8,14 +8,13 @@ interface MockResponse {
   success: boolean;
 }
 
-globalThis.fetch = vi.fn();
-
 describe("useApi", () => {
   const mockUrl = "https://api.example.com/data";
   const mockData: MockResponse = { success: true };
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    // A fresh mock per test, undone by `unstubGlobals` in vitest.config.ts.
+    vi.stubGlobal("fetch", vi.fn());
   });
 
   it("should initialize with loading state and no data or error", async () => {

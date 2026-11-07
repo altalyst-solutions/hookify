@@ -132,10 +132,13 @@ describe("hooks under StrictMode", () => {
   });
 
   it("useApi settles with the fetched data despite the duplicate fetch", async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ success: true }),
-    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ success: true }),
+      })
+    );
 
     const { result } = renderHook(
       () => useApi<{ success: boolean }>("https://api.example.com/data"),

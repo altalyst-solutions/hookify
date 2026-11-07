@@ -12,13 +12,11 @@ describe("useDocVisible", () => {
     // Set up initial visibility state
     visibilityState = "visible";
 
-    // Mock document.visibilityState
-    Object.defineProperty(document, "visibilityState", {
-      configurable: true,
-      get() {
-        return visibilityState;
-      },
-    });
+    // Mock document.visibilityState; `restoreMocks` in vitest.config.ts
+    // restores the real getter after each test.
+    vi.spyOn(document, "visibilityState", "get").mockImplementation(
+      () => visibilityState
+    );
   });
 
   it("should return true when document is initially visible", () => {
