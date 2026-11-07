@@ -29,7 +29,9 @@ export const SaveSettings = () => {
       <button onClick={save} disabled={isPending}>
         {isPending ? "Saving..." : error ? "Retry" : "Save"}
       </button>
-      {error && <p style={{ color: "crimson" }}>{(error as Error).message}</p>}
+      {error !== undefined && (
+        <p style={{ color: "crimson" }}>{(error as Error).message}</p>
+      )}
       {!error && data && <p>{data}</p>}
     </div>
   );
