@@ -19,7 +19,9 @@ describe("useClipboard", () => {
   });
 
   afterEach(() => {
-    setClipboard(undefined);
+    // jsdom has no Clipboard API, so remove the property rather than leaving
+    // a stub behind for other test files.
+    delete (navigator as { clipboard?: unknown }).clipboard;
   });
 
   it("starts idle", () => {

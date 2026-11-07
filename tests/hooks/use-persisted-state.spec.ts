@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { usePersistedState } from "@/hooks";
 
@@ -20,12 +20,12 @@ const localStorageMock = (() => {
   };
 })();
 
-Object.defineProperty(global, "localStorage", {
-  value: localStorageMock,
-  writable: true,
-});
-
 describe("usePersistedState", () => {
+  beforeEach(() => {
+    // Undone after each test by `unstubGlobals` in vitest.config.ts.
+    vi.stubGlobal("localStorage", localStorageMock);
+  });
+
   afterEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
