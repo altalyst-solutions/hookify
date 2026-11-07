@@ -65,7 +65,12 @@ function useControlledState<T>(
 - Pass `undefined` for `value` to run in uncontrolled mode; pass any defined
   value to run in controlled mode.
 - `setValue` accepts either a new value or an updater function, mirroring
-  React's `setState`.
+  React's `setState`. In uncontrolled mode, several updater calls in one event
+  each build on the previous result, so calling `setValue(n => n + 1)` twice
+  adds 2.
+- `setValue` keeps a stable identity for the life of the component and always
+  calls the latest `onChange`, so it is safe in memoized children and effect
+  dependencies.
 - In development, switching between controlled and uncontrolled modes across
   renders logs a warning, since it's considered an anti-pattern.
 

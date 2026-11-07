@@ -1,9 +1,11 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
 
+import { useLatest } from "./use-latest";
+
 /**
  * Configuration options for the useDocVisible hook.
  */
-type UseDocVisibleOptions = {
+export type UseDocVisibleOptions = {
   /** Callback function invoked when the document's visibility changes. Receives the new visibility state as a parameter. */
   onChange?: (isVisible: boolean) => void;
 };
@@ -125,7 +127,7 @@ export const useDocVisible = (options?: UseDocVisibleOptions): boolean => {
    * Ref to store the onChange callback function.
    * Using a ref ensures the callback can be updated without re-subscribing to the event.
    */
-  const onChangeRef = useRef(options?.onChange);
+  const onChangeRef = useLatest(options?.onChange);
 
   /**
    * Ref to track the previous visibility state.
@@ -133,18 +135,13 @@ export const useDocVisible = (options?: UseDocVisibleOptions): boolean => {
    */
   const prevVisibleRef = useRef(isVisible);
 
-  // Keep callback ref up to date
-  useEffect(() => {
-    onChangeRef.current = options?.onChange;
-  }, [options?.onChange]);
-
   // Trigger onChange callback when visibility changes
   useEffect(() => {
     if (prevVisibleRef.current !== isVisible) {
       prevVisibleRef.current = isVisible;
       onChangeRef.current?.(isVisible);
     }
-  }, [isVisible]);
+  }, [isVisible, onChangeRef]);
 
   return isVisible;
 };

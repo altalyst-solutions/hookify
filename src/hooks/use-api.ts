@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
  * Options for configuring the API request.
  */
-interface UseApiOptions {
+export interface UseApiOptions {
   /** The HTTP method to use for the request. Default is `GET`. */
-  method?: "GET" | "POST" | "PUT" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   /** Headers to include in the request. */
   headers?: HeadersInit;
   /** The body of the request for methods that require it (e.g., `POST`, `PUT`). */
@@ -16,7 +16,7 @@ interface UseApiOptions {
  * The return type of the useApi hook.
  * @typeParam T - The type of data expected in the response.
  */
-interface UseApiReturn<T> {
+export interface UseApiReturn<T> {
   /** The fetched data, or null if there’s no data yet. */
   data: T | null;
   /** Indicates whether the request is currently being processed. */
@@ -45,6 +45,11 @@ const requestJson = async <T>(
       throw new Error(`Error: ${response.status}`);
     }
 
+    // "No Content" responses have no body to parse.
+    if (response.status === 204 || response.status === 205) {
+      return { ok: true, data: null as T };
+    }
+
     return { ok: true, data: (await response.json()) as T };
   } catch (err) {
     return { ok: false, error: (err as Error).message };
@@ -65,7 +70,13 @@ const requestJson = async <T>(
  * The hook can handle different HTTP methods and allows for custom headers
  * and request bodies, making it flexible for various API interactions.
  *
- * The response data is automatically parsed as JSON, and any errors encountered
+ * Only the latest request can update the state: when the inputs change, `refetch`
+ * is called again, or the component unmounts, the request in flight is aborted
+ * through an `AbortSignal` and its result is ignored. This prevents a slow,
+ * outdated response from overwriting a newer one.
+ *
+ * The response data is automatically parsed as JSON (`204` and `205` responses
+ * resolve to `null`), and any errors encountered
  * during the request process are caught and returned, allowing the consuming
  * component to handle them appropriately.
  *
@@ -110,8 +121,9 @@ export const useApi = <T = unknown>(
    * only when those inputs change, which is what triggers a new fetch.
    */
   const request = useCallback(
-    () =>
+    (signal: AbortSignal) =>
       requestJson<T>(url, {
+        signal,
         method: method || "GET",
         headers: headersKey
           ? Object.fromEntries(JSON.parse(headersKey) as [string, string][])
@@ -147,6 +159,30 @@ export const useApi = <T = unknown>(
     setError(null);
   }
 
+  /** The controller of the request in flight, aborted when a newer one starts. */
+  const controllerRef = useRef<AbortController | null>(null);
+
+  /** Aborts the request in flight and returns the controller for a new one. */
+  const begin = useCallback(() => {
+    controllerRef.current?.abort();
+    const controller = new AbortController();
+    controllerRef.current = controller;
+    return controller;
+  }, []);
+
+  /**
+   * Applies a finished request, unless it was aborted because a newer request
+   * started or the component unmounted.
+   */
+  const settle = useCallback(
+    (controller: AbortController, result: RequestResult<T>) => {
+      if (controller.signal.aborted) return;
+      controllerRef.current = null;
+      applyResult(result);
+    },
+    [applyResult]
+  );
+
   /**
    * Manually re-runs the request, exposed to consumers as `refetch`.
    * Switches back to the loading state before fetching.
@@ -154,13 +190,23 @@ export const useApi = <T = unknown>(
   const fetchApi = useCallback(async () => {
     setLoading(true);
     setError(null);
-    applyResult(await request());
-  }, [request, applyResult]);
+    const controller = begin();
+    settle(controller, await request(controller.signal));
+  }, [begin, request, settle]);
 
   // Fetch on mount and whenever the request inputs change.
   useEffect(() => {
-    request().then(applyResult);
-  }, [request, applyResult]);
+    const controller = begin();
+    request(controller.signal).then((result) => settle(controller, result));
+  }, [begin, request, settle]);
+
+  // Abort whatever is still in flight (including a `refetch`) on unmount.
+  useEffect(
+    () => () => {
+      controllerRef.current?.abort();
+    },
+    []
+  );
 
   return { data, loading, error, refetch: fetchApi };
 };

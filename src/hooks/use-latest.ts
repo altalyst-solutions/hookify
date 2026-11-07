@@ -1,4 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
+
+import { useIsomorphicLayoutEffect } from "./use-isomorphic-layout-effect";
 
 /**
  * Returns a ref that always holds the latest value passed to the hook.
@@ -7,9 +9,10 @@ import { useEffect, useRef } from "react";
  * closures (timers, event listeners, async callbacks, effects with empty
  * dependency arrays) without re-subscribing or capturing stale values.
  *
- * The ref is synchronized in an effect, so it is updated after each commit
- * rather than during render. Read `ref.current` inside callbacks or effects,
- * not while rendering.
+ * The ref is synchronized in a layout effect (a regular effect during server
+ * rendering), so it is updated after each commit but before any `useEffect`
+ * runs, including those of child components. Read `ref.current` inside
+ * callbacks or effects, not while rendering.
  *
  * @param value - The value to keep in the ref.
  * @returns A stable ref object whose `current` is the latest value.
@@ -27,7 +30,7 @@ import { useEffect, useRef } from "react";
 export const useLatest = <T>(value: T): { readonly current: T } => {
   const ref = useRef(value);
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     ref.current = value;
   });
 

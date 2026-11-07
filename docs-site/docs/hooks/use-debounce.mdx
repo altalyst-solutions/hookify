@@ -59,13 +59,15 @@ function useDebounce<T extends (...args: any[]) => void>(
 
 ## Usage notes
 
-- The returned function is stable across re-renders as long as `callback` and
-  `delay` don't change (it's memoized with `useCallback`).
+- The returned function keeps a stable identity across re-renders and always
+  calls the latest `callback`, so an inline callback never runs with stale
+  props or state.
 - Any pending timeout is cleared automatically when the component unmounts,
   so it's safe to use inside effects and event handlers without manual
   cleanup.
-- Changing `callback` or `delay` resets the debounce timer.
-- Need a stable function, `cancel`, `flush`, or leading-edge calls? Use
+- A new `delay` applies from the next call; a call already waiting keeps its
+  original delay.
+- Need `cancel`, `flush`, or leading-edge calls? Use
   [`useDebouncedCallback`](./use-debounced-callback.mdx).
 
 ## Hook source

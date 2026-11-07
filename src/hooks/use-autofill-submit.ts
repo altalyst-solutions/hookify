@@ -1,6 +1,8 @@
 import type { RefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { useLatest } from "./use-latest";
+
 /** A form control whose value can be filled by a password manager. */
 export type AutofillField =
   HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
@@ -166,10 +168,7 @@ export const useAutofillSubmit = <const TName extends string>(
   );
 
   // Latest options, read at sample time so callbacks never need stable identity.
-  const optionsRef = useRef(options);
-  useEffect(() => {
-    optionsRef.current = options;
-  });
+  const optionsRef = useLatest(options);
 
   // Whether the next fill may submit. A ref: it must not cause re-renders.
   const armedRef = useRef(true);
@@ -312,6 +311,7 @@ export const useAutofillSubmit = <const TName extends string>(
   }, [
     enabled,
     fields,
+    optionsRef,
     formRef,
     interactionEvents,
     pollInterval,

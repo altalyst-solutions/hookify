@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { warnInDevelopment } from "../utils";
+import { useLatest } from "./use-latest";
 
 /**
  * Props type for components using controlled state pattern.
@@ -39,9 +40,10 @@ const isValueControlled = (value: unknown): boolean => value !== undefined;
  * This pattern provides flexibility for component consumers, allowing them to choose
  * between full control of the state or letting the component manage it automatically.
  *
- * The `setValue` function is optimized for performance with a stable reference that only
- * changes when the component switches between controlled/uncontrolled modes or when the
- * `onChange` callback changes. This prevents unnecessary re-renders in child components.
+ * The `setValue` function keeps a stable identity for the lifetime of the component and
+ * always calls the latest `onChange`, so it is safe to pass to memoized children or use
+ * in effect dependencies. Updater functions called several times in one event each see
+ * the result of the previous call in uncontrolled mode, just like React's `setState`.
  *
  * In development mode, the hook will warn if a component switches between controlled
  * and uncontrolled modes, which is considered an anti-pattern and can lead to
@@ -147,7 +149,10 @@ export const useControlledState = <T>(
     wasControlledRef.current = isControlledNow;
   }, [value]);
 
-  // Memoized setter function that handles both direct values and updater functions
+  const isControlledRef = useLatest(isControlled);
+  const onChangeRef = useLatest(onChange);
+
+  // Stable setter that handles both direct values and updater functions
   const setValue = useCallback(
     (newValue: T | ((prev: T) => T)) => {
       // Resolve updater function to get the actual value (supports prev => prev + 1 pattern)
@@ -157,14 +162,16 @@ export const useControlledState = <T>(
           : newValue;
 
       // Update internal state only in uncontrolled mode (controlled mode ignores this)
-      if (!isValueControlled(value)) {
+      if (!isControlledRef.current) {
+        // Record the pending value so a second updater in the same event builds on it.
+        currentValueRef.current = resolvedValue;
         setInternalValue(resolvedValue);
       }
 
       // Always notify parent of value changes via onChange callback
-      onChange?.(resolvedValue);
+      onChangeRef.current?.(resolvedValue);
     },
-    [onChange, value]
+    [currentValueRef, isControlledRef, onChangeRef]
   );
 
   return [currentValue, setValue] as const;

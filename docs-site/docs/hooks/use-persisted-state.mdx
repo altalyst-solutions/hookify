@@ -64,7 +64,13 @@ function usePersistedState<T>(
   degrades gracefully (falls back to `initialValue`) if storage is
   unavailable (e.g. private browsing).
 - Listens for the `storage` event, so updates made in one tab automatically
-  propagate to other open tabs.
+  propagate to other open tabs. Instances that share a key in the same tab
+  stay in sync too.
+- If the key is removed (or storage is cleared) in another tab, the value
+  falls back to `initialValue`.
+- Changing `key` loads the value stored under the new key (or
+  `initialValue`); the previous value is never written under the new key.
+- `setValue` keeps a stable identity across renders, just like `useState`.
 
 ## Hook source
 

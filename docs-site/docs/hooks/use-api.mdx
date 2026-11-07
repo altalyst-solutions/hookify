@@ -39,7 +39,7 @@ function useApi<T = unknown>(
 ): UseApiReturn<T>;
 
 interface UseApiOptions {
-  method?: "GET" | "POST" | "PUT" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   headers?: HeadersInit;
   body?: BodyInit;
 }
@@ -63,7 +63,14 @@ interface UseApiReturn<T> {
 
 - The request automatically re-runs whenever `url`, `method`, `headers`, or
   `body` change.
-- The response body is parsed as JSON automatically.
+- The response body is parsed as JSON automatically. `204` and `205` (No
+  Content) responses resolve to `null` without parsing.
+- Only the latest request can update the state. When the inputs change,
+  `refetch` runs again, or the component unmounts, the request in flight is
+  aborted with an `AbortSignal` and its result is ignored, so a slow,
+  outdated response never overwrites a newer one.
+- `UseApiOptions` and `UseApiReturn` are exported for typing your own
+  wrappers.
 - `refetch` re-triggers the same request on demand — handy for "Retry" or
   "Refresh" buttons.
 

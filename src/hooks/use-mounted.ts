@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef } from "react";
 
+import { useLatest } from "./use-latest";
+
 /**
  * Configuration options for the useMounted hook.
  */
-type UseMountedOptions = {
+export type UseMountedOptions = {
   /**
    * Callback function that is invoked when the component mounts.
    * Optionally returns a cleanup function that will be called before unmount.
@@ -81,14 +83,11 @@ export const useMounted = (options?: UseMountedOptions): (() => boolean) => {
    * Holds the latest options so the mount/unmount effect can run exactly once
    * while still calling the most recent callbacks.
    */
-  const optionsRef = useRef(options);
-
-  // Declared before the mount effect so onMount always sees the latest options.
-  useEffect(() => {
-    optionsRef.current = options;
-  });
+  const optionsRef = useLatest(options);
 
   useEffect(() => {
+    const latestOptions = optionsRef;
+
     // Mark the component as mounted
     isMounted.current = true;
 
@@ -106,10 +105,11 @@ export const useMounted = (options?: UseMountedOptions): (() => boolean) => {
         cleanupRef.current();
       }
 
-      // Call onUnmount callback
-      optionsRef.current?.onUnmount?.();
+      // Call the latest onUnmount callback. Reading the ref here is intended:
+      // it holds callbacks, not a DOM node.
+      latestOptions.current?.onUnmount?.();
     };
-  }, []);
+  }, [optionsRef]);
 
   /**
    * Returns the current mount status of the component.

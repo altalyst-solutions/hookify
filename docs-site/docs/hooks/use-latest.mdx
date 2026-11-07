@@ -45,7 +45,9 @@ function useLatest<T>(value: T): { readonly current: T };
 ```
 
 **Returns:** a ref whose `current` is the latest `value`. It is synchronized
-after each commit, so read it inside callbacks or effects, not during render.
+in a layout effect after each commit, before any `useEffect` runs (including
+those of child components), so read it inside callbacks or effects, not during
+render.
 
 ## Example
 

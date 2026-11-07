@@ -40,20 +40,25 @@ replacement for `useState(false)` plus a manual toggler.
 ## Signature
 
 ```ts
-function useToggleState(initialState?: boolean): [boolean, () => void];
+function useToggleState(
+  initialState?: boolean
+): [boolean, () => void, Dispatch<SetStateAction<boolean>>];
 ```
 
 | Parameter      | Type      | Description                             |
 | -------------- | --------- | --------------------------------------- |
 | `initialState` | `boolean` | The initial state. Defaults to `false`. |
 
-**Returns:** a tuple of `[state, toggle]`.
+**Returns:** a tuple of `[state, toggle, setState]`.
 
 ## Usage notes
 
 - `toggle` is memoized with `useCallback` and never changes identity across
   renders, so it's safe to pass down to child components or effect deps.
 - Call `toggle()` with no arguments — it always flips the current state.
+- Use the third element, `setState`, to set an explicit value, for example
+  `setOpen(false)` when a menu item is picked. It is React's own setter, so it
+  is stable too and also accepts an updater function.
 
 ## Hook source
 
