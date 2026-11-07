@@ -16,6 +16,8 @@ jobs:
       contents: write # required to push the "Version Packages" PR branch and release tags
       pull-requests: write # required for changesets/action to open/update the "Version Packages" PR
       id-token: write # required for npm trusted publishing (OIDC)
+    outputs:
+      published: ${{ steps.changesets.outputs.published }}
 
     steps:
       - name: Checkout code
@@ -40,6 +42,7 @@ jobs:
         uses: ./.github/actions/verify-npm
 
       - name: Create Release Pull Request or Publish to npm
+        id: changesets
         # Ensure this only runs on push to main, never on manual dispatch
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: changesets/action@v2
@@ -51,10 +54,22 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
         # authenticates npm publish via OIDC trusted publishing, no NPM_TOKEN needed
 
+  # After a release is published, deploy its docs as the new stable channel.
+  # (The release is created with GITHUB_TOKEN, which doesn't trigger other
+  # workflows, so the docs workflow is called directly instead.)
+  deploy-docs:
+    needs: build-and-publish
+    if: ${{ needs.build-and-publish.outputs.published == 'true' }}
+    permissions:
+      contents: write # attach the built stable docs to the release
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/docs-deploy.yml
+
   publish-dry-run:
     # Manual-only job to verify the trusted publisher OIDC setup without publishing.
     # workflow_dispatch already requires write access to the repo to trigger.
-    if: >
+    if: >-
       ${{
         github.event_name == 'workflow_dispatch' &&
         github.repository == 'altalyst-solutions/hookify'

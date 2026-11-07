@@ -7,6 +7,7 @@ import {
   SandpackProvider,
 } from "@codesandbox/sandpack-react";
 import BrowserOnly from "@docusaurus/BrowserOnly";
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import { useColorMode } from "@docusaurus/theme-common";
 import React, { useEffect, useRef } from "react";
 
@@ -21,10 +22,10 @@ const REACT_VERSION = "19.3.0";
 const REACT_TYPES_VERSION = "19.3.0";
 const REACT_DOM_TYPES_VERSION = "19.3.0";
 
-// Always resolves to the latest version published to npm, matching the
-// "pull from npm CDN" approach: demos show the published library, not
-// unreleased local changes.
-const HOOKIFY_DEPENDENCY_VERSION = "latest";
+// The `@altalyst/hookify` version demos install from npm comes from the
+// `hookifyDemoVersion` custom field in docusaurus.config.ts: the exact release
+// the stable docs were built from, or `latest` in local dev. The `next`
+// channel injects the locally built library instead (see below).
 
 // When the docs run with HOOKIFY_LOCAL=1, the locally built library is injected
 // into the sandbox as a virtual `@altalyst/hookify` package, so unreleased
@@ -89,8 +90,10 @@ export interface HookDemoProps {
 /**
  * Renders a live, editable Sandpack demo for a hookify hook.
  *
- * The demo runs the real `@altalyst/hookify` package resolved from npm, so
- * what consumers see and edit is exactly what they'd get in their own app.
+ * On the stable docs, the demo runs the released `@altalyst/hookify` package
+ * from npm, pinned to the version the docs were built from, so what consumers
+ * see and edit is exactly what they'd get in their own app. On the `next`
+ * docs, it runs the library built from the same commit as the docs.
  */
 export default function HookDemo({
   files,
@@ -101,6 +104,10 @@ export default function HookDemo({
   height = 400,
 }: HookDemoProps): React.ReactElement {
   const { colorMode } = useColorMode();
+  const { siteConfig } = useDocusaurusContext();
+  const hookifyVersion = String(
+    siteConfig.customFields?.hookifyDemoVersion ?? "latest"
+  );
   const wrapperRef = useRef<HTMLDivElement>(null);
   const resolvedActiveFile = activeFile ?? Object.keys(files)[0];
 
@@ -122,7 +129,7 @@ export default function HookDemo({
               dependencies: {
                 ...(localHookifySource
                   ? {}
-                  : { "@altalyst/hookify": HOOKIFY_DEPENDENCY_VERSION }),
+                  : { "@altalyst/hookify": hookifyVersion }),
                 react: REACT_VERSION,
                 "react-dom": REACT_VERSION,
                 ...dependencies,
