@@ -1,0 +1,178 @@
+---
+title: useTabLeader
+sidebar_position: 30
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-tab-leader/App";
+import tabSource from "!!raw-loader!@site/src/hook-examples/use-tab-leader/Tab";
+import sharedPollerSource from "!!raw-loader!@site/src/hook-examples/use-tab-leader/SharedPoller";
+import hookSource from "!!raw-loader!../../../src/hooks/use-tab-leader.ts";
+
+# useTabLeader
+
+Elect one browser tab as the leader among all tabs of the same origin, so work
+that should run only once (polling, a websocket, a sync) runs in a single tab.
+When the leader closes or crashes, another tab is elected automatically.
+
+## When to use it
+
+- Polling an API, or holding a websocket or `EventSource`, from one tab instead
+  of every open tab.
+- Running a periodic sync, cleanup or analytics flush once per browser.
+- Sharing the leader's results with the other tabs (`broadcast` / `onMessage`).
+- Pausing the work of a tab that shouldn't take part, for example while signed
+  out (`enabled`).
+
+## Demo
+
+Each line in **Simulated tabs** is one hook instance standing in for a browser
+tab. Close the leader and another one takes over, and the **Console** tab logs
+every `onElected` and `onDemoted`. In the second demo only the leader runs the
+timer and broadcasts the value to the others. Open the page in a second browser
+tab to watch real tabs elect a leader together.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/Tab.tsx": tabSource,
+    "/SharedPoller.tsx": sharedPollerSource,
+  }}
+  activeFile="/Tab.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+interface UseTabLeaderOptions<TMessage = unknown> {
+  enabled?: boolean;
+  onElected?: () => void;
+  onDemoted?: () => void;
+  onMessage?: (message: TMessage, senderId: string) => void;
+}
+
+interface UseTabLeaderReturn<TMessage = unknown> {
+  isLeader: boolean;
+  leaderId: string | null;
+  id: string | null;
+  broadcast: (message: TMessage) => void;
+}
+
+function useTabLeader<TMessage = unknown>(
+  key: string,
+  options?: UseTabLeaderOptions<TMessage>
+): UseTabLeaderReturn<TMessage>;
+```
+
+| Parameter | Type                  | Description                                                             |
+| --------- | --------------------- | ----------------------------------------------------------------------- |
+| `key`     | `string`              | Names the election. Tabs with the same `key` compete, other keys don't. |
+| `options` | `UseTabLeaderOptions` | Optional settings and callbacks, listed below. Read at the time of use. |
+
+| Option      | Type                                            | Description                                                                                             |
+| ----------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `enabled`   | `boolean`                                       | Take part in the election only while `true`. Defaults to `true`.                                        |
+| `onElected` | `() => void`                                    | Called when this instance becomes the leader.                                                           |
+| `onDemoted` | `() => void`                                    | Called when this instance stops being the leader, including on unmount and when `key`/`enabled` change. |
+| `onMessage` | `(message: TMessage, senderId: string) => void` | Called with what another tab passed to `broadcast`. Never called for this instance's own messages.      |
+
+**Returns:**
+
+| Property    | Type                          | Description                                                                                  |
+| ----------- | ----------------------------- | -------------------------------------------------------------------------------------------- |
+| `isLeader`  | `boolean`                     | `true` while this instance is the leader. `false` on the server and on the first render.     |
+| `leaderId`  | `string \| null`              | The `id` of the current leader, or `null` while unknown.                                     |
+| `id`        | `string \| null`              | A random id for this instance (one per instance, even within one tab), `null` until mounted. |
+| `broadcast` | `(message: TMessage) => void` | Sends a message to every other tab using the same `key`. Stable identity.                    |
+
+## Usage notes
+
+- **Exactly one leader per key.** Different keys are independent, so you can
+  have a `"notifications"` leader and a `"sync"` leader in different tabs.
+- **How the election works.** The hook uses the
+  [Web Locks API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Locks_API):
+  the instance that holds the lock leads, and the browser hands the lock to
+  the next waiting tab when the holder closes, navigates away or crashes.
+- **Fallback without Web Locks.** Tabs ping each other over a
+  `BroadcastChannel`, the longest-running tab leads, and a tab that stops
+  pinging for about 3 seconds is dropped (right away when it closes
+  normally). A tab that is alone becomes the leader after about 0.4 seconds.
+  This is best effort: browsers may slow the timers of hidden tabs, which can
+  hand leadership over early. Use browsers with Web Locks when that matters.
+- **No API at all.** When neither Web Locks nor `BroadcastChannel` exists
+  (an old browser or an insecure context), the page is treated as a single
+  tab and becomes the leader once mounted. During server rendering,
+  `isLeader` is `false` and nothing touches `navigator` or `BroadcastChannel`.
+- **Start and stop work with the callbacks.** `onElected` fires on becoming
+  leader and `onDemoted` on losing leadership, on unmount, when `key`
+  changes and when `enabled` turns `false`. They are always balanced, also
+  under React StrictMode, so `onElected: start` with `onDemoted: stop` is
+  safe. For work driven by state, use `isLeader` directly, for example
+  `useInterval(poll, isLeader ? 5000 : null)`.
+- **Sharing results.** `broadcast(message)` reaches every _other_ tab, and
+  other hook instances in the same tab, with the same `key`, never the
+  sender. Messages must be structured-cloneable. They go to everyone, not just
+  the leader, so the usual pattern is: the leader fetches, updates its own
+  state and broadcasts, and followers update their state in `onMessage`.
+  `broadcast` does nothing without `BroadcastChannel`.
+- **`leaderId` for followers** comes from the leader's announcement over the
+  `BroadcastChannel`. Without it a follower sees `null` but still knows
+  `isLeader` is `false`.
+- **Each instance is a participant.** Two components in one tab using the
+  same `key` compete like two tabs, and only one of them leads. Call the hook
+  once and share the result (for example through context) if you want one
+  decision per tab.
+- Errors thrown by `onElected`, `onDemoted` are rethrown asynchronously so
+  they are reported without breaking the election. Callbacks always see the
+  latest props, and changing them doesn't re-run the election.
+- The election is shared only by tabs of the **same origin**, and by the same
+  browser profile.
+
+## Example
+
+```tsx
+// Only the leader tab polls
+const { isLeader } = useTabLeader("notifications");
+
+useInterval(poll, isLeader ? 5000 : null);
+```
+
+```tsx
+// The leader fetches, every tab shows the result
+const [prices, setPrices] = useState<Prices>();
+const { isLeader, broadcast } = useTabLeader<Prices>("prices", {
+  onMessage: setPrices,
+});
+
+useInterval(
+  async () => {
+    const next = await fetchPrices();
+    setPrices(next);
+    broadcast(next);
+  },
+  isLeader ? 5000 : null,
+  { immediate: true }
+);
+```
+
+```tsx
+// Hold a websocket in one tab only
+const { isLeader } = useTabLeader("socket", {
+  onElected: () => socket.connect(),
+  onDemoted: () => socket.disconnect(),
+});
+```
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useTabLeader</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-tab-leader.ts">
+    {hookSource}
+  </CodeBlock>
+</details>
