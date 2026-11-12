@@ -1,0 +1,171 @@
+---
+title: useWebLock
+sidebar_position: 29
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-web-lock/App";
+import skipIfBusySource from "!!raw-loader!@site/src/hook-examples/use-web-lock/SkipIfBusy";
+import workerSource from "!!raw-loader!@site/src/hook-examples/use-web-lock/Worker";
+import hookSource from "!!raw-loader!../../../src/hooks/use-web-lock.ts";
+
+# useWebLock
+
+Run async work under a named lock from the
+[Web Locks API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Locks_API),
+so only one tab, window or worker at a time (or any number, in shared mode)
+executes it. Lock requests are cleaned up on unmount.
+
+## When to use it
+
+- Avoiding duplicate token refreshes when several tabs notice an expired token.
+- Serializing writes to shared storage such as IndexedDB or `localStorage`.
+- Making sure a sync or migration runs in only one tab (`ifAvailable`).
+- Letting many readers proceed together while a writer waits (`shared`).
+
+## Demo
+
+Click **Run 2s task** on both workers: the second one shows "waiting for the
+lock..." until the first finishes, and the **Console** tab logs the order. Open
+the page in another tab to see the tabs take turns. The last example skips the
+work when the lock is already held.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/Worker.tsx": workerSource,
+    "/SkipIfBusy.tsx": skipIfBusySource,
+  }}
+  activeFile="/Worker.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+interface UseWebLockOptions {
+  mode?: LockMode; // "exclusive" | "shared"
+  ifAvailable?: boolean;
+  steal?: boolean;
+}
+
+interface UseWebLockRunOptions extends UseWebLockOptions {
+  signal?: AbortSignal;
+}
+
+type WebLockCallback<T> = (
+  lock: Lock | null,
+  signal: AbortSignal
+) => T | Promise<T>;
+
+interface UseWebLockReturn {
+  run: <T>(
+    fn: WebLockCallback<T>,
+    options?: UseWebLockRunOptions
+  ) => Promise<T | undefined>;
+  isHeld: boolean;
+  isPending: boolean;
+}
+
+function useWebLock(
+  name: string,
+  options?: UseWebLockOptions
+): UseWebLockReturn;
+```
+
+| Parameter | Type                | Description                                                              |
+| --------- | ------------------- | ------------------------------------------------------------------------ |
+| `name`    | `string`            | The lock name. Holders of the same name in the same origin contend.      |
+| `options` | `UseWebLockOptions` | Default lock settings for every `run` call. Each call can override them. |
+
+| Option        | Type                      | Description                                                                                 |
+| ------------- | ------------------------- | ------------------------------------------------------------------------------------------- |
+| `mode`        | `"exclusive" \| "shared"` | One holder at a time, or any number together. Defaults to `"exclusive"`.                    |
+| `ifAvailable` | `boolean`                 | Skip the work if the lock can't be granted right away. `run` then resolves `undefined`.     |
+| `steal`       | `boolean`                 | Take the lock immediately, aborting the current holder. Exclusive mode only. Use with care. |
+
+`run` accepts the same options as its second argument, plus `signal`.
+
+**Returns:**
+
+| Property    | Type                                           | Description                                                             |
+| ----------- | ---------------------------------------------- | ----------------------------------------------------------------------- |
+| `run`       | `<T>(fn, options?) => Promise<T \| undefined>` | Waits for the lock, runs `fn` while holding it, then releases the lock. |
+| `isHeld`    | `boolean`                                      | `true` while `fn` is running with the lock held.                        |
+| `isPending` | `boolean`                                      | `true` while a `run` call is waiting for the lock.                      |
+
+`fn` receives `(lock, signal)`:
+
+| Argument | Type           | Description                                                                                            |
+| -------- | -------------- | ------------------------------------------------------------------------------------------------------ |
+| `lock`   | `Lock \| null` | The granted lock, or `null` when the Web Locks API is unavailable and `fn` runs without locking.       |
+| `signal` | `AbortSignal`  | Aborts on unmount or when the `signal` given to `run` aborts. Pass it to `fetch` or check it in loops. |
+
+## Usage notes
+
+- The lock is released when `fn` resolves **or** rejects. A rejection from
+  `fn` is passed through to the `run` caller.
+- `run` resolves `undefined` when `ifAvailable` skips the work. If `fn` can
+  itself return `undefined`, return a distinct value (such as `true`) so
+  you can tell a skip from a result.
+- On unmount, requests still **waiting** for the lock are aborted and their
+  `run` rejects with an `AbortError`. Use the exported `isAbortError(error)`
+  to tell it from a real failure. A lock that is already **held** can't be
+  revoked: it is kept until `fn` settles, so honor the `signal` passed to `fn`
+  to stop long work early. State is never updated after unmount.
+- `steal` makes the previous holder's `run` reject with an `AbortError`. The
+  browser doesn't allow `steal` or `ifAvailable` together with an abort
+  signal, so the `signal` you pass to `run` then only reaches `fn`, never the
+  lock request. Neither option waits for the lock anyway.
+- Pass a per-call `signal` to cancel one waiting request without unmounting:
+  `run(fn, { signal: controller.signal })`.
+- Locks are shared by every tab, window and worker of the **same origin**.
+  They are not shared across origins, and an `exclusive` request from the same
+  tab also waits for a lock that tab already holds, so avoid calling `run` with
+  the same name from inside `fn`: it would wait on itself forever.
+- When `navigator.locks` is missing (server rendering, an unsupported browser
+  or an insecure context), `run` calls `fn(null, signal)` directly with no
+  locking, and `isHeld` stays `false`. Check the `lock` argument if the
+  work must not run unprotected. The Web Locks API needs a secure context
+  (HTTPS or `localhost`).
+- `isPending` and `isHeld` cover every `run` call made through the same hook
+  instance, and stay `true` until the last one finishes. Nothing touches
+  `navigator` during render, so the hook is SSR-safe.
+- `run` keeps a stable identity until `name` changes. The `options` you pass
+  to the hook are read when `run` is called, so inline objects are safe.
+
+## Example
+
+```tsx
+const { run, isPending } = useWebLock("token-refresh");
+
+const getToken = () =>
+  run(async (_lock, signal) => {
+    // Another tab may have refreshed while we waited for the lock
+    if (!isExpired(readToken())) return readToken();
+
+    const response = await fetch("/api/refresh", { signal });
+    const { token } = await response.json();
+    saveToken(token);
+    return token;
+  });
+```
+
+```tsx
+// Readers share the lock, a writer takes it alone
+const reader = useWebLock("cache", { mode: "shared" });
+const writer = useWebLock("cache");
+```
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useWebLock</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-web-lock.ts">
+    {hookSource}
+  </CodeBlock>
+</details>

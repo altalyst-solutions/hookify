@@ -27,3 +27,4 @@ export * from "./use-throttle";
 export * from "./use-throttled-value";
 export * from "./use-timeout";
 export * from "./use-toggle-state";
+export * from "./use-web-lock";

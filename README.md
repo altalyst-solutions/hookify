@@ -124,6 +124,7 @@ export const Example = () => {
 | [`useThrottledValue`](https://altalyst-solutions.github.io/hookify/hooks/use-throttled-value)                  | Throttle a value so it updates at most once per interval, with leading/trailing options.           |
 | [`useTimeout`](https://altalyst-solutions.github.io/hookify/hooks/use-timeout)                                 | Declarative `setTimeout` that pauses on `null`, with start, cancel and isPending controls.         |
 | [`useToggleState`](https://altalyst-solutions.github.io/hookify/hooks/use-toggle-state)                        | Toggle a boolean state, with a stable toggle and an explicit setter.                               |
+| [`useWebLock`](https://altalyst-solutions.github.io/hookify/hooks/use-web-lock)                                | Run async work under a Web Lock so only one tab at a time does it, with abort and fallback.        |
 
 `useDebounce` and `useThrottle` are deprecated aliases of `useDebouncedCallback`
 and `useThrottledValue`, kept for compatibility and due to be removed in a future
