@@ -23,6 +23,7 @@ export * from "./use-previous";
 export * from "./use-resize-observer";
 export * from "./use-sequential-request";
 export * from "./use-stable-callback";
+export * from "./use-tab-leader";
 export * from "./use-throttle";
 export * from "./use-throttled-value";
 export * from "./use-timeout";
