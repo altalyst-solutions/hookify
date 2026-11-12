@@ -121,6 +121,7 @@ export const Example = () => {
 | [`useResizeObserver`](https://altalyst-solutions.github.io/hookify/hooks/use-resize-observer)                  | Run a callback with the raw `ResizeObserverEntry` when an element resizes, without re-renders.     |
 | [`useSequentialRequest`](https://altalyst-solutions.github.io/hookify/hooks/use-sequential-request)            | Ensure only the latest of several in-flight async requests resolves; stale ones are ignored.       |
 | [`useStableCallback`](https://altalyst-solutions.github.io/hookify/hooks/use-stable-callback)                  | Stable function identity that always calls the latest callback, with optional-callback support.    |
+| [`useTabLeader`](https://altalyst-solutions.github.io/hookify/hooks/use-tab-leader)                            | Elect one tab as leader so polling or a websocket runs once, with callbacks and tab messaging.     |
 | [`useThrottledValue`](https://altalyst-solutions.github.io/hookify/hooks/use-throttled-value)                  | Throttle a value so it updates at most once per interval, with leading/trailing options.           |
 | [`useTimeout`](https://altalyst-solutions.github.io/hookify/hooks/use-timeout)                                 | Declarative `setTimeout` that pauses on `null`, with start, cancel and isPending controls.         |
 | [`useToggleState`](https://altalyst-solutions.github.io/hookify/hooks/use-toggle-state)                        | Toggle a boolean state, with a stable toggle and an explicit setter.                               |
