@@ -17,6 +17,7 @@ export * from "./use-isomorphic-layout-effect";
 export * from "./use-latest";
 export * from "./use-media-query";
 export * from "./use-mounted";
+export * from "./use-now";
 export * from "./use-outside-click";
 export * from "./use-persisted-state";
 export * from "./use-previous";
