@@ -115,6 +115,7 @@ export const Example = () => {
 | [`useLatest`](https://altalyst-solutions.github.io/hookify/hooks/use-latest)                                   | Keep a stable ref to the latest value or callback to avoid stale closures.                         |
 | [`useMediaQuery`](https://altalyst-solutions.github.io/hookify/hooks/use-media-query)                          | Subscribe to a CSS media query and get a hydration-safe boolean that tracks whether it matches.    |
 | [`useMounted`](https://altalyst-solutions.github.io/hookify/hooks/use-mounted)                                 | Track whether a component is currently mounted to guard async state updates.                       |
+| [`useNow`](https://altalyst-solutions.github.io/hookify/hooks/use-now)                                         | Current time that re-renders at an interval, with one shared timer that pauses in hidden tabs.     |
 | [`useOutsideClick`](https://altalyst-solutions.github.io/hookify/hooks/use-outside-click)                      | Fire a callback when a click or touch happens outside a given element.                             |
 | [`usePersistedState`](https://altalyst-solutions.github.io/hookify/hooks/use-persisted-state)                  | Persist state to `localStorage` and sync it across browser tabs.                                   |
 | [`usePrevious`](https://altalyst-solutions.github.io/hookify/hooks/use-previous)                               | Get the value from the previous render, with an optional initial value.                            |
