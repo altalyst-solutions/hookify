@@ -118,6 +118,7 @@ export const Example = () => {
 | [`useOutsideClick`](https://altalyst-solutions.github.io/hookify/hooks/use-outside-click)                      | Fire a callback when a click or touch happens outside a given element.                             |
 | [`usePersistedState`](https://altalyst-solutions.github.io/hookify/hooks/use-persisted-state)                  | Persist state to `localStorage` and sync it across browser tabs.                                   |
 | [`usePrevious`](https://altalyst-solutions.github.io/hookify/hooks/use-previous)                               | Get the value from the previous render, with an optional initial value.                            |
+| [`useRateLimitedCallback`](https://altalyst-solutions.github.io/hookify/hooks/use-rate-limited-callback)       | Limit a callback to N calls per time window with a token bucket, dropping or queuing the rest.     |
 | [`useResizeObserver`](https://altalyst-solutions.github.io/hookify/hooks/use-resize-observer)                  | Run a callback with the raw `ResizeObserverEntry` when an element resizes, without re-renders.     |
 | [`useSequentialRequest`](https://altalyst-solutions.github.io/hookify/hooks/use-sequential-request)            | Ensure only the latest of several in-flight async requests resolves; stale ones are ignored.       |
 | [`useStableCallback`](https://altalyst-solutions.github.io/hookify/hooks/use-stable-callback)                  | Stable function identity that always calls the latest callback, with optional-callback support.    |

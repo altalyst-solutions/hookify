@@ -1,0 +1,180 @@
+---
+title: useRateLimitedCallback
+sidebar_position: 31
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-rate-limited-callback/App";
+import burstLimitSource from "!!raw-loader!@site/src/hook-examples/use-rate-limited-callback/BurstLimit";
+import eventQueueSource from "!!raw-loader!@site/src/hook-examples/use-rate-limited-callback/EventQueue";
+import slowDownHintSource from "!!raw-loader!@site/src/hook-examples/use-rate-limited-callback/SlowDownHint";
+import tokenMeterSource from "!!raw-loader!@site/src/hook-examples/use-rate-limited-callback/TokenMeter";
+import hookSource from "!!raw-loader!../../../src/hooks/use-rate-limited-callback.ts";
+
+# useRateLimitedCallback
+
+Returns a stable function that runs a callback at most `limit` times per
+`windowMs`, using a token bucket. Calls beyond the limit are dropped or
+queued, and the function tells you which happened.
+
+It differs from the other timing hooks: debouncing
+([`useDebouncedCallback`](./use-debounced-callback.mdx)) waits for a quiet
+period, and throttling ([`useThrottledValue`](./use-throttled-value.mdx))
+spaces updates evenly. A rate limiter allows a burst up to the limit, then
+enforces the average rate.
+
+## When to use it
+
+- Staying under an API's quota, such as 5 requests per 10 seconds.
+- Sending analytics or telemetry events in order without flooding the server
+  (`overflow: "queue"`).
+- Protecting an expensive action, such as exports or searches, from being
+  triggered too often, and telling the user when it happens (`onLimited`).
+- Limiting how often a handler fires from a noisy source (socket messages,
+  pointer events) while still allowing short bursts.
+
+## Demo
+
+Click **Send request** quickly to use up the 3 tokens, then watch one return
+every 2 seconds. The second example queues events and delivers them in order,
+and the last one shows a hint when searches are skipped. Open the **Console**
+tab to see what ran and what was dropped.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/BurstLimit.tsx": burstLimitSource,
+    "/EventQueue.tsx": eventQueueSource,
+    "/SlowDownHint.tsx": slowDownHintSource,
+    "/TokenMeter.tsx": tokenMeterSource,
+  }}
+  activeFile="/BurstLimit.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+interface UseRateLimitedCallbackOptions<A extends unknown[] = unknown[]> {
+  limit: number;
+  windowMs: number;
+  overflow?: "drop" | "queue";
+  maxQueue?: number;
+  onLimited?: (...args: A) => void;
+}
+
+interface RateLimitedFunction<A extends unknown[]> {
+  (...args: A): boolean;
+  cancel: () => void;
+  remaining: () => number;
+  pending: () => number;
+}
+
+function useRateLimitedCallback<A extends unknown[]>(
+  callback: (...args: A) => void,
+  options: UseRateLimitedCallbackOptions<A>
+): RateLimitedFunction<A>;
+```
+
+| Parameter  | Type                            | Description                     |
+| ---------- | ------------------------------- | ------------------------------- |
+| `callback` | `(...args: A) => void`          | The function to limit.          |
+| `options`  | `UseRateLimitedCallbackOptions` | The limit, window and overflow. |
+
+| Option      | Type                   | Description                                                                                                  |
+| ----------- | ---------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `limit`     | `number`               | The most calls that may run within `windowMs`, and the size of a burst. Rounded down.                        |
+| `windowMs`  | `number`               | The window, in milliseconds, over which `limit` calls are allowed. `0` or less means no limit.               |
+| `overflow`  | `"drop" \| "queue"`    | What to do with a call when no token is left. Defaults to `"drop"`.                                          |
+| `maxQueue`  | `number`               | The most calls kept waiting when `overflow` is `"queue"`. Further calls are dropped. Defaults to `Infinity`. |
+| `onLimited` | `(...args: A) => void` | Called with the arguments of every dropped call.                                                             |
+
+**Returns:** a function with the same parameters as `callback` that returns
+`true` when the call ran or was queued, and `false` when it was dropped. It
+also has these members:
+
+| Member        | Description                                                        |
+| ------------- | ------------------------------------------------------------------ |
+| `cancel()`    | Discards every queued call. Tokens already spent are not refunded. |
+| `remaining()` | The whole number of calls that would run right now.                |
+| `pending()`   | The number of calls waiting in the queue.                          |
+
+## Usage notes
+
+- **How the bucket works.** It starts full with `limit` tokens. Each call
+  spends one, and tokens come back smoothly at `limit / windowMs` per
+  millisecond, never above `limit`. With `limit: 3, windowMs: 6000`, three
+  calls run at once and then one more every 2 seconds, rather than all three
+  returning after 6 seconds.
+- **Drop or queue.** With `"drop"` an excess call is discarded and
+  `onLimited` receives its arguments. With `"queue"` it waits and runs, in
+  order, as tokens refill. Calls never jump the queue: while any call is
+  waiting, new calls wait behind it. When the queue holds `maxQueue` calls,
+  further calls are dropped and reported to `onLimited`. Set `maxQueue` when
+  calls can arrive faster than the limit for a long time, as the default
+  queue is unbounded.
+- **Return value.** `true` means the callback ran or was accepted into the
+  queue; `false` means it was dropped. The callback's own return value is
+  ignored.
+- **`remaining` and `pending` are not reactive.** They read the current state
+  and do not re-render your component. Use them in handlers, or poll them
+  (for example with [`useInterval`](./use-interval.mdx)) to show a meter, as
+  the demo does.
+- **Stable identity, latest values.** The returned function (and its members)
+  never changes between renders. It always runs the latest `callback`,
+  including for queued calls, and reads the latest options. A new `limit` or
+  `windowMs` applies from the next call or refill and does not reset spent
+  tokens; a lower `limit` caps the bucket straight away. The callback is read
+  after each commit, so call the function from handlers and effects rather
+  than during render.
+- **Unmount.** The queue and timer are cleared, and calls made afterwards are
+  ignored (they return `false`, and `onLimited` is not called). Nothing runs
+  after unmount.
+- **Errors.** If the callback throws, the error reaches the caller. For a
+  queued call it is thrown from the timer, and later queued calls still run.
+- **Edge cases.** A `limit` below `1` (or `NaN`) means no call ever runs,
+  even when queueing. A `windowMs` of `0`, negative or `NaN` disables the
+  limit. A `limit` of `Infinity` never limits. An infinite `windowMs` never
+  refills.
+- **Per instance.** Each hook instance has its own bucket. The limit is not
+  shared between components, tabs or page loads. To share one quota, lift the
+  hook up, or enforce it on the server as well.
+- Safe under React `StrictMode`.
+
+## Example
+
+```tsx
+const search = useRateLimitedCallback((query: string) => fetchResults(query), {
+  limit: 5,
+  windowMs: 10_000,
+  onLimited: () => toast("Slow down a little"),
+});
+
+return <input onChange={(e) => search(e.target.value)} />;
+```
+
+```tsx
+// Send events in order, at most 2 per second, holding up to 50 back
+const track = useRateLimitedCallback(sendEvent, {
+  limit: 2,
+  windowMs: 1000,
+  overflow: "queue",
+  maxQueue: 50,
+});
+
+// Drop what is still waiting, for example when the user signs out
+const onSignOut = () => track.cancel();
+```
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useRateLimitedCallback</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-rate-limited-callback.ts">
+    {hookSource}
+  </CodeBlock>
+</details>
