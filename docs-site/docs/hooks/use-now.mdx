@@ -1,0 +1,155 @@
+---
+title: useNow
+sidebar_position: 32
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-now/App";
+import countdownSource from "!!raw-loader!@site/src/hook-examples/use-now/Countdown";
+import liveClockSource from "!!raw-loader!@site/src/hook-examples/use-now/LiveClock";
+import relativeTimesSource from "!!raw-loader!@site/src/hook-examples/use-now/RelativeTimes";
+import stopwatchSource from "!!raw-loader!@site/src/hook-examples/use-now/Stopwatch";
+import hookSource from "!!raw-loader!../../../src/hooks/use-now.ts";
+
+# useNow
+
+Returns the current time in milliseconds and re-renders your component at a
+fixed interval. Every component that uses the same interval shares a single
+timer, so a page with hundreds of "5 minutes ago" labels runs one
+`setInterval`.
+
+It differs from [`useInterval`](./use-interval.mdx), which runs a callback on
+its own timer in every component that calls it. `useNow` gives you a value to
+render, built on `useSyncExternalStore` so all components in a render see the
+same time.
+
+## When to use it
+
+- Relative timestamps such as "just now" and "5 min ago" in lists and feeds.
+- Countdowns to a deadline, session expiry or sale end.
+- Stopwatches and live clocks.
+- Any UI that depends on the passage of time but should not keep a hidden tab
+  busy.
+
+## Demo
+
+The clock shows the interval and pause options, and counts renders. The list
+adds labels that all share one timer. The stopwatch only runs while `enabled`
+is `true`. Switch tabs and come back to see the pause and refresh.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/Countdown.tsx": countdownSource,
+    "/LiveClock.tsx": liveClockSource,
+    "/RelativeTimes.tsx": relativeTimesSource,
+    "/Stopwatch.tsx": stopwatchSource,
+  }}
+  activeFile="/RelativeTimes.tsx"
+/>
+
+## Signature
+
+```ts
+interface UseNowOptions {
+  intervalMs?: number;
+  enabled?: boolean;
+  pauseWhenHidden?: boolean;
+  serverNow?: number;
+}
+
+function useNow(options?: UseNowOptions): number;
+```
+
+| Parameter | Type             | Description                                        |
+| --------- | ---------------- | -------------------------------------------------- |
+| `options` | `UseNowOptions?` | Optional interval, pause and server-time settings. |
+
+| Option            | Type      | Description                                                                                                          |
+| ----------------- | --------- | -------------------------------------------------------------------------------------------------------------------- |
+| `intervalMs`      | `number`  | How often the time is refreshed, in milliseconds. Defaults to `1000`.                                                |
+| `enabled`         | `boolean` | Set to `false` to stop updating. Defaults to `true`.                                                                 |
+| `pauseWhenHidden` | `boolean` | Stop ticking while the document is hidden, and refresh when it is visible again. Defaults to `true`.                 |
+| `serverNow`       | `number`  | The time to return on the server and while hydrating, in milliseconds since the epoch. Defaults to the current time. |
+
+**Returns:** `number` — the current time in milliseconds since the epoch, as
+`Date.now()` returns it.
+
+## Usage notes
+
+- **One timer per interval.** Consumers with the same `intervalMs` and
+  `pauseWhenHidden` share one timer and always show the same value. It starts
+  with the first consumer and stops with the last, so nothing runs when no
+  component is using it. Different intervals (or different `pauseWhenHidden`
+  values) use separate timers.
+- **A plain number.** Wrap it in `new Date(now)` for a `Date`, add a server
+  clock offset, or compute an age or remaining time. Hookify keeps the hook
+  small on purpose; formatting is up to you (`Intl.RelativeTimeFormat`,
+  `date-fns`, and so on).
+- **Pick the coarsest interval you can.** Each tick re-renders every consumer.
+  Use `60_000` for relative labels and `1000` for countdowns. Move the
+  `useNow` call into a small component, as the demo does with `TimeAgo`, so
+  only that component re-renders.
+- **The value can lag behind `Date.now()`.** It is refreshed on each tick, so
+  it can be up to one interval older than a `Date.now()` you read yourself, for
+  example right after a click. Clamp differences that must not be negative with
+  `Math.max(0, now - startedAt)`.
+- **Hidden tabs.** With `pauseWhenHidden` (the default), the timer stops while
+  `document.visibilityState` is `"hidden"` and the value refreshes as soon as
+  the tab is visible again. Set it to `false` for work that must keep running,
+  such as a clock in a picture-in-picture window.
+- **Pausing.** With `enabled: false` the hook does not subscribe, and keeps
+  returning the last value it returned while enabled (or the time of its first
+  render, if it starts disabled). When you enable it again it returns the
+  current time. Other consumers are not affected.
+- **`intervalMs` values.** A value that is not a finite, positive number falls
+  back to `1000`. Values above `2147483647` (about 24.8 days) are capped, as
+  larger delays are not valid for `setInterval`.
+- **Server rendering and hydration.** The server renders the time it has at
+  that moment, so time-dependent text will not match the browser's. To get
+  identical markup, serialize a timestamp from the server and pass it as
+  `serverNow` on both sides; the hook returns it during hydration and then
+  switches to the real time. Without it, render the text with
+  `suppressHydrationWarning` or only after mount.
+- **Testing.** The hook reads `Date.now()` and `setInterval`, so Vitest or Jest
+  fake timers (`vi.useFakeTimers()`, `vi.setSystemTime()`) control it. Wrap
+  `advanceTimersByTime` in `act`.
+- Safe under React `StrictMode`.
+
+## Example
+
+```tsx
+const TimeAgo = ({ at }: { at: number }) => {
+  const now = useNow({ intervalMs: 60_000 });
+  const minutes = Math.max(0, Math.floor((now - at) / 60_000));
+  return <span>{minutes < 1 ? "just now" : `${minutes} min ago`}</span>;
+};
+```
+
+```tsx
+// A stopwatch that only ticks while it is running
+const now = useNow({ intervalMs: 100, enabled: running });
+```
+
+```tsx
+// Wall-clock time that follows the server's clock
+const now = useNow() + serverClockOffset;
+```
+
+```tsx
+// Server-rendered page: same text on the server and while hydrating
+const now = useNow({ intervalMs: 60_000, serverNow: props.renderedAt });
+```
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useNow</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-now.ts">
+    {hookSource}
+  </CodeBlock>
+</details>
