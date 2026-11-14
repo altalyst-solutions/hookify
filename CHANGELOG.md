@@ -18,6 +18,20 @@ or the [GitHub tags](https://github.com/altalyst-solutions/hookify/tags)
 (tags from `0.5.1` and earlier have no `v` prefix, e.g. `0.4.0`; tags from
 `0.6.0` onward are named `v<version>`, e.g. `v0.6.0`).
 
+## 0.13.0
+
+### Minor Changes
+
+- [#117](https://github.com/altalyst-solutions/hookify/pull/117) [`57b2037`](https://github.com/altalyst-solutions/hookify/commit/57b2037ef40a1c40e1355fae2a8ace577ac23107) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useImpression` hook, which calls a callback once an element has been at least `threshold` visible for at least `minDurationMs`, for analytics, "mark as read" and ad-view tracking. Leaving the viewport before the time is up resets the timer, and time in a hidden tab does not count. It reports once per element by default (`once: false` reports again after the element leaves and re-enters), supports `root`, `rootMargin` and `enabled`, always calls the latest callback without re-observing, never re-renders your component, and does nothing on the server or where `IntersectionObserver` is unavailable.
+
+- [#115](https://github.com/altalyst-solutions/hookify/pull/115) [`cf1d9e0`](https://github.com/altalyst-solutions/hookify/commit/cf1d9e0b5024f0def660078d09e961901669b6eb) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useNow` hook, which returns the current time in milliseconds and re-renders at a given interval. Every component with the same interval shares one timer, so many "5 min ago" labels cost a single `setInterval`; it starts with the first consumer and stops with the last. Ticks pause while the tab is hidden and refresh on return (`pauseWhenHidden`), `enabled: false` stops updating, and `serverNow` gives identical markup during server rendering and hydration. It is built on `useSyncExternalStore`, so it never tears and is safe under `StrictMode`.
+
+- [#114](https://github.com/altalyst-solutions/hookify/pull/114) [`1d41626`](https://github.com/altalyst-solutions/hookify/commit/1d41626816bc25b43b9a31442a46b8847d4fc63c) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useRateLimitedCallback` hook, which returns a stable function that runs a callback at most `limit` times per `windowMs` using a token bucket, so bursts are allowed but the average rate is capped. Excess calls are dropped (default) or queued and run in order as tokens refill (`overflow: "queue"`, with an optional `maxQueue`), `onLimited` receives dropped calls, and the function reports whether a call ran or was queued. It also exposes `cancel`, `remaining` and `pending`, always runs the latest callback and options, and clears its queue and timer on unmount.
+
+- [#113](https://github.com/altalyst-solutions/hookify/pull/113) [`ec5c35e`](https://github.com/altalyst-solutions/hookify/commit/ec5c35e436ca5108c0effeb9e7d83f4e1933e7b8) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useTabLeader` hook, which elects one browser tab as the leader among all tabs of the same origin, so polling, websockets or syncs run in a single tab. It exposes `isLeader`, `leaderId`, `id` and a `broadcast` function, supports `enabled`, `onElected`, `onDemoted` and `onMessage` options, hands leadership to another tab when the leader closes or crashes, and elects with Web Locks, falling back to a `BroadcastChannel` heartbeat and then to treating the page as a single tab.
+
+- [#111](https://github.com/altalyst-solutions/hookify/pull/111) [`6d1e6ef`](https://github.com/altalyst-solutions/hookify/commit/6d1e6ef5fde8984266b404bbffaa72639ed66c88) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - Add `useWebLock` hook, which runs async work under a named lock from the Web Locks API so only one tab (or any number, in `shared` mode) executes it at a time. It exposes `run`, `isHeld` and `isPending`, supports `mode`, `ifAvailable` and `steal` options with per-call overrides and an abort `signal`, aborts pending lock requests on unmount, and falls back to running the work directly when `navigator.locks` is unavailable.
+
 ## 0.12.0
 
 ### Minor Changes
