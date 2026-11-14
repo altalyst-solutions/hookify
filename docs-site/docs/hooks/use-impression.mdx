@@ -1,0 +1,175 @@
+---
+title: useImpression
+sidebar_position: 33
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-impression/App";
+import markAsReadSource from "!!raw-loader!@site/src/hook-examples/use-impression/MarkAsRead";
+import repeatedViewsSource from "!!raw-loader!@site/src/hook-examples/use-impression/RepeatedViews";
+import viewTrackerSource from "!!raw-loader!@site/src/hook-examples/use-impression/ViewTracker";
+import hookSource from "!!raw-loader!../../../src/hooks/use-impression.ts";
+
+# useImpression
+
+Calls your callback once an element has been at least a given share visible for
+at least a given time, which is what analytics, "mark as read" and ad-view
+tracking usually mean by "seen". It adds dwell time on top of plain visibility
+and never re-renders your component.
+
+It differs from [`useIntersectionObserver`](./use-intersection-observer.mdx),
+which reports whether an element is visible as state, right away, and has no
+notion of how long it stayed visible.
+
+## When to use it
+
+- Analytics events such as "card viewed" or "ad impression".
+- Marking messages, notifications or articles as read after the user had time to
+  see them.
+- Counting how often a promotion scrolled into view, with `once: false`.
+- Starting work, such as a prefetch, only for content the user actually looked
+  at, not content they scrolled past.
+
+## Demo
+
+Scroll the boxes slowly and quickly to compare. The first demo shows the
+threshold and dwell time options and logs each impression to the **Console**
+tab. The second marks messages read and stops tracking them. The third counts
+repeated views of one banner.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/ViewTracker.tsx": viewTrackerSource,
+    "/MarkAsRead.tsx": markAsReadSource,
+    "/RepeatedViews.tsx": repeatedViewsSource,
+  }}
+  activeFile="/ViewTracker.tsx"
+  showConsole
+/>
+
+## Signature
+
+```ts
+interface UseImpressionOptions {
+  threshold?: number;
+  minDurationMs?: number;
+  once?: boolean;
+  root?: Element | Document | null;
+  rootMargin?: string;
+  enabled?: boolean;
+}
+
+function useImpression<T extends Element = HTMLElement>(
+  onImpression: (entry: IntersectionObserverEntry) => void,
+  options?: UseImpressionOptions
+): (element: T | null) => void;
+```
+
+| Parameter      | Type                                         | Description                                                   |
+| -------------- | -------------------------------------------- | ------------------------------------------------------------- |
+| `onImpression` | `(entry: IntersectionObserverEntry) => void` | Called when an impression is reported, with the latest entry. |
+| `options`      | `UseImpressionOptions?`                      | Optional visibility, timing and observer settings.            |
+
+| Option          | Type                          | Description                                                                                                                       |
+| --------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `threshold`     | `number`                      | How much of the element must be visible, from `0` to `1`. Values outside the range are clamped. Defaults to `0.5`.                |
+| `minDurationMs` | `number`                      | How long it must stay at least `threshold` visible, in milliseconds. Invalid values fall back to the default. Defaults to `1000`. |
+| `once`          | `boolean`                     | Report a single impression per element. With `false`, it can be reported again after leaving and re-entering. Defaults to `true`. |
+| `root`          | `Element \| Document \| null` | The viewport used for the check. Pass a scroll container to measure inside it. Defaults to the browser viewport.                  |
+| `rootMargin`    | `string`                      | Grows or shrinks the root's box, in CSS margin syntax, for example `"-50px"` to ignore a fixed header. Defaults to `"0px"`.       |
+| `enabled`       | `boolean`                     | Set to `false` to stop observing and discard the timer. Defaults to `true`.                                                       |
+
+**Returns:** a callback `ref`. Attach it to the element you want to track.
+
+## Usage notes
+
+- **A callback ref.** It works for elements that mount later, render
+  conditionally or are swapped for another one. The returned function is stable
+  across renders. To combine it with another ref, call both from a function
+  ref: `ref={(el) => { track(el); myRef.current = el; }}`.
+- **Dwell time is continuous.** The timer starts when the element is at least
+  `threshold` visible and restarts from zero if it drops below before
+  `minDurationMs` has passed. Changing the visible share while staying above
+  `threshold` does not affect the timer.
+- **Hidden tabs pause the timer.** Time spent while the document is hidden (a
+  background tab, a minimized window) does not count. The timer resumes with the
+  time that was left when the tab is visible again. If the tab is already hidden
+  when the element becomes visible, the timer starts when the tab is shown.
+- **Once or repeated.** By default each element is reported once, and the
+  observer is disconnected afterwards. With `once: false`, the element is
+  reported again after it has left the viewport (dropped below `threshold`) and
+  then stayed visible for `minDurationMs` again. Staying visible never reports
+  twice.
+- **The entry.** `onImpression` receives the `IntersectionObserverEntry` that
+  was current when the timer finished, so you can read `intersectionRatio`,
+  `boundingClientRect` or `target`, for example to include the element's id in
+  an analytics event.
+- **The latest callback is always used.** Passing an inline function does not
+  reset the timer or re-observe. Changing `root`, `rootMargin`, `threshold`,
+  `minDurationMs`, `once` or `enabled` does, and starts a fresh dwell timer.
+  With the default `once: true`, an element that was already reported is not
+  reported again when you toggle `enabled` or change an option. Attach the ref
+  to a different element to track it again.
+- **Pass a stable `root`.** To use a scroll container as `root`, store it in
+  state with a callback ref (`ref={setRoot}`), as the demos do, so that the hook
+  re-observes when it mounts. Avoid reading `ref.current` during render.
+- **Disabling.** `enabled: false` disconnects the observer and clears the timer,
+  so partial dwell time is thrown away. Use it to stop tracking content that was
+  already handled, such as a message that is already read.
+- **No re-renders.** The hook keeps its state in the observer and a timer, not
+  in React state. Update your own state from `onImpression` if you need the UI
+  to change.
+- **Server rendering and unsupported browsers.** Nothing runs on the server.
+  Where `IntersectionObserver` is unavailable the hook does nothing and the
+  callback is never called.
+- **Cleanup.** The observer, the timer and the visibility listener are removed
+  on unmount, and the callback is never called after unmount.
+- **Testing.** The dwell timer uses `setTimeout` and `Date.now()`, so Vitest or
+  Jest fake timers control it. Mock `IntersectionObserver` in a test
+  environment such as jsdom, which does not provide it, and wrap timer advances
+  in `act`.
+- Safe under React `StrictMode`.
+
+## Example
+
+```tsx
+// Report a view after the card was at least half visible for one second
+const ref = useImpression<HTMLDivElement>(() => {
+  analytics.track("card_viewed", { id });
+});
+
+return <div ref={ref}>{children}</div>;
+```
+
+```tsx
+// Mark a message as read after 2 seconds with 80% of it on screen
+const ref = useImpression<HTMLLIElement>(() => markAsRead(message.id), {
+  threshold: 0.8,
+  minDurationMs: 2000,
+  enabled: !message.read,
+});
+```
+
+```tsx
+// Count every time an ad is seen again, inside a scrollable feed
+const [feed, setFeed] = useState<HTMLDivElement | null>(null);
+
+const ref = useImpression<HTMLDivElement>(
+  (entry) => trackAdView(adId, entry.intersectionRatio),
+  { once: false, root: feed }
+);
+```
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useImpression</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-impression.ts">
+    {hookSource}
+  </CodeBlock>
+</details>
