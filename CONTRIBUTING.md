@@ -42,7 +42,25 @@ docs-site/          # Docusaurus documentation site (private workspace package)
 3. Add a matching spec at `packages/hookify/tests/hooks/use-your-hook.spec.ts`.
 4. Add a docs page at `docs-site/docs/hooks/use-your-hook.mdx` (copy an
    existing hook's page as a starting point) and, if useful, example
-   components under `docs-site/src/hook-examples/use-your-hook/`.
+   components under `docs-site/src/hook-examples/use-your-hook/`. Its front
+   matter needs this metadata, which the docs site shows on the hooks index
+   and AI agents use to recommend hooks:
+
+   ```yaml
+   title: useYourHook
+   description: One sentence on what it does and a typical use, 20 to 160 characters.
+   keywords: [search terms, people would use, lowercase]
+   category: timing # state, timing, async, dom, browser, lifecycle or refs
+   related: [useOtherHook] # optional
+   browserApis: [IntersectionObserver] # web features it relies on, [] for none
+   ```
+
+   Use cases go in the page's `## When to use it` section (at least two
+   bullets), not in the front matter. Quote a description that contains
+   `: `. A deprecated hook also sets `deprecated: true` and
+   `replacedBy: useNewHook`. `pnpm docs:check` validates all of this, and CI
+   runs it on every pull request.
+
 5. Preview the docs locally instead of waiting on a deploy:
 
    ```bash
