@@ -1,6 +1,11 @@
 ---
 title: useSequentialRequest
 sidebar_position: 10
+description: Wraps an async request so only the latest call counts, aborting the previous in-flight request.
+keywords: [race condition, cancel request, abort, latest request, typeahead]
+category: async
+related: [useAsync, useApi, useDebouncedValue]
+browserApis: []
 ---
 
 import HookDemo from "@site/src/components/HookDemo";
