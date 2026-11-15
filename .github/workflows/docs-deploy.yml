@@ -2,8 +2,8 @@ name: Deploy Docs
 
 # Publishes the docs as two channels on one GitHub Pages site:
 #
-# - stable, at /hookify/: built from the latest GitHub release, once per
-#   release. The built site is attached to the release as docs-stable.tar.gz
+# - stable, at /hookify/: built from the latest @altalyst/hookify release, once
+#   per release. The built site is attached to the release as docs-stable.tar.gz
 #   and reused by every later deploy, so it is never rebuilt needlessly.
 # - next, at /hookify/next/: built from main on every run, with demos running
 #   the library built from the same commit.
@@ -56,17 +56,30 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           FORCE_REBUILD: ${{ inputs.rebuild-stable == true }}
         run: |
-          release=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName,assets)
-          tag=$(jq -r '.tagName' <<<"$release")
-          has_build=$(jq --arg name "$STABLE_ASSET" '[.assets[].name] | index($name) != null' <<<"$release")
+          tag=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 100 \
+            --json tagName,isDraft,isPrerelease,publishedAt \
+            --jq '[.[] | select((.isDraft | not) and (.isPrerelease | not))
+                       | select(.tagName | test("^(v|@altalyst/hookify@)[0-9]+\\.[0-9]+\\.[0-9]+$"))]
+                  | sort_by(.publishedAt) | last | .tagName // empty')
+          if [ -z "$tag" ]; then
+            echo "::error::No published @altalyst/hookify release found."
+            exit 1
+          fi
+
+          has_build=$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json assets \
+            | jq --arg name "$STABLE_ASSET" '[.assets[].name] | index($name) != null')
           if [ "$FORCE_REBUILD" = "true" ]; then has_build=false; fi
+
+          # `@altalyst/hookify@0.14.0` or `v0.13.0` -> `0.14.0` / `0.13.0`
+          version=${tag##*@}
+          version=${version#v}
 
           {
             echo "tag=$tag"
-            echo "version=${tag#v}"
+            echo "version=$version"
             echo "has-stable-build=$has_build"
           } >> "$GITHUB_OUTPUT"
-          echo "Latest release: $tag (stable docs already built: $has_build)"
+          echo "Latest release: $tag, version $version (stable docs already built: $has_build)"
 
   # Builds stable from the release tag, once, and attaches it to the release.
   build-stable:
