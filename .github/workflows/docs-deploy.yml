@@ -86,10 +86,10 @@ jobs:
         uses: ./.github/actions/setup-deps
 
       - name: Install docs dependencies
-        run: cd docs-site && npm ci
+        run: pnpm --dir docs-site install --frozen-lockfile
 
       - name: Build stable docs
-        run: npm run docs:build
+        run: pnpm docs:build
         env:
           DOCS_CHANNEL: stable
           HOOKIFY_STABLE_VERSION: ${{ needs.release.outputs.version }}
@@ -118,25 +118,15 @@ jobs:
       - name: Set up Node and install dependencies
         uses: ./.github/actions/setup-deps
 
-      - name: Cache docs node_modules
-        uses: actions/cache@v6
-        with:
-          path: |
-            ~/.npm
-            docs-site/node_modules
-          key: ${{ runner.os }}-docs-node-${{ hashFiles('docs-site/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-docs-node-
-
       - name: Install docs dependencies
-        run: cd docs-site && npm ci
+        run: pnpm --dir docs-site install --frozen-lockfile
 
       # The next channel's demos run this build instead of the npm package.
       - name: Build library
-        run: npm run build
+        run: pnpm build
 
       - name: Build next docs
-        run: npm run docs:build
+        run: pnpm docs:build
         env:
           DOCS_CHANNEL: next
           HOOKIFY_STABLE_VERSION: ${{ needs.release.outputs.version }}

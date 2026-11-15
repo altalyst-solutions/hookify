@@ -34,13 +34,16 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+
       - name: Set up Node.js
         uses: actions/setup-node@v5
         with:
           node-version-file: ".nvmrc"
           package-manager-cache: false
 
-      # npm audit reads package-lock.json, so no install is needed.
-      - name: Run npm audit
+      # pnpm audit reads pnpm-lock.yaml, so no install is needed.
+      - name: Run pnpm audit
         working-directory: ${{ matrix.directory }}
-        run: npm audit --audit-level=${{ matrix.level }}
+        run: pnpm audit --audit-level=${{ matrix.level }}
