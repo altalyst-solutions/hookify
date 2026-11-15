@@ -50,18 +50,18 @@
   "engines": {
     "node": ">=24"
   },
-  "packageManager": "npm@11.6.2",
+  "packageManager": "pnpm@12.21.0",
   "scripts": {
-    "setup": "npm install",
+    "setup": "pnpm install",
     "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
-    "docs:install": "cd docs-site && npm install",
-    "docs:dev": "cd docs-site && npm start",
-    "docs:dev:local": "npm run build && cd docs-site && HOOKIFY_LOCAL=1 npm start",
-    "docs:build": "cd docs-site && npm run build",
-    "docs:serve": "cd docs-site && npm run serve",
+    "docs:install": "pnpm --dir docs-site install",
+    "docs:dev": "pnpm --dir docs-site start",
+    "docs:dev:local": "pnpm build && HOOKIFY_LOCAL=1 pnpm --dir docs-site start",
+    "docs:build": "pnpm --dir docs-site build",
+    "docs:serve": "pnpm --dir docs-site serve",
     "dev": "vite",
     "typecheck": "tsc -b",
-    "build": "npm run typecheck && vite build",
+    "build": "pnpm typecheck && vite build",
     "watch": "vite build --watch",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -70,7 +70,7 @@
     "test": "vitest",
     "coverage": "vitest run --coverage",
     "changeset": "changeset",
-    "version": "changeset version && npm install --package-lock-only",
+    "version": "changeset version && pnpm install --lockfile-only",
     "release": "changeset publish"
   },
   "peerDependencies": {
@@ -110,8 +110,5 @@
     "vite": "^8.3.0",
     "vite-plugin-dts": "^5.1.1",
     "vitest": "^5.0.5"
-  },
-  "overrides": {
-    "minimatch@10": "^11.0.1"
   }
 }
