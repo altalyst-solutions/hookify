@@ -61,6 +61,10 @@ docs-site/          # Docusaurus documentation site (private workspace package)
    `replacedBy: useNewHook`. `pnpm docs:check` validates all of this, and CI
    runs it on every pull request.
 
+   Give admonitions a title with brackets, as in `:::tip[Docs versions]`. The
+   older `:::tip Docs versions` form shows up as raw text on this site, and
+   `pnpm docs:check` rejects it.
+
 5. Preview the docs locally instead of waiting on a deploy:
 
    ```bash

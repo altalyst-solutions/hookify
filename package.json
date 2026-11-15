@@ -20,7 +20,7 @@
     "docs:dev:local": "pnpm build && HOOKIFY_LOCAL=1 pnpm -F docs-site start",
     "docs:build": "pnpm -F docs-site build",
     "docs:serve": "pnpm -F docs-site serve",
-    "docs:check": "node .github/scripts/check-hook-frontmatter.mjs",
+    "docs:check": "node .github/scripts/check-hook-frontmatter.mjs && node .github/scripts/check-docs-syntax.mjs",
     "changeset": "changeset",
     "version": "changeset version && pnpm install --lockfile-only",
     "release": "changeset publish"
