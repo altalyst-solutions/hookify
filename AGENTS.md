@@ -7,18 +7,25 @@ dependencies**. Follow this guide when changing code here; see
 
 ## Layout
 
+The repo is a pnpm workspace. The published library lives in
+`packages/hookify/`; the root only holds shared tooling (ESLint, Prettier,
+Changesets, CI).
+
 ```
-src/hooks/              one file per hook (use-kebab-case.ts), exported from src/hooks/index.ts
-src/utils/              internal helpers (dev-warnings.ts), not part of the public API
-tests/hooks/            one spec per hook, mirrors src/hooks
-docs-site/docs/hooks/   one .mdx page per hook
+packages/hookify/src/hooks/   one file per hook (use-kebab-case.ts), exported from src/hooks/index.ts
+packages/hookify/src/utils/   internal helpers (dev-warnings.ts), not part of the public API
+packages/hookify/tests/hooks/ one spec per hook, mirrors src/hooks
+docs-site/docs/hooks/         one .mdx page per hook
 docs-site/src/hook-examples/use-x/   live demo components (App.tsx plus one file per demo)
-.changeset/             release notes, one file per user-visible change
+.changeset/                   release notes, one file per user-visible change
 ```
+
+In the rest of this guide, `src/` and `tests/` mean `packages/hookify/src/`
+and `packages/hookify/tests/`.
 
 ## Commands
 
-Run these before finishing. CI (`.github/workflows/pr-check.yml`) runs the same.
+Run these from the repository root before finishing. CI (`.github/workflows/pr-check.yml`) runs the same.
 
 ```bash
 pnpm format:check   # prettier
@@ -28,22 +35,22 @@ pnpm coverage       # vitest with per-file coverage thresholds
 pnpm build          # typecheck + vite build
 ```
 
-`pnpm format` fixes formatting. To run a single spec: `pnpm exec vitest run tests/hooks/use-x.spec.ts`.
+`pnpm format` fixes formatting. To run a single spec: `pnpm -F @altalyst/hookify exec vitest run tests/hooks/use-x.spec.ts`.
 
 When a change touches React behavior, also run the React 18 matrix CI uses.
-pnpm has no `--no-save`, so each run edits `package.json` and `pnpm-lock.yaml`
+pnpm has no `--no-save`, so each run edits `packages/hookify/package.json` and `pnpm-lock.yaml`
 and then restores them. Restoring between runs matters: without it, `react@18`
 reuses the 18.0.0 just installed. Never commit those edits:
 
 ```bash
 for V in 18.0.0 18; do
-  pnpm add -D "react@$V" "react-dom@$V" "@types/react@${V%%.*}" "@types/react-dom@${V%%.*}"
-  pnpm exec tsc -b && pnpm test --run
-  git checkout package.json pnpm-lock.yaml && pnpm install
+  pnpm -F @altalyst/hookify add -D "react@$V" "react-dom@$V" "@types/react@${V%%.*}" "@types/react-dom@${V%%.*}"
+  pnpm typecheck && pnpm test --run
+  git checkout packages/hookify/package.json pnpm-lock.yaml && pnpm install
 done
 ```
 
-If you touched docs, also run `pnpm build && pnpm --dir docs-site typecheck && pnpm docs:build`.
+If you touched docs, also run `pnpm build && pnpm -F docs-site typecheck && pnpm docs:build`.
 
 ## Code style (`src/`)
 
@@ -149,7 +156,8 @@ Adding or changing a hook means all of the following, in the same PR:
    `use-rate-limited-callback.mdx`. Sections, in order: intro paragraph (how
    it differs from related hooks), `## When to use it`, `## Demo`
    (`<HookDemo files=... activeFile=... />`), `## Signature`, `## Usage notes`,
-   `## Example(s)`, `## Hook source` (raw-loaded from `src/`).
+   `## Example(s)`, `## Hook source` (raw-loaded with
+   `!!raw-loader!../../../packages/hookify/src/hooks/use-x.ts`).
    - Set `sidebar_position` to the next free number; deprecated hooks stay last,
      so shift them when adding.
 2. Live demos in `docs-site/src/hook-examples/use-x/`: an `App.tsx` with
