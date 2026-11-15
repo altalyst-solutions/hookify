@@ -1,2 +1,22 @@
+packages:
+  - packages/*
+  - docs-site
+
+# Dependencies whose install scripts may run. All three are denied: core-js
+# and es5-ext only print messages, and @swc/core's script only checks for the
+# native binary that its platform package already provides.
+allowBuilds:
+  "@swc/core": false
+  core-js: false
+  es5-ext: false
+
 overrides:
-  minimatch@10: ^11.0.1
+  # Library tooling only: minimatch 11 removed APIs (such as matchOne) that
+  # Docusaurus dependencies still call, so this must not apply workspace-wide.
+  "@microsoft/api-extractor>minimatch": ^11.0.1
+  "@typescript-eslint/typescript-estree>minimatch": ^11.0.1
+  # docs-site (Docusaurus) transitive dependencies
+  postcss-selector-parser: ^7.1.7
+  serialize-javascript: ^7.1.2
+  tinypool: ^2.1.2
+  uuid: ^11.1.1

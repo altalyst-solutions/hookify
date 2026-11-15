@@ -6,8 +6,8 @@ import type * as Preset from "@docusaurus/preset-classic";
 import type TypedocPlugin from "docusaurus-plugin-typedoc";
 
 const typedocOptions: Parameters<typeof TypedocPlugin>[1] = {
-  entryPoints: ["../src/index.ts"],
-  tsconfig: "../tsconfig.app.json",
+  entryPoints: ["../packages/hookify/src/index.ts"],
+  tsconfig: "../packages/hookify/tsconfig.app.json",
   compilerOptions: {
     types: ["node"],
   },
@@ -67,7 +67,7 @@ const channelMenuItem = (label: string, href: string, active: boolean) => ({
 });
 
 // Set HOOKIFY_LOCAL=1 (see `pnpm docs:dev:local`) to run live demos against
-// the locally built library in ../dist instead of the version published to npm.
+// the locally built library in ../packages/hookify/dist instead of the version published to npm.
 // The `next` channel always does, since its hooks may not be released yet.
 const useLocalHookify = isNext || process.env.HOOKIFY_LOCAL === "1";
 
@@ -121,7 +121,7 @@ const config: Config = {
             alias: {
               // Resolved by HookDemo; empty source means "use the npm version".
               "@hookify-local-source": useLocalHookify
-                ? path.resolve(__dirname, "../dist/hookify.js")
+                ? path.resolve(__dirname, "../packages/hookify/dist/hookify.js")
                 : path.resolve(__dirname, "src/components/HookDemo/empty.js"),
             },
           },
