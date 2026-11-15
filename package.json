@@ -20,6 +20,7 @@
     "docs:dev:local": "pnpm build && HOOKIFY_LOCAL=1 pnpm -F docs-site start",
     "docs:build": "pnpm -F docs-site build",
     "docs:serve": "pnpm -F docs-site serve",
+    "docs:check": "node .github/scripts/check-hook-frontmatter.mjs",
     "changeset": "changeset",
     "version": "changeset version && pnpm install --lockfile-only",
     "release": "changeset publish"
@@ -41,6 +42,7 @@
     "globals": "^15.9.0",
     "prettier": "^3.4.2",
     "typescript": "^5.5.3",
-    "typescript-eslint": "^8.0.1"
+    "typescript-eslint": "^8.0.1",
+    "yaml": "^2.9.1"
   }
 }

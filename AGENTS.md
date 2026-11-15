@@ -50,7 +50,7 @@ for V in 18.0.0 18; do
 done
 ```
 
-If you touched docs, also run `pnpm build && pnpm -F docs-site typecheck && pnpm docs:build`.
+If you touched docs, also run `pnpm docs:check && pnpm build && pnpm -F docs-site typecheck && pnpm docs:build`.
 
 ## Code style (`src/`)
 
@@ -160,6 +160,16 @@ Adding or changing a hook means all of the following, in the same PR:
    `!!raw-loader!../../../packages/hookify/src/hooks/use-x.ts`).
    - Set `sidebar_position` to the next free number; deprecated hooks stay last,
      so shift them when adding.
+   - Front matter metadata: `description` (one sentence, 20 to 160
+     characters, ending with a period; quote it if it contains `: `),
+     `keywords` (2 to 8 lowercase search terms not already in the name),
+     `category` (`state`, `timing`, `async`, `dom`, `browser`, `lifecycle` or
+     `refs`), optional `related` (other hook names) and `browserApis` (web
+     features the hook relies on, such as `IntersectionObserver`; `[]` for
+     none; not timers or `AbortController`). Deprecated hooks add
+     `deprecated: true` and `replacedBy`. Use cases stay in
+     `## When to use it`, which needs at least two bullets. `pnpm docs:check`
+     enforces all of it.
 2. Live demos in `docs-site/src/hook-examples/use-x/`: an `App.tsx` with
    `export default function App()` (the Sandpack entry; this is the one place
    `function` is required) that renders one or more small demo components,

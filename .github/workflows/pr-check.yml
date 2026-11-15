@@ -84,6 +84,9 @@ jobs:
       - name: Set up Node and install dependencies
         uses: ./.github/actions/setup-deps
 
+      - name: Check hook page metadata
+        run: pnpm docs:check
+
       # docs-site gets @altalyst/hookify as a workspace package, whose types
       # come from its dist/, so build the library before type-checking.
       - name: Build library
