@@ -27,7 +27,7 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@altalyst/hookify": "^0.3.4",
+    "@altalyst/hookify": "workspace:*",
     "@docusaurus/module-type-aliases": "3.10.2",
     "@docusaurus/tsconfig": "3.10.2",
     "@docusaurus/types": "3.10.2",

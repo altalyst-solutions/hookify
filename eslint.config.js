@@ -11,7 +11,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", "docs-site", "coverage"] },
+  { ignores: ["**/dist", "**/coverage", "docs-site"] },
   {
     extends: [
       js.configs.recommended,
@@ -49,7 +49,7 @@ export default tseslint.config(
       ...jsdoc.configs["flat/recommended-typescript-error"].plugins,
       tsdoc,
     },
-    files: ["src/**/*.ts"],
+    files: ["packages/*/src/**/*.ts"],
     settings: {
       jsdoc: { tagNamePreference: { template: "typeParam" } },
     },

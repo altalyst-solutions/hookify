@@ -12,7 +12,7 @@
     <a href="https://github.com/altalyst-solutions/hookify/actions/workflows/pr-check.yml"><img src="https://github.com/altalyst-solutions/hookify/actions/workflows/pr-check.yml/badge.svg" alt="PR Check status" /></a>
     <img src="https://img.shields.io/npm/types/@altalyst/hookify.svg?color=3178C6" alt="TypeScript" />
     <a href="https://github.com/altalyst-solutions/hookify/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome" /></a>
-    <a href="./LICENSE"><img src="https://img.shields.io/npm/l/@altalyst/hookify.svg?color=blue" alt="MIT license" /></a>
+    <a href="https://github.com/altalyst-solutions/hookify/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/@altalyst/hookify.svg?color=blue" alt="MIT license" /></a>
   </p>
 
   <p>
@@ -106,22 +106,22 @@ release.
 ## Contributing
 
 Contributions, issues, and feature requests are welcome! See
-[CONTRIBUTING.md](./CONTRIBUTING.md) for local setup, running tests and the
+[CONTRIBUTING.md](https://github.com/altalyst-solutions/hookify/blob/main/CONTRIBUTING.md) for local setup, running tests and the
 docs site, how to add a new hook, and our commit/versioning conventions. Please also read our
-[Code of Conduct](./CODE_OF_CONDUCT.md). See [CHANGELOG.md](./CHANGELOG.md)
+[Code of Conduct](https://github.com/altalyst-solutions/hookify/blob/main/CODE_OF_CONDUCT.md). See [CHANGELOG.md](https://github.com/altalyst-solutions/hookify/blob/main/packages/hookify/CHANGELOG.md)
 for release history.
 
 ## Community
 
 - 💬 [GitHub Discussions](https://github.com/altalyst-solutions/hookify/discussions) — ask questions, share ideas.
 - 🐛 [Issues](https://github.com/altalyst-solutions/hookify/issues) — report bugs or request features.
-- 🔒 [Security policy](./SECURITY.md) — how to report a vulnerability.
+- 🔒 [Security policy](https://github.com/altalyst-solutions/hookify/blob/main/SECURITY.md) — how to report a vulnerability.
 - 📦 [npm](https://www.npmjs.com/package/@altalyst/hookify) — package page and version history.
 
 ## License
 
 MIT © [Altalyst Solutions](https://github.com/altalyst-solutions). See
-[LICENSE](./LICENSE) for details.
+[LICENSE](https://github.com/altalyst-solutions/hookify/blob/main/LICENSE) for details.
 
 ---
 

@@ -15,32 +15,37 @@ pnpm install
 
 ## Project layout
 
+The repository is a [pnpm workspace](https://pnpm.io/workspaces). A single
+`pnpm install` at the root installs everything, and every command below runs
+from the root.
+
 ```
-src/hooks/        # Hook source files (one file per hook)
-tests/hooks/       # Vitest + Testing Library specs, mirroring src/hooks
-docs-site/         # Docusaurus documentation site
-  docs/hooks/      # One .mdx page per hook (demo + docs)
+packages/hookify/   # the published @altalyst/hookify package
+  src/hooks/        # Hook source files (one file per hook)
+  tests/hooks/      # Vitest + Testing Library specs, mirroring src/hooks
+  CHANGELOG.md      # written by Changesets
+docs-site/          # Docusaurus documentation site (private workspace package)
+  docs/hooks/       # One .mdx page per hook (demo + docs)
   src/hook-examples # Example components used by the live demos
 ```
 
 ## Adding a new hook
 
-1. Create `src/hooks/use-your-hook.ts` and export it from
-   `src/hooks/index.ts`.
+1. Create `packages/hookify/src/hooks/use-your-hook.ts` and export it from
+   `packages/hookify/src/hooks/index.ts`.
 2. Write thorough doc comments (TSDoc style) on the exported function,
    including `@example` blocks — this is used to auto-generate the API
    reference. Don't put types in braces: use `@param name - description`,
    `@returns description` and `@typeParam T - description`. `pnpm lint`
    enforces this. Tag code examples ` ```tsx ` when they contain JSX and
    ` ```ts ` otherwise.
-3. Add a matching spec at `tests/hooks/use-your-hook.spec.ts`.
+3. Add a matching spec at `packages/hookify/tests/hooks/use-your-hook.spec.ts`.
 4. Add a docs page at `docs-site/docs/hooks/use-your-hook.mdx` (copy an
    existing hook's page as a starting point) and, if useful, example
    components under `docs-site/src/hook-examples/use-your-hook/`.
 5. Preview the docs locally instead of waiting on a deploy:
 
    ```bash
-   pnpm docs:install   # first time only
    pnpm docs:dev       # http://localhost:3000, hot reload
    ```
 
@@ -53,14 +58,16 @@ docs-site/         # Docusaurus documentation site
    pnpm watch            # optional, in another terminal: rebuild on changes
    ```
 
-   Demos use the built `dist/` (not `src/`), so edits to a hook only reach
+   Demos use the built `packages/hookify/dist/` (not `src/`), so edits to a hook only reach
    them while `pnpm watch` is running; docs pages and example components
    hot reload on their own. If a demo looks stale, refresh the page. Plain
    `pnpm docs:dev` is unaffected and keeps using the npm release.
 
-   Editor types for example components come from the local `dist/` build (see
-   `docs-site/tsconfig.json`), so run `pnpm build` once if your editor
-   reports that `@altalyst/hookify` can't be resolved.
+   docs-site depends on the library as a workspace package
+   (`"@altalyst/hookify": "workspace:*"`), so editor types for example
+   components come from the local `packages/hookify/dist/` build. Run
+   `pnpm build` once if your editor reports that `@altalyst/hookify` can't be
+   resolved.
 
    Once your PR merges, you can also check the page online in the
    [unreleased docs](https://altalyst-solutions.github.io/hookify/next/),
@@ -86,7 +93,7 @@ checks on every PR via `.github/workflows/pr-check.yml`.
 ## Commit messages and versioning
 
 Hookify uses [Changesets](https://github.com/changesets/changesets) to
-manage versioning, `CHANGELOG.md`, and npm publishing
+manage versioning, `packages/hookify/CHANGELOG.md`, and npm publishing
 (`.github/workflows/ci.yml`, via
 [changesets/action](https://github.com/changesets/action)).
 
@@ -119,10 +126,10 @@ docs changes only reach the stable docs with a release; see below.
 The docs site has two versions, deployed by
 `.github/workflows/docs-deploy.yml`:
 
-| Version | URL                                                                                   | Shows                                         | Updated                                                 |
-| ------- | ------------------------------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------- |
-| Stable  | [altalyst-solutions.github.io/hookify](https://altalyst-solutions.github.io/hookify/) | The latest release, with demos from npm       | When a release is published                             |
-| Next    | […/hookify/next](https://altalyst-solutions.github.io/hookify/next/)                  | `main`, with demos running the code on `main` | On every push to `main` that touches the docs or `src/` |
+| Version | URL                                                                                   | Shows                                         | Updated                                                               |
+| ------- | ------------------------------------------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------------------- |
+| Stable  | [altalyst-solutions.github.io/hookify](https://altalyst-solutions.github.io/hookify/) | The latest release, with demos from npm       | When a release is published                                           |
+| Next    | […/hookify/next](https://altalyst-solutions.github.io/hookify/next/)                  | `main`, with demos running the code on `main` | On every push to `main` that touches the docs or the library's `src/` |
 
 So a docs change, including a typo fix, shows up on next as soon as it merges,
 but on stable only with the next release. Stable is always built from the
@@ -132,7 +139,7 @@ a release.
 
 A local `pre-push` git hook (`.githooks/pre-push`, wired up automatically
 by `pnpm install` via the `prepare` script) blocks pushes that change
-`src/` or `package.json` without a changeset, as a safety net for forgetting
+`packages/hookify/src/` or `packages/hookify/package.json` without a changeset, as a safety net for forgetting
 the step above. Bypass it for an intentional exception with
 `git push --no-verify`.
 
