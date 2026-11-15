@@ -97,7 +97,7 @@ If this PR changes the published package in a user-visible way (new hook,
 behavior change, bug fix, etc.), add a changeset before finishing:
 
 ```
-npx changeset
+pnpm changeset
 ```
 
 Pick the correct bump (major/minor/patch) and write a summary from the

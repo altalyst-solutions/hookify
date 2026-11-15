@@ -22,13 +22,13 @@ jobs:
         uses: ./.github/actions/setup-deps
 
       - name: Check formatting
-        run: npm run format:check
+        run: pnpm format:check
 
       - name: Lint library
-        run: npm run lint
+        run: pnpm lint
 
       - name: Run library tests with coverage
-        run: npm run coverage
+        run: pnpm coverage
         env:
           CI: true
 
@@ -37,7 +37,7 @@ jobs:
         run: node .github/scripts/coverage-summary.mjs >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build library
-        run: npm run build
+        run: pnpm build
 
   react-compat:
     if: ${{ github.repository == 'altalyst-solutions/hookify' }}
@@ -59,15 +59,17 @@ jobs:
           REACT_VERSION: ${{ matrix.react }}
         run: |
           TYPES="${REACT_VERSION%%.*}"
-          npm install --no-save \
+          # pnpm has no --no-save: this edits package.json and the lockfile
+          # in the CI checkout only, and is never committed.
+          pnpm add -D \
             "react@$REACT_VERSION" "react-dom@$REACT_VERSION" \
             "@types/react@$TYPES" "@types/react-dom@$TYPES"
 
       - name: Type-check
-        run: npx tsc -b
+        run: pnpm exec tsc -b
 
       - name: Run library tests
-        run: npm run test -- --run
+        run: pnpm test --run
         env:
           CI: true
 
@@ -82,26 +84,16 @@ jobs:
       - name: Set up Node and install dependencies
         uses: ./.github/actions/setup-deps
 
-      - name: Cache docs node_modules
-        uses: actions/cache@v6
-        with:
-          path: |
-            ~/.npm
-            docs-site/node_modules
-          key: ${{ runner.os }}-docs-node-${{ hashFiles('docs-site/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-docs-node-
-
       - name: Install docs dependencies
-        run: cd docs-site && npm ci
+        run: pnpm --dir docs-site install --frozen-lockfile
 
       # The docs' editor types for @altalyst/hookify come from ../dist (see
       # docs-site/tsconfig.json), so build the library before type-checking.
       - name: Build library
-        run: npm run build
+        run: pnpm build
 
       - name: Type-check docs
-        run: cd docs-site && npm run typecheck
+        run: pnpm --dir docs-site typecheck
 
       - name: Build docs site
-        run: npm run docs:build
+        run: pnpm docs:build

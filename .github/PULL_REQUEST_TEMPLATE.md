@@ -16,11 +16,11 @@
 
 ## Checklist
 
-- [ ] `npm run lint` passes
-- [ ] `npm run format:check` passes
-- [ ] `npm test` passes
-- [ ] `npm run build` passes
+- [ ] `pnpm lint` passes
+- [ ] `pnpm format:check` passes
+- [ ] `pnpm test --run` passes
+- [ ] `pnpm build` passes
 - [ ] Added/updated tests in `tests/hooks`
 - [ ] Added/updated docs in `docs-site/docs/hooks` (for new/changed hooks)
-- [ ] Added a changeset (`npx changeset`) for user-facing changes — see
+- [ ] Added a changeset (`pnpm changeset`) for user-facing changes — see
       [CONTRIBUTING.md](../CONTRIBUTING.md#commit-messages-and-versioning)

@@ -34,7 +34,7 @@ has_changeset=$(echo "$changed_files" | grep -E '^\.changeset/.+\.md$' | grep -v
 if [ -z "$has_changeset" ]; then
   echo ""
   echo "⚠️  This push changes src/ or package.json but adds no changeset."
-  echo "   Run 'npx changeset' to record a version bump + changelog entry."
+  echo "   Run 'pnpm changeset' to record a version bump + changelog entry."
   echo "   If this genuinely shouldn't trigger a release, push again with:"
   echo "     git push --no-verify"
   echo ""

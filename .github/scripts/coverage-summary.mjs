@@ -1,7 +1,7 @@
 /**
  * @file Prints a Markdown coverage report for the GitHub Actions job summary.
  *
- * The PR check runs the test suite with coverage (`npm run coverage`), which
+ * The PR check runs the test suite with coverage (`pnpm coverage`), which
  * makes Vitest write `coverage/coverage-summary.json` through its
  * `json-summary` reporter. This script reads that file and prints a report to
  * stdout, which the workflow appends to the job summary:
@@ -29,10 +29,10 @@
  * the job itself. When there is no coverage file (for example, an earlier step
  * failed before the tests ran), it prints a short notice instead.
  *
- * Run it locally after `npm run coverage` to preview the report:
+ * Run it locally after `pnpm coverage` to preview the report:
  *
  * ```sh
- * npm run coverage && node .github/scripts/coverage-summary.mjs
+ * pnpm coverage && node .github/scripts/coverage-summary.mjs
  * ```
  *
  * It uses only Node.js built-ins and needs Node 20.11 or later for

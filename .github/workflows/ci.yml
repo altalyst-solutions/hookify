@@ -31,12 +31,12 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Run library tests
-        run: npm run test
+        run: pnpm test
         env:
           CI: true
 
       - name: Build library
-        run: npm run build
+        run: pnpm build
 
       - name: Verify npm supports trusted publishing
         uses: ./.github/actions/verify-npm
@@ -47,12 +47,12 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: changesets/action@v2
         with:
-          version-script: npm run version
-          publish-script: npm run release
+          version-script: pnpm run version
+          publish-script: pnpm run release
           commit-message: "ci: version packages"
           pr-title: "ci: version packages"
           github-token: ${{ secrets.GITHUB_TOKEN }}
-        # authenticates npm publish via OIDC trusted publishing, no NPM_TOKEN needed
+        # authenticates pnpm publish via OIDC trusted publishing, no NPM_TOKEN needed
 
   # After a release is published, deploy its docs as the new stable channel.
   # (The release is created with GITHUB_TOKEN, which doesn't trigger other
@@ -90,10 +90,10 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Build library
-        run: npm run build
+        run: pnpm build
 
       - name: Verify npm supports trusted publishing
         uses: ./.github/actions/verify-npm
 
       - name: Publish to NPM (dry run)
-        run: npm publish --dry-run # authenticates via OIDC trusted publishing, no token needed
+        run: pnpm publish --dry-run --no-git-checks # authenticates via OIDC trusted publishing, no token needed

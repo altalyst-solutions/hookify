@@ -5,12 +5,12 @@ need to get set up, make a change, and submit a pull request.
 
 ## Getting started
 
-Hookify requires **Node.js >= 24** (see `.nvmrc`) and npm. Use the Node version from `.nvmrc` so your npm matches CI; a different npm can rewrite `package-lock.json` (for example its `"peer"` flags). When bumping Node, edit `.nvmrc` and the `packageManager` field to the npm version it bundles (CI requires npm >= 11.5.1 for trusted publishing).
+Hookify requires **Node.js >= 24** (see `.nvmrc`) and **pnpm**, pinned to an exact version in the `packageManager` field of `package.json`. Corepack (`corepack enable pnpm`) and recent pnpm versions switch to the pinned version automatically inside this repo, so you always match CI. If you have neither, run `npm install -g pnpm`. To upgrade pnpm, change the `packageManager` field; CI reads the same field.
 
 ```bash
 git clone https://github.com/altalyst-solutions/hookify.git
 cd hookify
-npm run setup
+pnpm install
 ```
 
 ## Project layout
@@ -30,7 +30,7 @@ docs-site/         # Docusaurus documentation site
 2. Write thorough doc comments (TSDoc style) on the exported function,
    including `@example` blocks — this is used to auto-generate the API
    reference. Don't put types in braces: use `@param name - description`,
-   `@returns description` and `@typeParam T - description`. `npm run lint`
+   `@returns description` and `@typeParam T - description`. `pnpm lint`
    enforces this. Tag code examples ` ```tsx ` when they contain JSX and
    ` ```ts ` otherwise.
 3. Add a matching spec at `tests/hooks/use-your-hook.spec.ts`.
@@ -40,8 +40,8 @@ docs-site/         # Docusaurus documentation site
 5. Preview the docs locally instead of waiting on a deploy:
 
    ```bash
-   npm run docs:install   # first time only
-   npm run docs:dev       # http://localhost:3000, hot reload
+   pnpm docs:install   # first time only
+   pnpm docs:dev       # http://localhost:3000, hot reload
    ```
 
    Live demos run the **published** `@altalyst/hookify` from npm, so a new or
@@ -49,17 +49,17 @@ docs-site/         # Docusaurus documentation site
    unreleased changes, run the demos against your local build instead:
 
    ```bash
-   npm run docs:dev:local   # builds the library, then starts the docs site
-   npm run watch            # optional, in another terminal: rebuild on changes
+   pnpm docs:dev:local   # builds the library, then starts the docs site
+   pnpm watch            # optional, in another terminal: rebuild on changes
    ```
 
    Demos use the built `dist/` (not `src/`), so edits to a hook only reach
-   them while `npm run watch` is running; docs pages and example components
+   them while `pnpm watch` is running; docs pages and example components
    hot reload on their own. If a demo looks stale, refresh the page. Plain
-   `npm run docs:dev` is unaffected and keeps using the npm release.
+   `pnpm docs:dev` is unaffected and keeps using the npm release.
 
    Editor types for example components come from the local `dist/` build (see
-   `docs-site/tsconfig.json`), so run `npm run build` once if your editor
+   `docs-site/tsconfig.json`), so run `pnpm build` once if your editor
    reports that `@altalyst/hookify` can't be resolved.
 
    Once your PR merges, you can also check the page online in the
@@ -70,17 +70,17 @@ docs-site/         # Docusaurus documentation site
 ## Development workflow
 
 ```bash
-npm test              # run the test suite (vitest)
-npm run coverage       # run tests with coverage
-npm run lint           # eslint
-npm run typecheck      # tsc -b (src and tests)
-npm run format         # prettier --write
-npm run format:check   # prettier --check
-npm run build          # build the library (tsc + vite)
+pnpm test           # run the test suite (vitest, watch mode)
+pnpm coverage       # run tests with coverage
+pnpm lint           # eslint
+pnpm typecheck      # tsc -b (src and tests)
+pnpm format         # prettier --write
+pnpm format:check   # prettier --check
+pnpm build          # build the library (tsc + vite)
 ```
 
-Please make sure `npm run lint`, `npm run format:check`, `npm test`, and
-`npm run build` all pass before opening a pull request. CI runs the same
+Please make sure `pnpm lint`, `pnpm format:check`, `pnpm test --run`, and
+`pnpm build` all pass before opening a pull request. CI runs the same
 checks on every PR via `.github/workflows/pr-check.yml`.
 
 ## Commit messages and versioning
@@ -94,7 +94,7 @@ If your change should be released (anything beyond docs/tooling that
 doesn't affect the published package), add a changeset in the same PR:
 
 ```bash
-npx changeset
+pnpm changeset
 ```
 
 This prompts you for the bump type (major/minor/patch) and a short summary,
@@ -110,7 +110,7 @@ the actual npm publish — you don't need to (and shouldn't) edit
 `CHANGELOG.md` or `package.json`'s version by hand.
 
 If a change genuinely doesn't need a release (e.g. a docs typo fix), run
-`npx changeset add --empty` or simply skip adding a changeset — CI won't
+`pnpm changeset add --empty` or simply skip adding a changeset — CI won't
 block the PR, but please don't skip it for anything user-facing. Note that
 docs changes only reach the stable docs with a release; see below.
 
@@ -131,7 +131,7 @@ docs fix should reach stable sooner, add a `patch` changeset so it ships with
 a release.
 
 A local `pre-push` git hook (`.githooks/pre-push`, wired up automatically
-by `npm run setup` via the `prepare` script) blocks pushes that change
+by `pnpm install` via the `prepare` script) blocks pushes that change
 `src/` or `package.json` without a changeset, as a safety net for forgetting
 the step above. Bypass it for an intentional exception with
 `git push --no-verify`.
