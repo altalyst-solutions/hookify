@@ -1,0 +1,188 @@
+---
+title: useFrecency
+sidebar_position: 35
+---
+
+import HookDemo from "@site/src/components/HookDemo";
+import CodeBlock from "@theme/CodeBlock";
+
+import appSource from "!!raw-loader!@site/src/hook-examples/use-frecency/App";
+import commandPaletteSource from "!!raw-loader!@site/src/hook-examples/use-frecency/CommandPalette";
+import liveDecaySource from "!!raw-loader!@site/src/hook-examples/use-frecency/LiveDecay";
+import hookSource from "!!raw-loader!../../../src/hooks/use-frecency.ts";
+
+# useFrecency
+
+Ranks items by how often **and** how recently they were used ("frecency"), and
+remembers it across reloads. Every use adds one to an item's score, and the
+score halves every half-life (7 days by default), so something you used many
+times last month can rank below something you used a few times today.
+
+It differs from a plain "most recent" list, which forgets how often you use an
+item, and from a plain "most used" list, which never lets go of old favorites.
+[`usePersistedState`](./use-persisted-state.mdx) stores a value for you, while
+`useFrecency` adds the scoring on top of it.
+
+## When to use it
+
+- Sorting the commands in a command palette or quick switcher.
+- "Recent" and "frequent" menus, such as recent files, projects or channels.
+- Search suggestions and autocomplete options that should favor what the user
+  picks most.
+- Ordering shortcuts, emoji pickers or tool palettes by use.
+
+## Demo
+
+The first demo is a command palette: run a few commands and they move to the
+top, also after a reload. The second uses a 20 second half-life, keeps at most
+4 items and stores them in `sessionStorage`, so you can watch the scores decay
+and see the lowest one dropped.
+
+<HookDemo
+  files={{
+    "/App.tsx": appSource,
+    "/CommandPalette.tsx": commandPaletteSource,
+    "/LiveDecay.tsx": liveDecaySource,
+  }}
+  activeFile="/CommandPalette.tsx"
+/>
+
+## Signature
+
+```ts
+interface UseFrecencyOptions {
+  halfLifeMs?: number;
+  maxItems?: number;
+  now?: () => number;
+  storage?: PersistedStateStorage;
+}
+
+interface UseFrecencyReturn<T extends string | number> {
+  record: (id: T) => void;
+  rank: (ids: readonly T[]) => T[];
+  score: (id: T) => number;
+  remove: (id: T) => void;
+  clear: () => void;
+}
+
+function useFrecency<T extends string | number>(
+  storageKey: string,
+  options?: UseFrecencyOptions
+): UseFrecencyReturn<T>;
+```
+
+| Option       | Type                    | Description                                                                                                                                                                        |
+| ------------ | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `halfLifeMs` | `number`                | How long a score takes to halve, in milliseconds. Shorter favors recent use, longer favors frequent use. Zero, negative and non-finite values use the default. Defaults to 7 days. |
+| `maxItems`   | `number`                | The most items to keep. Past it, `record` removes the lowest-scored items, never the one just recorded. `Infinity` keeps everything. Defaults to `100`.                            |
+| `now`        | `() => number`          | Returns the current time in milliseconds. Inject it for deterministic tests or a server-synchronized clock. Defaults to `Date.now`.                                                |
+| `storage`    | `PersistedStateStorage` | Where to keep the scores: `sessionStorage`, or any object with `getItem` and `setItem`. Defaults to `localStorage`.                                                                |
+
+**Returns:** an object with:
+
+- `record(id)`: counts one use of `id` now. Its score becomes its decayed score
+  plus one.
+- `rank(ids)`: returns a sorted copy of `ids`, highest score first. Items that
+  were never recorded come last, and ties keep their given order.
+- `score(id)`: the current score of `id`, or `0` when it is not tracked.
+- `remove(id)`: forgets one item.
+- `clear()`: forgets every item.
+
+## Usage notes
+
+- **How the score works.** Each item stores a score and the time it was last
+  updated. When you read it, the score is multiplied by
+  `2 ^ (-elapsed / halfLifeMs)`. Recording adds one to that decayed value. Only
+  two numbers are kept per item, no matter how often it is used.
+- **Order only changes when you record.** Every score decays at the same rate,
+  so two items never swap places just because time passes. `rank` returns the
+  same order until something is recorded, removed or cleared. The values from
+  `score` do keep shrinking, so compare them only with scores read at about the
+  same time.
+- **Stable and changing identities.** `record`, `remove` and `clear` keep a
+  permanent identity. `rank` and `score` read the current scores, so they get a
+  new identity whenever the scores change. Call them while rendering, or list
+  them in the dependencies of `useMemo` or `useEffect`, and they never go
+  stale.
+- **Ids.** Items are identified by their string form, so `1` and `"1"` are the
+  same item. `rank` returns your original ids, not strings.
+- **Limiting the size.** Past `maxItems` the lowest-scored items are removed,
+  least recently used first among equal scores, and the item you just recorded
+  is always kept. Lowering `maxItems` takes effect on the next `record`.
+- **Persistence.** The scores are stored with
+  [`usePersistedState`](./use-persisted-state.mdx) as one JSON object under
+  `storageKey`. Hooks that use the same key stay in sync, also across tabs.
+  Missing or corrupt storage, and entries that are not valid, are ignored and
+  start empty. Use a different `storageKey` for each list.
+- **A custom clock.** `now` is read each time you record, rank or score.
+  Control it in tests to get exact scores, with no fake timers needed.
+- **Server rendering.** On the server, and when no storage is available, the
+  scores live in memory and `rank` returns the ids in the order you pass them.
+  The stored scores are read on the first client render, so a list ranked from
+  them can differ from the server HTML. If you hydrate such a list, render it
+  after mounting.
+- Safe under React `StrictMode`.
+
+## Examples
+
+```tsx
+// Sort a command palette by frecency
+const commands = [
+  { id: "open", label: "Open file" },
+  { id: "save", label: "Save file" },
+  { id: "close", label: "Close tab" },
+];
+
+const { record, rank } = useFrecency<string>("command-palette");
+
+const byId = new Map(commands.map((command) => [command.id, command]));
+const sorted = rank(commands.map((command) => command.id));
+
+return (
+  <ul>
+    {sorted.map((id) => (
+      <li key={id}>
+        <button onClick={() => record(id)}>{byId.get(id)?.label}</button>
+      </li>
+    ))}
+  </ul>
+);
+```
+
+```tsx
+// Memoize the ranking: `rank` changes only when the scores change
+const { rank } = useFrecency<number>("projects");
+const sorted = useMemo(() => rank(projectIds), [rank, projectIds]);
+```
+
+```ts
+// Favor what was used recently, keep 20 items, and forget them with the tab
+const { record, score } = useFrecency<number>("recent-docs", {
+  halfLifeMs: 60 * 60 * 1000,
+  maxItems: 20,
+  storage: sessionStorage,
+});
+```
+
+```ts
+// Deterministic scores in a test
+let time = 0;
+const { result } = renderHook(() =>
+  useFrecency<string>("test", { halfLifeMs: 1000, now: () => time })
+);
+
+act(() => result.current.record("a"));
+time = 1000;
+result.current.score("a"); // 0.5
+```
+
+## Hook source
+
+<details>
+  <summary>
+    View <code>useFrecency</code> source
+  </summary>
+  <CodeBlock language="tsx" title="use-frecency.ts">
+    {hookSource}
+  </CodeBlock>
+</details>
