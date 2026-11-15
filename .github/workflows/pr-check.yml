@@ -84,7 +84,9 @@ jobs:
       - name: Set up Node and install dependencies
         uses: ./.github/actions/setup-deps
 
-      - name: Check hook page metadata
+      # Hook page front matter, plus Markdown syntax that the docs site's
+      # future.v4 flag would show as raw text (old-style admonition titles).
+      - name: Check docs metadata and syntax
         run: pnpm docs:check
 
       # docs-site gets @altalyst/hookify as a workspace package, whose types
