@@ -66,7 +66,7 @@ const channelMenuItem = (label: string, href: string, active: boolean) => ({
   }" href="${href}">${label}</a>`,
 });
 
-// Set HOOKIFY_LOCAL=1 (see `npm run docs:dev:local`) to run live demos against
+// Set HOOKIFY_LOCAL=1 (see `pnpm docs:dev:local`) to run live demos against
 // the locally built library in ../dist instead of the version published to npm.
 // The `next` channel always does, since its hooks may not be released yet.
 const useLocalHookify = isNext || process.env.HOOKIFY_LOCAL === "1";

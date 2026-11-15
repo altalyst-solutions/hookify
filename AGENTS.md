@@ -21,26 +21,29 @@ docs-site/src/hook-examples/use-x/   live demo components (App.tsx plus one file
 Run these before finishing. CI (`.github/workflows/pr-check.yml`) runs the same.
 
 ```bash
-npm run format:check   # prettier
-npm run lint           # eslint, including TSDoc rules
-npm run typecheck      # tsc -b (src and tests)
-npm run coverage       # vitest with per-file coverage thresholds
-npm run build          # typecheck + vite build
+pnpm format:check   # prettier
+pnpm lint           # eslint, including TSDoc rules
+pnpm typecheck      # tsc -b (src and tests)
+pnpm coverage       # vitest with per-file coverage thresholds
+pnpm build          # typecheck + vite build
 ```
 
-`npm run format` fixes formatting. To run a single spec: `npx vitest run tests/hooks/use-x.spec.ts`.
+`pnpm format` fixes formatting. To run a single spec: `pnpm exec vitest run tests/hooks/use-x.spec.ts`.
 
-When a change touches React behavior, also run the React 18 matrix CI uses, then
-restore the repo's React version:
+When a change touches React behavior, also run the React 18 matrix CI uses.
+pnpm has no `--no-save`, so each run edits `package.json` and `pnpm-lock.yaml`
+and then restores them. Restoring between runs matters: without it, `react@18`
+reuses the 18.0.0 just installed. Never commit those edits:
 
 ```bash
 for V in 18.0.0 18; do
-  npm install --no-save "react@$V" "react-dom@$V" "@types/react@${V%%.*}" "@types/react-dom@${V%%.*}"
-  npx tsc -b && npm run test -- --run
+  pnpm add -D "react@$V" "react-dom@$V" "@types/react@${V%%.*}" "@types/react-dom@${V%%.*}"
+  pnpm exec tsc -b && pnpm test --run
+  git checkout package.json pnpm-lock.yaml && pnpm install
 done
 ```
 
-If you touched docs, also run `npm run build && (cd docs-site && npm run typecheck) && npm run docs:build`.
+If you touched docs, also run `pnpm build && pnpm --dir docs-site typecheck && pnpm docs:build`.
 
 ## Code style (`src/`)
 
@@ -83,7 +86,7 @@ If you touched docs, also run `npm run build && (cd docs-site && npm run typeche
 
 ## Documentation style (TSDoc)
 
-Everything in `src/` is documented, and `npm run lint` enforces the syntax
+Everything in `src/` is documented, and `pnpm lint` enforces the syntax
 (`eslint-plugin-jsdoc` + `eslint-plugin-tsdoc`), though not completeness. The
 generated API reference is built from these comments, so write them for
 consumers. The reference examples are `use-rate-limited-callback.ts`,
@@ -155,7 +158,7 @@ Adding or changing a hook means all of the following, in the same PR:
    each in its own file as a named arrow-function `export const`. Demos
    import from `@altalyst/hookify`, are self-contained, and show the
    options that matter. They run the **published** package, so they only show a
-   new hook after release or with `npm run docs:dev:local`.
+   new hook after release or with `pnpm docs:dev:local`.
 3. A changeset (below).
 
 The hooks index on the docs site is generated from `docs-site/docs/hooks`, and
