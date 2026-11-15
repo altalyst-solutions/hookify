@@ -23,7 +23,7 @@ on:
       - main
     paths:
       - "docs-site/**"
-      - "src/**"
+      - "packages/hookify/src/**"
       - ".github/workflows/docs-deploy.yml"
   workflow_call:
   workflow_dispatch:
@@ -85,8 +85,14 @@ jobs:
       - name: Set up Node and install dependencies
         uses: ./.github/actions/setup-deps
 
-      - name: Install docs dependencies
-        run: pnpm --dir docs-site install --frozen-lockfile
+      # Tags from before the pnpm workspace (v0.13.0 and earlier) keep
+      # docs-site as a separate project with its own lockfile. Newer tags
+      # install it with the workspace in the step above.
+      - name: Install docs dependencies (pre-workspace tags)
+        run: |
+          if [ -f docs-site/pnpm-lock.yaml ]; then
+            pnpm --dir docs-site install --frozen-lockfile
+          fi
 
       - name: Build stable docs
         run: pnpm docs:build
@@ -117,9 +123,6 @@ jobs:
 
       - name: Set up Node and install dependencies
         uses: ./.github/actions/setup-deps
-
-      - name: Install docs dependencies
-        run: pnpm --dir docs-site install --frozen-lockfile
 
       # The next channel's demos run this build instead of the npm package.
       - name: Build library

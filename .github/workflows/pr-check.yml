@@ -59,14 +59,14 @@ jobs:
           REACT_VERSION: ${{ matrix.react }}
         run: |
           TYPES="${REACT_VERSION%%.*}"
-          # pnpm has no --no-save: this edits package.json and the lockfile
-          # in the CI checkout only, and is never committed.
-          pnpm add -D \
+          # pnpm has no --no-save: this edits the library's package.json and
+          # the lockfile in the CI checkout only, and is never committed.
+          pnpm -F @altalyst/hookify add -D \
             "react@$REACT_VERSION" "react-dom@$REACT_VERSION" \
             "@types/react@$TYPES" "@types/react-dom@$TYPES"
 
       - name: Type-check
-        run: pnpm exec tsc -b
+        run: pnpm typecheck
 
       - name: Run library tests
         run: pnpm test --run
@@ -84,16 +84,13 @@ jobs:
       - name: Set up Node and install dependencies
         uses: ./.github/actions/setup-deps
 
-      - name: Install docs dependencies
-        run: pnpm --dir docs-site install --frozen-lockfile
-
-      # The docs' editor types for @altalyst/hookify come from ../dist (see
-      # docs-site/tsconfig.json), so build the library before type-checking.
+      # docs-site gets @altalyst/hookify as a workspace package, whose types
+      # come from its dist/, so build the library before type-checking.
       - name: Build library
         run: pnpm build
 
       - name: Type-check docs
-        run: pnpm --dir docs-site typecheck
+        run: pnpm -F docs-site typecheck
 
       - name: Build docs site
         run: pnpm docs:build

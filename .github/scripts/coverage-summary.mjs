@@ -2,7 +2,7 @@
  * @file Prints a Markdown coverage report for the GitHub Actions job summary.
  *
  * The PR check runs the test suite with coverage (`pnpm coverage`), which
- * makes Vitest write `coverage/coverage-summary.json` through its
+ * makes Vitest write `packages/hookify/coverage/coverage-summary.json` through its
  * `json-summary` reporter. This script reads that file and prints a report to
  * stdout, which the workflow appends to the job summary:
  *
@@ -23,7 +23,7 @@
  * says how many files are below, and expands the file table so they are
  * visible without a click.
  *
- * The thresholds come from `tests/coverage-thresholds.json`, the same file
+ * The thresholds come from `packages/hookify/tests/coverage-thresholds.json`, the same file
  * `vitest.config.ts` uses to fail the run, so the report and the check always
  * agree. This script only reports: it always exits with code 0 and never fails
  * the job itself. When there is no coverage file (for example, an earlier step
@@ -62,7 +62,7 @@ import { relative, resolve } from "node:path";
  */
 
 /**
- * The parsed `coverage/coverage-summary.json` file. `total` holds the combined
+ * The parsed `packages/hookify/coverage/coverage-summary.json` file. `total` holds the combined
  * coverage; every other key is a file's absolute path.
  *
  * @typedef {{ total: FileCoverage } & Record<string, FileCoverage>} CoverageSummary
@@ -75,7 +75,7 @@ import { relative, resolve } from "node:path";
  */
 
 /**
- * The contents of `tests/coverage-thresholds.json`: the minimum percentage per
+ * The contents of `packages/hookify/tests/coverage-thresholds.json`: the minimum percentage per
  * metric, and whether each file must meet them too. A metric without a
  * threshold is reported but never marked as failing.
  *
@@ -95,7 +95,7 @@ import { relative, resolve } from "node:path";
  * A file that is not fully covered, with its path relative to the repository.
  *
  * @typedef {object} PartialFile
- * @property {string} file - Path relative to the repository root, such as `src/hooks/use-api.ts`.
+ * @property {string} file - Path relative to the library package, such as `src/hooks/use-api.ts`.
  * @property {FileCoverage} data - The file's coverage.
  * @property {boolean} failing - `true` if `perFile` is on and any metric is below its threshold.
  */
@@ -103,11 +103,14 @@ import { relative, resolve } from "node:path";
 /** Absolute path of the repository root (two levels above this script). */
 const ROOT = resolve(import.meta.dirname, "../..");
 
+/** Absolute path of the library package, where Vitest runs. */
+const PACKAGE_DIR = resolve(ROOT, "packages/hookify");
+
 /** Where Vitest's `json-summary` reporter writes its output. */
-const SUMMARY_PATH = resolve(ROOT, "coverage/coverage-summary.json");
+const SUMMARY_PATH = resolve(PACKAGE_DIR, "coverage/coverage-summary.json");
 
 /** The thresholds file shared with `vitest.config.ts`. */
-const THRESHOLDS_PATH = resolve(ROOT, "tests/coverage-thresholds.json");
+const THRESHOLDS_PATH = resolve(PACKAGE_DIR, "tests/coverage-thresholds.json");
 
 /**
  * The metrics in the order they appear in both tables, as
@@ -185,7 +188,7 @@ const findPartialFiles = (summary, thresholds) =>
     .filter(([file]) => file !== "total")
     .filter(([, data]) => METRICS.some(([, key]) => data[key].pct < 100))
     .map(([file, data]) => ({
-      file: relative(ROOT, file),
+      file: relative(PACKAGE_DIR, file),
       data,
       failing:
         thresholds.perFile === true &&
