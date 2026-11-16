@@ -1,0 +1,54 @@
+{
+  "name": "@altalyst/hookify-mcp",
+  "version": "0.0.0",
+  "private": true,
+  "description": "MCP server that gives AI coding agents accurate docs and recommendations for @altalyst/hookify React hooks.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "react",
+    "hooks",
+    "hookify",
+    "ai",
+    "agents"
+  ],
+  "homepage": "https://altalyst-solutions.github.io/hookify",
+  "bugs": {
+    "url": "https://github.com/altalyst-solutions/hookify/issues"
+  },
+  "author": "Altalyst Solutions",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/altalyst-solutions/hookify.git",
+    "directory": "packages/hookify-mcp"
+  },
+  "bin": {
+    "hookify-mcp": "./dist/bin.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build:data": "node scripts/build-data.ts",
+    "build": "pnpm build:data && tsc -p tsconfig.build.json",
+    "typecheck": "pnpm build:data && tsc -p tsconfig.json",
+    "test": "pnpm build && vitest"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.4.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@altalyst/hookify": "workspace:*",
+    "@modelcontextprotocol/client": "^2.4.0",
+    "@types/node": "^22.4.0",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5",
+    "yaml": "^2.9.1"
+  }
+}

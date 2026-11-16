@@ -36,8 +36,47 @@ jobs:
         if: ${{ !cancelled() }}
         run: node .github/scripts/coverage-summary.mjs >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Build library
+      - name: Build packages
         run: pnpm build
+
+      - name: Type-check MCP server
+        run: pnpm -F @altalyst/hookify-mcp typecheck
+
+      - name: Run MCP server tests
+        run: pnpm test:mcp --run
+        env:
+          CI: true
+
+  # @altalyst/hookify-mcp runs on users' machines and supports Node.js 22 (its
+  # `engines`), while the repo's tooling uses Node 24. Build on 24, then run the
+  # server's tests and its built command on the newest Node 22.
+  mcp-node22:
+    if: ${{ github.repository == 'altalyst-solutions/hookify' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node and install dependencies
+        uses: ./.github/actions/setup-deps
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Switch to Node.js 22
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          package-manager-cache: false
+
+      - name: Run MCP server tests on Node.js 22
+        working-directory: packages/hookify-mcp
+        run: |
+          node --version
+          pnpm exec vitest run
+        env:
+          CI: true
 
   react-compat:
     if: ${{ github.repository == 'altalyst-solutions/hookify' }}
