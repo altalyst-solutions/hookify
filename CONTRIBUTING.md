@@ -24,6 +24,8 @@ packages/hookify/   # the published @altalyst/hookify package
   src/hooks/        # Hook source files (one file per hook)
   tests/hooks/      # Vitest + Testing Library specs, mirroring src/hooks
   CHANGELOG.md      # written by Changesets
+packages/hookify-mcp/ # MCP server that gives AI agents the hooks' docs
+  scripts/build-data.ts # builds its hook data from the library's types and the docs pages
 docs-site/          # Docusaurus documentation site (private workspace package)
   docs/hooks/       # One .mdx page per hook (demo + docs)
   src/hook-examples # Example components used by the live demos
@@ -105,7 +107,8 @@ pnpm lint           # eslint
 pnpm typecheck      # tsc -b (src and tests)
 pnpm format         # prettier --write
 pnpm format:check   # prettier --check
-pnpm build          # build the library (tsc + vite)
+pnpm build          # build the library (tsc + vite), then the MCP server
+pnpm test:mcp       # MCP server tests, including find_hook's golden queries
 ```
 
 Please make sure `pnpm lint`, `pnpm format:check`, `pnpm test --run`, and

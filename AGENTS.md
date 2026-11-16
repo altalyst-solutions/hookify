@@ -17,6 +17,7 @@ packages/hookify/src/utils/   internal helpers (dev-warnings.ts), not part of th
 packages/hookify/tests/hooks/ one spec per hook, mirrors src/hooks
 docs-site/docs/hooks/         one .mdx page per hook
 docs-site/src/hook-examples/use-x/   live demo components (App.tsx plus one file per demo)
+packages/hookify-mcp/         MCP server for AI agents (private until released); see its README
 .changeset/                   release notes, one file per user-visible change
 ```
 
@@ -32,7 +33,7 @@ pnpm format:check   # prettier
 pnpm lint           # eslint, including TSDoc rules
 pnpm typecheck      # tsc -b (src and tests)
 pnpm coverage       # vitest with per-file coverage thresholds
-pnpm build          # typecheck + vite build
+pnpm build          # typecheck + vite build, then the MCP server
 ```
 
 `pnpm format` fixes formatting. To run a single spec: `pnpm -F @altalyst/hookify exec vitest run tests/hooks/use-x.spec.ts`.
@@ -49,6 +50,12 @@ for V in 18.0.0 18; do
   git checkout packages/hookify/package.json pnpm-lock.yaml && pnpm install
 done
 ```
+
+The MCP server builds its data from the library's bundled types and the hook
+pages' front matter and "When to use it" sections, so a new or changed hook
+reaches it automatically. If you add a hook, also add a query for it to
+`GOLDEN_QUERIES` in `packages/hookify-mcp/tests/search.spec.ts`, and run
+`pnpm build && pnpm test:mcp --run`.
 
 If you touched docs, also run `pnpm docs:check && pnpm build && pnpm -F docs-site typecheck && pnpm docs:build`.
 
