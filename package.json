@@ -23,6 +23,7 @@
     "docs:serve": "pnpm -F docs-site serve",
     "docs:check": "node .github/scripts/check-hook-frontmatter.mjs && node .github/scripts/check-docs-syntax.mjs",
     "changeset": "changeset",
+    "changeset:check": "node .github/scripts/check-changesets.mjs",
     "version": "changeset version && pnpm install --lockfile-only",
     "release": "changeset publish"
   },

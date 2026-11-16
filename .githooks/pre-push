@@ -1,8 +1,9 @@
 #!/bin/sh
-# Reminds/blocks pushing changes that affect the published package
-# (packages/hookify/src/ or packages/hookify/package.json) without a
-# changeset. Doesn't run any network calls; only looks at local git history,
-# so it's fast and safe to run on every push.
+# Reminds/blocks pushing changes that affect a published package without a
+# changeset: the library (packages/hookify/src/ or its package.json) or the MCP
+# server (packages/hookify-mcp/src/, scripts/ or its package.json). Doesn't
+# run any network calls; only looks at local git history, so it's fast and
+# safe to run on every push.
 #
 # Skip this check for a single push with: git push --no-verify
 
@@ -24,9 +25,9 @@ fi
 
 changed_files=$(git diff --name-only "$merge_base" HEAD)
 
-# Only the library's src/ and package.json affect the published package; skip
+# Only those paths affect what gets published; skip
 # docs-only, CI-only, or test-only changes.
-if ! echo "$changed_files" | grep -qE '^packages/hookify/(src/|package\.json$)'; then
+if ! echo "$changed_files" | grep -qE '^packages/(hookify/(src/|package\.json$)|hookify-mcp/(src/|scripts/|package\.json$))'; then
   exit 0
 fi
 
@@ -34,7 +35,7 @@ has_changeset=$(echo "$changed_files" | grep -E '^\.changeset/.+\.md$' | grep -v
 
 if [ -z "$has_changeset" ]; then
   echo ""
-  echo "⚠️  This push changes packages/hookify/src/ or its package.json but adds no changeset."
+  echo "⚠️  This push changes a published package (packages/hookify or packages/hookify-mcp) but adds no changeset."
   echo "   Run 'pnpm changeset' to record a version bump + changelog entry."
   echo "   If this genuinely shouldn't trigger a release, push again with:"
   echo "     git push --no-verify"
