@@ -1,6 +1,6 @@
 {
   "name": "@altalyst/hookify-mcp",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "MCP server that gives AI coding agents accurate docs and recommendations for @altalyst/hookify React hooks.",
   "mcpName": "io.github.altalyst-solutions/hookify",
   "keywords": [
