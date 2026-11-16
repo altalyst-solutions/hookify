@@ -96,4 +96,6 @@ jobs:
         uses: ./.github/actions/verify-npm
 
       - name: Publish to NPM (dry run)
-        run: pnpm --dir packages/hookify publish --dry-run --no-git-checks # authenticates via OIDC trusted publishing, no token needed
+        run: | # authenticates via OIDC trusted publishing, no token needed
+          pnpm --dir packages/hookify publish --dry-run --no-git-checks
+          pnpm --dir packages/hookify-mcp publish --dry-run --no-git-checks

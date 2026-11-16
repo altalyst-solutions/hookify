@@ -21,6 +21,11 @@ jobs:
       - name: Set up Node and install dependencies
         uses: ./.github/actions/setup-deps
 
+      # The MCP server bundles data built from the library, so a library
+      # release must also release it (usually as a patch).
+      - name: Check changesets
+        run: pnpm changeset:check
+
       - name: Check formatting
         run: pnpm format:check
 
