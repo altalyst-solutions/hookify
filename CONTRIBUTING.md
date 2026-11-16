@@ -135,6 +135,22 @@ change. You can include multiple bullet points in the summary if useful;
 it becomes the changelog entry for this release, so write it for consumers
 of the package, not just for reviewers.
 
+The repository publishes two packages: the library, `@altalyst/hookify`, and
+the MCP server, `@altalyst/hookify-mcp`, which bundles data built from the
+library's types and docs. Whenever a changeset bumps the library, also select
+the MCP server (usually as a `patch`), so its data is released with the
+library:
+
+```md
+---
+"@altalyst/hookify": minor
+"@altalyst/hookify-mcp": patch
+---
+```
+
+`pnpm changeset:check` fails when the library is released without the MCP
+server, and CI runs it on every pull request.
+
 When your PR merges to `main`, the `changesets/action` bot opens or updates
 a "Version Packages" pull request that bumps `package.json` and updates
 `CHANGELOG.md` from the accumulated changesets. Merging that PR triggers

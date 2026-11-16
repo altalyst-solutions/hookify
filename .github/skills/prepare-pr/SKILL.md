@@ -101,7 +101,10 @@ pnpm changeset
 ```
 
 Pick the correct bump (major/minor/patch) and write a summary from the
-consumer's point of view — it becomes the changelog entry. Stage the
+consumer's point of view — it becomes the changelog entry. Whenever the
+changeset bumps `@altalyst/hookify`, also select `@altalyst/hookify-mcp`
+(usually `patch`), since the MCP server bundles data built from the library;
+`pnpm changeset:check` fails otherwise. Stage the
 generated `.changeset/*.md` file as part of the relevant commit (or its own
 `docs`/`chore` commit). Skip this for changes that don't affect the
 published package (docs-site-only tweaks, CI, internal tooling).

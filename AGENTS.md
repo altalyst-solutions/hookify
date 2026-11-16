@@ -17,7 +17,7 @@ packages/hookify/src/utils/   internal helpers (dev-warnings.ts), not part of th
 packages/hookify/tests/hooks/ one spec per hook, mirrors src/hooks
 docs-site/docs/hooks/         one .mdx page per hook
 docs-site/src/hook-examples/use-x/   live demo components (App.tsx plus one file per demo)
-packages/hookify-mcp/         MCP server for AI agents (private until released); see its README
+packages/hookify-mcp/         @altalyst/hookify-mcp, the MCP server for AI agents; see its README
 .changeset/                   release notes, one file per user-visible change
 ```
 
@@ -203,6 +203,12 @@ the old form isn't parsed and shows up as raw text without any build error.
   (`minor` new hook or feature, `patch` fix, `major` breaking). Write the body
   from the consumer's view; it becomes the changelog. Never edit
   `CHANGELOG.md` or the `package.json` version by hand.
+- Every changeset that bumps `@altalyst/hookify` also bumps
+  `@altalyst/hookify-mcp`, usually as a `patch`: the MCP server bundles data
+  built from the library, so releasing the library alone would leave it
+  describing the old API. `pnpm changeset:check` (run in CI) enforces this.
+  Changes to the MCP server itself (`packages/hookify-mcp/src`, `scripts`, its
+  `package.json`) get their own `"@altalyst/hookify-mcp"` changeset.
 - Commit messages are conventional: `feat:`, `fix:`, `docs:`, `chore:`,
   `refactor:`, `test:`, `ci:`. Branches: `<type>/<kebab-description>`.
 - Don't commit, push, branch or edit a PR unless asked. To prepare a PR, use
