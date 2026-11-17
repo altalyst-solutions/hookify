@@ -1,0 +1,24 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.altalyst-solutions/hookify",
+  "title": "Hookify",
+  "description": "Accurate, version-matched docs and hook recommendations for the @altalyst/hookify React hooks.",
+  "websiteUrl": "https://github.com/altalyst-solutions/hookify/tree/main/packages/hookify-mcp#readme",
+  "repository": {
+    "url": "https://github.com/altalyst-solutions/hookify",
+    "source": "github",
+    "subfolder": "packages/hookify-mcp"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@altalyst/hookify-mcp",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

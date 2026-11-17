@@ -15,5 +15,8 @@
       "source.sortImports": "never",
       "source.organizeImports": "never"
     }
+  },
+  "json.schemaDownload.trustedDomains": {
+    "https://static.modelcontextprotocol.io/": true
   }
 }
