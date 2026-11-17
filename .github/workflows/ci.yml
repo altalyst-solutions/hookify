@@ -18,6 +18,9 @@ jobs:
       id-token: write # required for npm trusted publishing (OIDC)
     outputs:
       published: ${{ steps.changesets.outputs.published }}
+      # `true` when this run published @altalyst/hookify-mcp, so the MCP
+      # Registry listing is updated below.
+      mcp-published: ${{ contains(fromJSON(steps.changesets.outputs.publishedPackages || '[]').*.name, '@altalyst/hookify-mcp') }}
 
     steps:
       - name: Checkout code
@@ -54,6 +57,26 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
         # authenticates pnpm publish via OIDC trusted publishing, no NPM_TOKEN needed
 
+      # GitHub marks the newest release as "Latest", which after an MCP-only
+      # release would be @altalyst/hookify-mcp. Keep the badge on the library,
+      # the main package, like other per-package monorepos (changesets, Remix).
+      - name: Keep the library as the latest GitHub release
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 100 \
+            --json tagName,isDraft,isPrerelease,publishedAt \
+            --jq '[.[] | select((.isDraft | not) and (.isPrerelease | not))
+                       | select(.tagName | test("^(v|@altalyst/hookify@)[0-9]+\\.[0-9]+\\.[0-9]+$"))]
+                  | sort_by(.publishedAt) | last | .tagName // empty')
+          if [ -z "$tag" ]; then
+            echo "::warning::No @altalyst/hookify release found to mark as latest."
+            exit 0
+          fi
+          gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --latest
+          echo "Marked $tag as the latest release."
+
   # After a release is published, deploy its docs as the new stable channel.
   # (The release is created with GITHUB_TOKEN, which doesn't trigger other
   # workflows, so the docs workflow is called directly instead.)
@@ -65,6 +88,15 @@ jobs:
       pages: write
       id-token: write
     uses: ./.github/workflows/docs-deploy.yml
+
+  # Lists each new @altalyst/hookify-mcp version on the MCP Registry.
+  publish-mcp-registry:
+    needs: build-and-publish
+    if: ${{ needs.build-and-publish.outputs.mcp-published == 'true' }}
+    permissions:
+      contents: read
+      id-token: write # the MCP Registry authenticates GitHub Actions with OIDC
+    uses: ./.github/workflows/mcp-registry.yml
 
   publish-dry-run:
     # Manual-only job to verify the trusted publisher OIDC setup without publishing.

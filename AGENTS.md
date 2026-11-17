@@ -209,6 +209,11 @@ the old form isn't parsed and shows up as raw text without any build error.
   describing the old API. `pnpm changeset:check` (run in CI) enforces this.
   Changes to the MCP server itself (`packages/hookify-mcp/src`, `scripts`, its
   `package.json`) get their own `"@altalyst/hookify-mcp"` changeset.
+- `packages/hookify-mcp/server.json` is the server's MCP Registry entry. Its
+  versions follow `package.json` automatically (the root `version` script runs
+  `.github/scripts/sync-server-json.mjs`), so never edit them by hand; its
+  `name` must equal `package.json`'s `mcpName`, and `description` stays under
+  100 characters. A test checks all three.
 - Commit messages are conventional: `feat:`, `fix:`, `docs:`, `chore:`,
   `refactor:`, `test:`, `ci:`. Branches: `<type>/<kebab-description>`.
 - Don't commit, push, branch or edit a PR unless asked. To prepare a PR, use
