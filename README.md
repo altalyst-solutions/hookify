@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs-site/static/img/logo.svg" alt="Hookify logo" width="120" height="120" />
+  <img src="https://raw.githubusercontent.com/altalyst-solutions/hookify/main/docs-site/static/img/logo.svg" alt="Hookify logo" width="120" height="120" />
 
   <h1>Hookify</h1>
 
@@ -102,6 +102,20 @@ version menu in the top right switches between the two.
 `useDebounce` and `useThrottle` are deprecated aliases of `useDebouncedCallback`
 and `useThrottledValue`, kept for compatibility and due to be removed in a future
 release.
+
+## Using hookify with AI agents
+
+[`@altalyst/hookify-mcp`](https://www.npmjs.com/package/@altalyst/hookify-mcp)
+is an MCP server that gives AI coding agents such as Claude Code, Cursor and VS
+Code accurate, version-matched docs for every hook, so they use the real API
+instead of guessing it. It runs locally and makes no network requests:
+
+```bash
+claude mcp add hookify -- npx -y @altalyst/hookify-mcp
+```
+
+Setup for other clients, and what the server offers, is in its
+[README](https://github.com/altalyst-solutions/hookify/tree/main/packages/hookify-mcp#readme).
 
 ## Contributing
 
