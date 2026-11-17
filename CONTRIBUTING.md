@@ -151,6 +151,14 @@ library:
 `pnpm changeset:check` fails when the library is released without the MCP
 server, and CI runs it on every pull request.
 
+Releasing the MCP server also updates its listing on the
+[MCP Registry](https://registry.modelcontextprotocol.io): the "Version
+Packages" pull request bumps `packages/hookify-mcp/server.json` along with its
+`package.json`, and after the npm publish CI runs
+`.github/workflows/mcp-registry.yml`, which publishes `server.json` using
+GitHub's OIDC identity. Never edit the versions in `server.json` by hand. To
+retry a failed listing, run that workflow manually from the Actions tab.
+
 When your PR merges to `main`, the `changesets/action` bot opens or updates
 a "Version Packages" pull request that bumps `package.json` and updates
 `CHANGELOG.md` from the accumulated changesets. Merging that PR triggers
