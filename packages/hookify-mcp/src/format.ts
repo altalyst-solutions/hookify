@@ -30,6 +30,12 @@ export interface HookListOptions {
   includeDeprecated?: boolean;
 }
 
+/** Options for {@link formatHook}. */
+interface FormatHookOptions {
+  /** Include every documented example. Default is `false`. */
+  includeAllExamples?: boolean;
+}
+
 /**
  * Formats the `list_hooks` response: one line per hook, grouped by category.
  *
@@ -105,9 +111,14 @@ const formatType = (type: TypeEntry) => {
  *
  * @param hook - The hook.
  * @param data - The hook data, for the version line.
+ * @param options - Whether to include every documented example.
  * @returns The hook's docs as Markdown.
  */
-export const formatHook = (hook: HookEntry, data: HooksData) => {
+export const formatHook = (
+  hook: HookEntry,
+  data: HooksData,
+  options: FormatHookOptions = {}
+) => {
   const sections: string[] = [`# ${hook.name}`, hook.description];
 
   if (hook.deprecated) {
@@ -155,12 +166,28 @@ export const formatHook = (hook: HookEntry, data: HooksData) => {
 
   if (hook.details) sections.push(`## Details\n${hook.details}`);
 
-  const [example, ...moreExamples] = hook.examples;
-  if (example) {
-    const language = /<[A-Za-z]/.test(example) ? "tsx" : "ts";
-    sections.push(
-      `## Example\n\`\`\`${language}\n${example}\n\`\`\`${moreExamples.length > 0 ? `\n${moreExamples.length} more example${moreExamples.length === 1 ? "" : "s"} on the docs page.` : ""}`
-    );
+  const examples = options.includeAllExamples
+    ? hook.examples
+    : hook.examples.slice(0, 1);
+  if (examples.length > 0) {
+    if (options.includeAllExamples && examples.length > 1) {
+      sections.push(
+        [
+          "## Examples",
+          ...examples.map((example, index) => {
+            const language = /<[A-Za-z]/.test(example) ? "tsx" : "ts";
+            return `### Example ${index + 1}\n\`\`\`${language}\n${example}\n\`\`\``;
+          }),
+        ].join("\n\n")
+      );
+    } else {
+      const [example] = examples;
+      const language = /<[A-Za-z]/.test(example) ? "tsx" : "ts";
+      const moreExamples = hook.examples.length - examples.length;
+      sections.push(
+        `## Example\n\`\`\`${language}\n${example}\n\`\`\`${moreExamples > 0 ? `\n${moreExamples} more example${moreExamples === 1 ? "" : "s"} on the docs page.` : ""}`
+      );
+    }
   }
 
   if (hook.related.length > 0) {

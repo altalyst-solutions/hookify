@@ -108,7 +108,7 @@ export const createServer = (options: CreateServerOptions = {}) => {
     {
       title: "Get a hookify hook",
       description:
-        "Get everything needed to use one @altalyst/hookify hook correctly: its signature, parameters, option and return types with defaults, when to use it, behavior details, an example and its docs link.",
+        "Get everything needed to use one @altalyst/hookify hook correctly: its signature, parameters, option and return types with defaults, when to use it, behavior details and its docs link. Set includeAllExamples to true to return every documented example instead of only the first.",
       inputSchema: z.object({
         name: z
           .string()
@@ -116,10 +116,16 @@ export const createServer = (options: CreateServerOptions = {}) => {
           .describe(
             "The hook name, such as useDebouncedValue (the docs slug use-debounced-value also works)."
           ),
+        includeAllExamples: z
+          .boolean()
+          .optional()
+          .describe(
+            "Include every documented example instead of only the first. Default is false."
+          ),
       }),
       annotations: READ_ONLY,
     },
-    async ({ name }) => {
+    async ({ name, includeAllExamples }) => {
       const hook = findHook(name, data);
       if (!hook) {
         return textResult(
@@ -127,7 +133,9 @@ export const createServer = (options: CreateServerOptions = {}) => {
           true
         );
       }
-      return textResult(withNote(formatHook(hook, data), note));
+      return textResult(
+        withNote(formatHook(hook, data, { includeAllExamples }), note)
+      );
     }
   );
 
