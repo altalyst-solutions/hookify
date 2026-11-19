@@ -68,11 +68,11 @@ real signature, `useDebouncedValue<T>(value: T, delay: number): T`.
 
 ## Tools
 
-| Tool         | What your agent gets                                                                                                       |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| `list_hooks` | Every hook in one line, grouped by category. Optional `category` and `includeDeprecated`.                                  |
-| `get_hook`   | One hook's signature, parameters, option and return types with their defaults, use cases, behavior details and an example. |
-| `find_hook`  | The best hooks for a problem described in plain language, with the use case each one fits. Optional `limit` (1 to 10).     |
+| Tool         | What your agent gets                                                                                                                                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `list_hooks` | Every hook in one line, grouped by category. Optional `category` and `includeDeprecated`.                                                                                                                           |
+| `get_hook`   | One hook's signature, parameters, option and return types with their defaults, use cases and behavior details. Set `includeAllExamples: true` to include every documented example; by default it returns the first. |
+| `find_hook`  | The best hooks for a problem described in plain language, with the use case each one fits. Optional `limit` (1 to 10).                                                                                              |
 
 All three are read-only. When the project your agent works in has a different
 `@altalyst/hookify` version installed than the one the data describes, every

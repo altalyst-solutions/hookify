@@ -128,6 +128,43 @@ describe("hookify MCP server", () => {
       );
     });
 
+    it("returns only the first documented example by default", async () => {
+      const { text } = await call(await connect(), "get_hook", {
+        name: "useControlledState",
+      });
+      expect(text).toContain("## Example\n");
+      expect(text).toContain("Uncontrolled usage");
+      expect(text).toContain("3 more examples on the docs page.");
+      expect(text).not.toContain("Controlled usage");
+    });
+
+    it("includes every documented example when requested", async () => {
+      const { text } = await call(await connect(), "get_hook", {
+        name: "useControlledState",
+        includeAllExamples: true,
+      });
+      expect(text.match(/^### Example \d+$/gm)).toHaveLength(4);
+      expect(text).toContain("## Examples");
+      expect(text).toContain("Uncontrolled usage");
+      expect(text).toContain("Controlled usage");
+      expect(text).toContain("updater function");
+      expect(text).toContain("lazy initialization");
+      expect(text).not.toContain("more examples on the docs page");
+    });
+
+    it("returns the same single example when a hook has only one", async () => {
+      const client = await connect();
+      const args = { name: "usePrevious" };
+      const { text: normal } = await call(client, "get_hook", args);
+      const { text: all } = await call(client, "get_hook", {
+        ...args,
+        includeAllExamples: true,
+      });
+      expect(all).toBe(normal);
+      expect(all).toContain("## Example\n");
+      expect(all).not.toMatch(/more examples? on the docs page/);
+    });
+
     it("accepts the docs slug", async () => {
       const { text } = await call(await connect(), "get_hook", {
         name: "use-debounced-value",
