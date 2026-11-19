@@ -34,26 +34,30 @@ in a single commit.
 Don't assume — a branch/PR from this same change may already exist. Check:
 
 1. `git branch --show-current` — are we already on a non-`main` branch?
-2. `git rev-parse --abbrev-ref --symbolic-full-name @{u}` — does the current
-   branch have an upstream (i.e. has it been pushed before)? Errors if not.
+2. `git rev-parse --abbrev-ref --symbolic-full-name @{u}` — what does the
+   current branch track? Errors if it has no tracking branch.
 3. `gh pr view --json number,url,title,state 2>/dev/null` — is there already
    an open PR for this branch?
+4. `git remote -v` and `git ls-remote --heads <fork-remote> refs/heads/<branch>`
+   — identify the writable fork and check whether this branch exists there.
+
+A tracking branch can be a base branch such as `upstream/main` or
+`origin/main`; it does not prove that the feature branch was pushed.
 
 State what you found before proceeding (e.g. "You're on `feat/x` with an open
 PR #42 — treating these as follow-up commits on that PR.") so the user can
 correct you if the detection is wrong. Then:
 
-- **No branch / no upstream / no PR** → this is new work: go to step 3.
-- **Branch and/or upstream exist, but no PR yet** → keep the existing branch
-  (skip step 3), continue at step 4, and draft the initial PR at step 5. If
-  the branch already has commits from an earlier session (check
+- **On the base branch, with no change branch** → this is new work: go to
+  step 3.
+- **Change branch exists, but no PR yet** → keep the existing branch (skip
+  step 3), continue at step 4, and draft the initial PR at step 5. If the
+  branch already has commits from an earlier session (check
   `git log <default-branch>..HEAD --oneline`), the PR title/body must
-  summarize the **whole branch**, not just today's newest commits — and the
-  push command is still `git push -u origin <branch>` if `@{u}` errors (no
-  upstream yet), even though the branch itself isn't brand new.
+  summarize the **whole branch**, not just today's newest commits.
 - **PR already open** → this is a follow-up: keep the existing branch (skip
-  step 3), continue at step 4 using `git push` (not `-u`), and only refresh
-  the PR body at step 5 if the change materially affects it.
+  step 3), continue at step 4, and only refresh the PR body at step 5 if the
+  change materially affects it.
 
 ## 3. Propose a branch name
 
@@ -93,8 +97,8 @@ CHANGE` appearing incidentally.
 
 ### 4a. Add a changeset
 
-If this PR changes the published package in a user-visible way (new hook,
-behavior change, bug fix, etc.), add a changeset before finishing:
+If this PR changes a published package in a user-visible way (new hook,
+MCP tool, behavior change, bug fix, etc.), add a changeset before finishing:
 
 ```
 pnpm changeset
@@ -109,6 +113,10 @@ generated `.changeset/*.md` file as part of the relevant commit (or its own
 `docs`/`chore` commit). Skip this for changes that don't affect the
 published package (docs-site-only tweaks, CI, internal tooling).
 
+For an MCP-only user-visible change, add a changeset for
+`@altalyst/hookify-mcp` with the appropriate bump; a library bump is not
+required.
+
 If the CLI's git commit trailer convention is active for this session,
 append it as a second `-m` flag on every `git commit` command, e.g.:
 
@@ -116,10 +124,12 @@ append it as a second `-m` flag on every `git commit` command, e.g.:
 git commit -m "docs: add MIT license" -m "Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>"
 ```
 
-Finish with the push command: `git push -u origin <branch>` for new work,
-or plain `git push` for a follow-up on a branch that already has an
-upstream. As with `git add`/`git commit`, only run it if the user explicitly
-asks — otherwise just present it.
+Finish with the push command. When the writable fork is `origin`, use
+`git push -u origin <branch>` if the branch does not yet track its matching
+fork branch, even if it tracks a base branch. Use plain `git push` only when
+the current tracking branch is the intended PR head. Use the actual fork
+remote if it is not `origin`. As with `git add`/`git commit`, only run it if
+the user explicitly asks — otherwise just present it.
 
 ## 5. Draft or update the pull request
 
@@ -132,7 +142,7 @@ docs: ...`) separate from the body — never as a `# <title>` heading or plain
 first line inside the body's markdown, since that duplicates GitHub's
 separate title field once pasted into the description box.
 
-Then follow [`.github/PULL_REQUEST_TEMPLATE.md`](../../PULL_REQUEST_TEMPLATE.md)
+Then follow [`.github/PULL_REQUEST_TEMPLATE.md`](../../../.github/PULL_REQUEST_TEMPLATE.md)
 exactly for the body — same section order and headings:
 
 - `## Summary` — one clear paragraph (not a bulleted list, not manually
@@ -140,12 +150,12 @@ exactly for the body — same section order and headings:
   different format.
 - `## Related issue(s)` — link any issues this closes/references, or state
   "None" if there aren't any.
-- `## Type of change` — check the boxes that apply from the template
-  (Bug fix / New hook / Enhancement to an existing hook / Documentation /
-  Other).
-- `## Checklist` — check off the items that were actually verified locally
-  (lint, format:check, test, build, tests/docs added, a changeset added for
-  user-facing changes). Only check an item if it was genuinely run/confirmed.
+- `## Affected area(s)` — check the relevant packages, documentation, or
+  tooling.
+- `## Type of change` — check the boxes that apply from the template.
+- `## Checklist` — check off only items genuinely run or confirmed, including
+  the applicable library, MCP and docs checks. Leave unrun or inapplicable
+  items unchecked and explain why.
 
 When asked for the PR "in markdown", present the title on its own line first
 (e.g. `**PR title:** docs: ...`), then wrap only the body in a
@@ -158,6 +168,7 @@ refresh what the new commits actually change:
 
 - Append to (don't replace) `## Summary` if the new commits add meaningfully
   to what the PR does.
+- Re-check `## Affected area(s)` if another package or area is affected.
 - Re-check `## Type of change` boxes if a new category now applies.
 - Re-verify `## Checklist` items (lint/format/test/build, docs, changeset)
   against the latest state, not just the original commits.
