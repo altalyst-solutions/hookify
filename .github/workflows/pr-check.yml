@@ -44,6 +44,9 @@ jobs:
       - name: Build packages
         run: pnpm build
 
+      - name: Check library bundles
+        run: pnpm dist:check
+
       - name: Type-check MCP server
         run: pnpm -F @altalyst/hookify-mcp typecheck
 
