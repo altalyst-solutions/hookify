@@ -17,10 +17,12 @@ jobs:
       pull-requests: write # required for changesets/action to open/update the "Version Packages" PR
       id-token: write # required for npm trusted publishing (OIDC)
     outputs:
-      published: ${{ steps.changesets.outputs.published }}
+      # `true` when this run published @altalyst/hookify, so its docs are
+      # deployed below. MCP-only releases don't change the docs site.
+      library-published: ${{ contains(fromJSON(steps.changesets.outputs['published-packages'] || '[]').*.name, '@altalyst/hookify') }}
       # `true` when this run published @altalyst/hookify-mcp, so the MCP
       # Registry listing is updated below.
-      mcp-published: ${{ contains(fromJSON(steps.changesets.outputs.publishedPackages || '[]').*.name, '@altalyst/hookify-mcp') }}
+      mcp-published: ${{ contains(fromJSON(steps.changesets.outputs['published-packages'] || '[]').*.name, '@altalyst/hookify-mcp') }}
 
     steps:
       - name: Checkout code
@@ -77,12 +79,12 @@ jobs:
           gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --latest
           echo "Marked $tag as the latest release."
 
-  # After a release is published, deploy its docs as the new stable channel.
+  # After a library release is published, deploy its docs as the new stable channel.
   # (The release is created with GITHUB_TOKEN, which doesn't trigger other
   # workflows, so the docs workflow is called directly instead.)
   deploy-docs:
     needs: build-and-publish
-    if: ${{ needs.build-and-publish.outputs.published == 'true' }}
+    if: ${{ needs.build-and-publish.outputs.library-published == 'true' }}
     permissions:
       contents: write # attach the built stable docs to the release
       pages: write
