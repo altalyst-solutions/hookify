@@ -154,23 +154,18 @@ jobs:
           path: docs-site/build
           retention-days: 1
 
-  deploy:
+  # Combines both channels into the github-pages artifact. This is a separate
+  # job from deploy on purpose: deploy-pages looks the artifact up through the
+  # run's artifact list, which can take a moment to include a new upload, and
+  # running both steps back to back in one job intermittently failed with
+  # 'No artifacts named "github-pages" were found'.
+  assemble:
     needs: [release, build-stable, build-next]
     # build-stable is skipped when the release already has its build.
     if: ${{ !cancelled() && needs.build-next.result == 'success' && (needs.build-stable.result == 'success' || needs.build-stable.result == 'skipped') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read # download the release asset
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    # One deploy at a time, in order, so a release deploy is never overwritten
-    # by an older run.
-    concurrency:
-      group: pages
-      cancel-in-progress: false
     steps:
       - name: Download stable docs
         env:
@@ -189,13 +184,28 @@ jobs:
           name: docs-next
           path: site/next
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v6
-
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
           path: site
+
+  deploy:
+    needs: assemble
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # One deploy at a time, in order, so a release deploy is never overwritten
+    # by an older run.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - name: Setup Pages
+        uses: actions/configure-pages@v6
 
       - name: Deploy to GitHub Pages
         id: deployment
