@@ -13,8 +13,9 @@ name: Deploy Docs
 #
 # Triggers:
 # - push to main (docs or library changes): rebuilds next, reuses stable.
-# - workflow_call from ci.yml right after a release is published: builds the
-#   new stable (the new release has no docs-stable.tar.gz yet) and next.
+# - workflow_call from ci.yml right after a library release is published:
+#   builds the new stable (the new release has no docs-stable.tar.gz yet) and
+#   next.
 # - workflow_dispatch: manual run; optionally force a stable rebuild.
 
 on:

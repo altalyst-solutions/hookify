@@ -177,7 +177,7 @@ The docs site has two versions, deployed by
 
 | Version | URL                                                                                   | Shows                                         | Updated                                                               |
 | ------- | ------------------------------------------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------------------- |
-| Stable  | [altalyst-solutions.github.io/hookify](https://altalyst-solutions.github.io/hookify/) | The latest release, with demos from npm       | When a release is published                                           |
+| Stable  | [altalyst-solutions.github.io/hookify](https://altalyst-solutions.github.io/hookify/) | The latest release, with demos from npm       | When a library release is published                                   |
 | Next    | […/hookify/next](https://altalyst-solutions.github.io/hookify/next/)                  | `main`, with demos running the code on `main` | On every push to `main` that touches the docs or the library's `src/` |
 
 So a docs change, including a typo fix, shows up on next as soon as it merges,
