@@ -192,6 +192,9 @@ jobs:
 
   deploy:
     needs: assemble
+    # The default success() check also fails when an indirect dependency
+    # (build-stable) was skipped, so check assemble's result explicitly.
+    if: ${{ !cancelled() && needs.assemble.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       pages: write
