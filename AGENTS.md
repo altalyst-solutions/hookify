@@ -32,9 +32,12 @@ Run these from the repository root before finishing. CI (`.github/workflows/pr-c
 pnpm format:check   # prettier
 pnpm lint           # eslint, including TSDoc rules
 pnpm typecheck      # tsc -b (src and tests)
+pnpm typecheck:all  # builds, then type-checks the library, MCP server, docs site and e2e/consumers fixtures
 pnpm coverage       # vitest with per-file coverage thresholds
 pnpm build          # typecheck + vite build, then the MCP server
 pnpm check:package  # after a build: publint and attw on the packed packages
+pnpm test:consumers # after a build: install the packed library into the e2e/consumers fixtures
+pnpm setup:consumers # after a build: install the fixtures' dependencies in place so editors resolve their imports
 ```
 
 `pnpm format` fixes formatting. To run a single spec: `pnpm -F @altalyst/hookify exec vitest run tests/hooks/use-x.spec.ts`.

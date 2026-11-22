@@ -11,7 +11,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["**/dist", "**/coverage", "docs-site"] },
+  { ignores: ["**/dist", "**/coverage", "docs-site", "e2e"] },
   {
     extends: [
       js.configs.recommended,

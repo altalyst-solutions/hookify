@@ -89,6 +89,47 @@ jobs:
         env:
           CI: true
 
+  # Installs the packed library into small consumer projects (Node ESM and
+  # CommonJS, TypeScript with node16 and bundler resolution, a Vite build) to
+  # catch packaging that only breaks for some kinds of consumer. Fixtures are
+  # the folders in e2e/consumers, and each one gets its own job.
+  consumer-fixtures:
+    if: ${{ github.repository == 'altalyst-solutions/hookify' }}
+    runs-on: ubuntu-latest
+    outputs:
+      fixtures: ${{ steps.list.outputs.fixtures }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: List consumer fixtures
+        id: list
+        run: |
+          fixtures=$(find e2e/consumers -mindepth 2 -maxdepth 2 -name package.json -exec dirname {} \; | xargs -n1 basename | sort | jq -R . | jq -sc .)
+          echo "fixtures=$fixtures" >> "$GITHUB_OUTPUT"
+
+  consumer-test:
+    needs: consumer-fixtures
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        fixture: ${{ fromJSON(needs.consumer-fixtures.outputs.fixtures) }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node and install dependencies
+        uses: ./.github/actions/setup-deps
+
+      - name: Build library
+        run: pnpm -F @altalyst/hookify build
+
+      - name: Run ${{ matrix.fixture }} fixture
+        run: pnpm test:consumers ${{ matrix.fixture }}
+
   react-compat:
     if: ${{ github.repository == 'altalyst-solutions/hookify' }}
     runs-on: ubuntu-latest

@@ -11,6 +11,7 @@
     "build": "pnpm -r --filter \"./packages/*\" build",
     "watch": "pnpm -F @altalyst/hookify watch",
     "typecheck": "pnpm -F @altalyst/hookify typecheck",
+    "typecheck:all": "pnpm build && pnpm -F @altalyst/hookify-mcp typecheck && pnpm -F docs-site typecheck && node e2e/consumers/run.mjs --script=typecheck",
     "test": "pnpm -F @altalyst/hookify test",
     "coverage": "pnpm -F @altalyst/hookify coverage",
     "test:mcp": "pnpm -F @altalyst/hookify-mcp test",
@@ -26,6 +27,8 @@
     "changeset:check": "node .github/scripts/check-changesets.mjs",
     "dist:check": "node .github/scripts/check-dist.mjs",
     "check:package": "node .github/scripts/check-package.mjs",
+    "test:consumers": "node e2e/consumers/run.mjs",
+    "setup:consumers": "node e2e/consumers/run.mjs --install",
     "version": "changeset version && node .github/scripts/sync-server-json.mjs && pnpm install --lockfile-only",
     "release": "changeset publish"
   },
