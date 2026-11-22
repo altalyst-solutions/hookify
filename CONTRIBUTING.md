@@ -98,6 +98,9 @@ docs-site/          # Docusaurus documentation site (private workspace package)
    where demos already run the code from `main`. See
    [Where docs changes appear](#where-docs-changes-appear).
 
+6. Run `pnpm build && pnpm size:update` and commit the new line in
+   `packages/hookify/size-budgets.json`. See [Size budgets](#size-budgets).
+
 ## Development workflow
 
 ```bash
@@ -110,14 +113,40 @@ pnpm format         # prettier --write
 pnpm format:check   # prettier --check
 pnpm build          # build the library (tsc + vite), then the MCP server
 pnpm check:package  # after a build: publint and are-the-types-wrong on the packed packages
+pnpm size           # after a build: gzipped size of the bundle and of each hook against packages/hookify/size-budgets.json
+pnpm size:update    # after a build: add budgets for new hooks, drop deleted ones; name a hook to raise its budget
 pnpm test:consumers # after a build: install the packed library into the e2e/consumers fixtures
 pnpm setup:consumers # after a build: install the fixtures' dependencies in place so editors resolve their imports
 pnpm test:mcp       # MCP server tests, including find_hook's golden queries
 ```
 
-Please make sure `pnpm lint`, `pnpm format:check`, `pnpm test --run`, and
-`pnpm build` all pass before opening a pull request. CI runs the same
+Please make sure `pnpm lint`, `pnpm format:check`, `pnpm test --run`,
+`pnpm build`, and `pnpm size` (after the build) all pass before opening a pull
+request. CI runs the same
 checks on every PR via `.github/workflows/pr-check.yml`.
+
+### Size budgets
+
+Every hook, and the package as a whole, has a gzipped size budget in
+`packages/hookify/size-budgets.json`. `pnpm size` (run in CI on every pull
+request, after a build) measures what a consumer would bundle when importing
+only that hook, and fails when a hook goes over its budget, has no budget, or
+has a budget but no longer exists. Contributors maintain the file in the pull
+request that changes a hook's size, and reviewers see every change to it in
+the diff. CI never writes it, and `pnpm size:update` never changes an existing
+budget unless you name it, so a regression can't be hidden by accident.
+
+| You are...                                    | Do this                                                                                                                                                       |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Adding a hook                                 | Run `pnpm build && pnpm size:update`, then commit the new line in `size-budgets.json`.                                                                        |
+| Changing a hook and staying within its budget | Nothing. New budgets leave about 10% of headroom for small changes.                                                                                           |
+| Growing a hook past its budget on purpose     | Run `pnpm build && pnpm size:update useYourHook` and commit the new number. Explain the growth in the pull request. If it wasn't on purpose, shrink the code. |
+| Changing shared code, such as `useLatest`     | Several hooks can grow at once. `pnpm size` lists every one over budget. Reset the ones that should grow, for example `pnpm size:update useA useB`.           |
+| Making a hook smaller                         | Optional. To keep the budget tight, run `pnpm size:update useYourHook`.                                                                                       |
+| Removing or renaming a hook                   | Run `pnpm size:update` to drop the old line and add the new one.                                                                                              |
+
+`pnpm size:update bundle` resets the whole-package budget, and
+`pnpm size:update --all` resets every budget.
 
 ## Commit messages and versioning
 

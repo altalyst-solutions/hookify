@@ -32,6 +32,7 @@
 - [ ] `pnpm typecheck` passes
 - [ ] `pnpm coverage` passes
 - [ ] `pnpm build` passes
+- [ ] `pnpm size` passes (after a build), with `size-budgets.json` updated via `pnpm size:update` if a hook was added, removed or grew on purpose
 - [ ] `pnpm -F @altalyst/hookify-mcp typecheck` and `pnpm test:mcp --run` pass
 - [ ] `pnpm docs:check`, `pnpm -F docs-site typecheck`, and `pnpm docs:build` pass (for docs changes)
 - [ ] Verified React 18.0.0 and 18 compatibility (for React behavior changes; locally or in CI)
