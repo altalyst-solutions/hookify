@@ -1,5 +1,11 @@
 # @altalyst/hookify-mcp
 
+## 0.1.2
+
+### Patch Changes
+
+- [#136](https://github.com/altalyst-solutions/hookify/pull/136) [`b9d68ba`](https://github.com/altalyst-solutions/hookify/commit/b9d68ba85f49af5ece8e6de60fa15a4e482dc1da) Thanks [@sleepinzombie](https://github.com/sleepinzombie)! - The ES and CommonJS bundles now start with the `"use client"` directive, so React Server Component frameworks such as the Next.js App Router treat `@altalyst/hookify` as client code. Calling a hook from a Server Component now fails with a clear "is on the client" error instead of an obscure `useState is not a function` TypeError. Hooks still only run in Client Components, so put the components that call them in a file marked `"use client"`.
+
 ## 0.1.1
 
 ### Patch Changes
