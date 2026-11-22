@@ -52,16 +52,15 @@ export const Example = () => {
 ## Using Hookify with Next.js and React Server Components
 
 Hookify's bundles start with the `"use client"` directive, so
-`@altalyst/hookify` is a client boundary in the Next.js App Router and other
-React Server Component frameworks. You can import it from any module, such as a
-shared file or a barrel that a Server Component also imports, without writing
-your own wrapper that re-exports it behind `"use client"`.
+`@altalyst/hookify` is treated as client code in the Next.js App Router and
+other React Server Component frameworks. Hooks use state, effects and browser
+APIs, so they only run in Client Components. If you call one while a Server
+Component renders, the framework stops with a clear error (in Next.js,
+`Attempted to call useToggleState() from the server but useToggleState is on
+the client`) instead of an obscure `useState is not a function` TypeError.
 
-Hooks still only run in Client Components, because they use state, effects and
-browser APIs. Calling a hook while a Server Component renders fails with an
-error from React, as it does for any hook. Put the components that call hooks
-in a file that starts with `"use client"`, and render them from your Server
-Components:
+Put the components that call hooks in a file that starts with `"use client"`,
+and render them from your Server Components:
 
 ```tsx title="app/disclosure.tsx"
 "use client";

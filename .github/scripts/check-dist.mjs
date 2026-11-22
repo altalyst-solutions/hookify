@@ -1,10 +1,11 @@
 /**
  * @file Checks the built `@altalyst/hookify` bundles.
  *
- * React Server Component frameworks, such as the Next.js App Router, only
- * accept hooks from modules that start with the `"use client"` directive.
- * Without it, importing hookify from a shared or server module fails, and
- * consumers have to write their own wrapper files. This script fails when
+ * React Server Component frameworks, such as the Next.js App Router, use the
+ * `"use client"` directive to tell client code from server code. Without it,
+ * they don't treat hookify as client code, so a hook called from a Server
+ * Component fails with an obscure `useState is not a function` TypeError
+ * instead of a clear "is on the client" error. This script fails when
  * either bundle doesn't begin with the directive. Run it after `pnpm build`:
  *
  * ```sh
@@ -32,7 +33,7 @@ const main = () => {
 
   if (missing.length > 0) {
     console.error(
-      `These bundles don't start with "use client", so React Server Component frameworks can't import hookify from shared modules:\n${missing
+      `These bundles don't start with "use client", so React Server Component frameworks won't treat hookify as client code:\n${missing
         .map((bundle) => `  - packages/hookify/dist/${bundle}`)
         .join(
           "\n"
