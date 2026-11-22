@@ -83,9 +83,10 @@ Examples: `feat/use-intersection-observer-hook`,
 
 Present the commits as a table with three columns: commit description, the
 exact `git add` command(s) for that commit's files, and the exact
-`git commit` command with its message. Do not run these commands yourself
-unless the user explicitly asks you to stage/commit — treat them as
-information to review first.
+`git commit` command with its message **and its description** (the commit
+body, see below). Do not run these commands yourself unless the user
+explicitly asks you to stage/commit — treat them as information to review
+first.
 
 Every commit message must follow this repo's
 [conventional-commit convention](../../../CONTRIBUTING.md#commit-messages-and-versioning)
@@ -94,6 +95,22 @@ readability and changelog clarity. Commit message wording no longer
 controls the version bump — that's decided by the changeset(s) added in
 step 4a below — so don't worry about the substring `feat` or `BREAKING
 CHANGE` appearing incidentally.
+
+Every commit also gets a **description**: a short body under the subject that
+explains what changed and why, so the history is useful without opening the
+diff. Pass it as its own `-m` flag right after the subject (each `-m` becomes
+a separate paragraph):
+
+- Subject: conventional-commit prefix, imperative mood, no trailing period,
+  ideally 72 characters or fewer.
+- Description: one to three sentences of plain prose, not manually wrapped. Say
+  why the change is needed and what it does, not just a restatement of the
+  subject. Mention anything a reviewer should know, such as a trade-off or a
+  follow-up. Use a short bullet list only when a commit makes several distinct
+  changes.
+- Keep it safe inside double quotes in the `git commit` command: no backticks,
+  `$`, or double quotes. Write code names as plain words (for example
+  useDebounce) instead of formatting them as code.
 
 ### 4a. Add a changeset
 
@@ -117,11 +134,12 @@ For an MCP-only user-visible change, add a changeset for
 `@altalyst/hookify-mcp` with the appropriate bump; a library bump is not
 required.
 
-If the CLI's git commit trailer convention is active for this session,
-append it as a second `-m` flag on every `git commit` command, e.g.:
+Each `git commit` command is therefore the subject, the description, and,
+if the CLI's git commit trailer convention is active for this session, the
+trailer as the last `-m` flag, e.g.:
 
 ```
-git commit -m "docs: add MIT license" -m "Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>"
+git commit -m "docs: add MIT license" -m "Adds the MIT license file and points the README and package metadata at it, so the package can be used and redistributed under clear terms." -m "Co-authored-by: Copilot App <223556219+Copilot@users.noreply.github.com>"
 ```
 
 Finish with the push command. When the writable fork is `origin`, use
