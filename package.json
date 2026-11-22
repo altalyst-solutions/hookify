@@ -25,10 +25,12 @@
     "changeset": "changeset",
     "changeset:check": "node .github/scripts/check-changesets.mjs",
     "dist:check": "node .github/scripts/check-dist.mjs",
+    "check:package": "node .github/scripts/check-package.mjs",
     "version": "changeset version && node .github/scripts/sync-server-json.mjs && pnpm install --lockfile-only",
     "release": "changeset publish"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
     "@changesets/changelog-github": "^1.0.1",
     "@changesets/cli": "^3.0.3",
     "@eslint/js": "^9.9.0",
@@ -44,6 +46,7 @@
     "eslint-plugin-tsdoc": "^0.5.4",
     "globals": "^15.9.0",
     "prettier": "^3.4.2",
+    "publint": "^0.3.25",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "yaml": "^2.9.1"
