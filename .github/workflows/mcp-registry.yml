@@ -12,7 +12,9 @@ name: Publish to MCP Registry
 #
 # The registry checks that the npm package version in server.json exists and
 # that its package.json `mcpName` equals the server name, and authenticates
-# this workflow with GitHub OIDC: no secret is needed.
+# this workflow with GitHub OIDC: no secret is needed. A version published to
+# npm seconds earlier may not be visible yet, so the job waits for npm to list
+# it and retries the listing a few times.
 
 on:
   workflow_call:
@@ -56,6 +58,26 @@ jobs:
           tar xzf "$archive" mcp-publisher
           rm -f "$archive" "$archive.sigstore.json"
 
+      # npm can take a little while to list a version that was just published,
+      # and the MCP Registry rejects the listing until it does.
+      - name: Wait for npm to list the version
+        working-directory: packages/hookify-mcp
+        run: |
+          set -euo pipefail
+          name=$(jq -r '.packages[0].identifier' server.json)
+          version=$(jq -r '.packages[0].version' server.json)
+          url="https://registry.npmjs.org/${name/\//%2f}/${version}"
+          for attempt in $(seq 1 40); do
+            if curl --silent --fail --output /dev/null "$url"; then
+              echo "$name@$version is available on npm."
+              exit 0
+            fi
+            echo "Attempt $attempt: $name@$version isn't on npm yet, retrying in 15s."
+            sleep 15
+          done
+          echo "::error::$name@$version did not appear on npm within 10 minutes."
+          exit 1
+
       - name: Validate server.json
         working-directory: packages/hookify-mcp
         run: ../../mcp-publisher validate
@@ -63,6 +85,18 @@ jobs:
       - name: Authenticate to the MCP Registry
         run: ./mcp-publisher login github-oidc
 
+      # The registry checks npm itself, so retry a few times in case it still
+      # sees a stale copy of the package right after the wait above.
       - name: Publish server.json
         working-directory: packages/hookify-mcp
-        run: ../../mcp-publisher publish
+        run: |
+          for attempt in 1 2 3; do
+            if ../../mcp-publisher publish; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              echo "Publish attempt $attempt failed, retrying in 30s."
+              sleep 30
+            fi
+          done
+          exit 1
