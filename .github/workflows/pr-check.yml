@@ -92,7 +92,8 @@ jobs:
   # Installs the packed library into small consumer projects (Node ESM and
   # CommonJS, TypeScript with node16 and bundler resolution, a Vite build) to
   # catch packaging that only breaks for some kinds of consumer. Fixtures are
-  # the folders in e2e/consumers, and each one gets its own job.
+  # the folders in e2e/consumers, and each one gets its own job. The
+  # consumer-tests job at the end summarizes them.
   consumer-fixtures:
     if: ${{ github.repository == 'altalyst-solutions/hookify' }}
     runs-on: ubuntu-latest
@@ -106,7 +107,7 @@ jobs:
       - name: List consumer fixtures
         id: list
         run: |
-          fixtures=$(find e2e/consumers -mindepth 2 -maxdepth 2 -name package.json -exec dirname {} \; | xargs -n1 basename | sort | jq -R . | jq -sc .)
+          fixtures=$(find e2e/consumers -mindepth 2 -maxdepth 2 -name package.json -print0 | xargs -0 -n1 dirname | xargs -n1 basename | sort | jq -R . | jq -sc .)
           echo "fixtures=$fixtures" >> "$GITHUB_OUTPUT"
 
   consumer-test:
@@ -129,6 +130,27 @@ jobs:
 
       - name: Run ${{ matrix.fixture }} fixture
         run: pnpm test:consumers ${{ matrix.fixture }}
+
+  # Single, stable status check that summarizes a dynamic matrix. Matrix job
+  # names change with the matrix (new, renamed or removed entries), so requiring
+  # them directly would leave new entries unprotected and make removed ones
+  # block merges forever. Require this job instead: it fails unless the job
+  # that builds the matrix and every matrix entry succeeded, and it still runs
+  # (and fails) when they are skipped or cancelled.
+  consumer-tests:
+    if: ${{ always() && github.repository == 'altalyst-solutions/hookify' }}
+    needs: [consumer-fixtures, consumer-test]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check consumer fixture results
+        env:
+          LIST_RESULT: ${{ needs.consumer-fixtures.result }}
+          TEST_RESULT: ${{ needs.consumer-test.result }}
+        run: |
+          echo "consumer-fixtures: $LIST_RESULT"
+          echo "consumer-test: $TEST_RESULT"
+          [ "$LIST_RESULT" = "success" ] && [ "$TEST_RESULT" = "success" ]
 
   react-compat:
     if: ${{ github.repository == 'altalyst-solutions/hookify' }}
