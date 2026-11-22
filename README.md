@@ -36,6 +36,9 @@ demo.
 - 🌐 **SSR-safe** — hooks never touch `window`, `document` or `navigator`
   during render, so they work with Next.js, Remix and other server renderers
   without hydration warnings.
+- 🧭 **Server Components ready** — the bundles start with `"use client"`, so
+  you can import hooks in the Next.js App Router without writing wrapper
+  files.
 - 🧹 **Safe by default** — timers, listeners and observers are cleaned up on
   unmount and when inputs change, and hooks behave correctly under
   `StrictMode`.
