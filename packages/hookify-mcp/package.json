@@ -21,7 +21,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/altalyst-solutions/hookify.git",
+    "url": "git+https://github.com/altalyst-solutions/hookify.git",
     "directory": "packages/hookify-mcp"
   },
   "bin": {
