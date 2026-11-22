@@ -43,6 +43,11 @@ jobs:
       - name: Build library
         run: pnpm build
 
+      # Blocks the publish step below when the packed packages are broken, even
+      # if the PR check was skipped or bypassed before this commit reached main.
+      - name: Check packed packages
+        run: pnpm check:package
+
       - name: Verify npm supports trusted publishing
         uses: ./.github/actions/verify-npm
 
