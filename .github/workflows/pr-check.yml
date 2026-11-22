@@ -47,6 +47,9 @@ jobs:
       - name: Check library bundles
         run: pnpm dist:check
 
+      - name: Check bundle size budgets
+        run: pnpm size
+
       - name: Check packed packages
         run: pnpm check:package
 
