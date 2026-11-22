@@ -1,0 +1,11 @@
+{
+  "name": "consumer-cjs-node",
+  "private": true,
+  "scripts": {
+    "test": "node index.cjs"
+  },
+  "dependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  }
+}

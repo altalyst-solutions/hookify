@@ -105,10 +105,13 @@ pnpm test           # run the test suite (vitest, watch mode)
 pnpm coverage       # run tests with coverage
 pnpm lint           # eslint
 pnpm typecheck      # tsc -b (src and tests)
+pnpm typecheck:all  # builds, then type-checks the library, MCP server, docs site and e2e/consumers fixtures
 pnpm format         # prettier --write
 pnpm format:check   # prettier --check
 pnpm build          # build the library (tsc + vite), then the MCP server
 pnpm check:package  # after a build: publint and are-the-types-wrong on the packed packages
+pnpm test:consumers # after a build: install the packed library into the e2e/consumers fixtures
+pnpm setup:consumers # after a build: install the fixtures' dependencies in place so editors resolve their imports
 pnpm test:mcp       # MCP server tests, including find_hook's golden queries
 ```
 
