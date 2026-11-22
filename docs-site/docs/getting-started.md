@@ -49,6 +49,52 @@ export const Example = () => {
 };
 ```
 
+## Using Hookify with Next.js and React Server Components
+
+Hookify's bundles start with the `"use client"` directive, so
+`@altalyst/hookify` is a client boundary in the Next.js App Router and other
+React Server Component frameworks. You can import it from any module, such as a
+shared file or a barrel that a Server Component also imports, without writing
+your own wrapper that re-exports it behind `"use client"`.
+
+Hooks still only run in Client Components, because they use state, effects and
+browser APIs. Calling a hook while a Server Component renders fails with an
+error from React, as it does for any hook. Put the components that call hooks
+in a file that starts with `"use client"`, and render them from your Server
+Components:
+
+```tsx title="app/disclosure.tsx"
+"use client";
+
+import { useToggleState } from "@altalyst/hookify";
+
+export const Disclosure = () => {
+  const [isOpen, toggle] = useToggleState(false);
+
+  return (
+    <div>
+      <button onClick={toggle}>{isOpen ? "Hide" : "Show"} details</button>
+      {isOpen && <p>Details that only render after a click.</p>}
+    </div>
+  );
+};
+```
+
+```tsx title="app/page.tsx"
+import { Disclosure } from "./disclosure";
+
+// A Server Component: it renders the Client Component but calls no hooks.
+export default function Page() {
+  return <Disclosure />;
+}
+```
+
+Client Components are still rendered on the server for the first HTML, and
+hooks never touch `window`, `document` or `navigator` during render, so there
+are no hydration warnings. Hooks that read browser state, such as
+[`useMediaQuery`](/hooks/use-media-query), render a default value on the server
+and update after hydration. Each hook's page describes its server behavior.
+
 ## Requirements
 
 | Requirement            | Version                |
