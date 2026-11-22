@@ -108,6 +108,7 @@ pnpm typecheck      # tsc -b (src and tests)
 pnpm format         # prettier --write
 pnpm format:check   # prettier --check
 pnpm build          # build the library (tsc + vite), then the MCP server
+pnpm check:package  # after a build: publint and are-the-types-wrong on the packed packages
 pnpm test:mcp       # MCP server tests, including find_hook's golden queries
 ```
 

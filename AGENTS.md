@@ -34,6 +34,7 @@ pnpm lint           # eslint, including TSDoc rules
 pnpm typecheck      # tsc -b (src and tests)
 pnpm coverage       # vitest with per-file coverage thresholds
 pnpm build          # typecheck + vite build, then the MCP server
+pnpm check:package  # after a build: publint and attw on the packed packages
 ```
 
 `pnpm format` fixes formatting. To run a single spec: `pnpm -F @altalyst/hookify exec vitest run tests/hooks/use-x.spec.ts`.
