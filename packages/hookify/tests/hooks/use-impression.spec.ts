@@ -4,48 +4,26 @@ import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useImpression } from "@/hooks";
+import {
+  createIntersectionObserverEntry,
+  type FakeIntersectionObserver,
+  installIntersectionObserver,
+  type IntersectionObserverController,
+} from "@/testing";
 
-class MockIntersectionObserver {
-  static instances: MockIntersectionObserver[] = [];
+let observers: IntersectionObserverController;
 
-  observed: Element[] = [];
-  disconnected = false;
-
-  constructor(
-    readonly callback: IntersectionObserverCallback,
-    readonly init: IntersectionObserverInit = {}
-  ) {
-    MockIntersectionObserver.instances.push(this);
-  }
-
-  observe(target: Element) {
-    this.observed.push(target);
-  }
-
-  unobserve() {}
-
-  disconnect() {
-    this.disconnected = true;
-  }
-}
-
-const live = () =>
-  MockIntersectionObserver.instances.filter((o) => !o.disconnected);
-
-const makeEntry = (
-  target: Element,
-  intersectionRatio: number
-): IntersectionObserverEntry =>
-  ({
-    target,
-    isIntersecting: intersectionRatio > 0,
-    intersectionRatio,
-  }) as unknown as IntersectionObserverEntry;
-
-const notify = (observer: MockIntersectionObserver, ratio: number) => {
-  const entry = makeEntry(observer.observed[0], ratio);
+/**
+ * Reports the observed element at the given visibility ratio, inside `act()`.
+ *
+ * @returns The entry that was delivered.
+ */
+const notify = (observer: FakeIntersectionObserver, ratio: number) => {
+  const entry = createIntersectionObserverEntry(observer.targets[0], {
+    intersectionRatio: ratio,
+  });
   act(() => {
-    observer.callback([entry], observer as unknown as IntersectionObserver);
+    observer.notify([entry]);
   });
   return entry;
 };
@@ -66,8 +44,7 @@ describe("useImpression", () => {
   };
 
   beforeEach(() => {
-    MockIntersectionObserver.instances = [];
-    vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
+    observers = installIntersectionObserver();
     visibilityState = "visible";
     // `restoreMocks` in vitest.config.ts restores the real getter after each test.
     vi.spyOn(document, "visibilityState", "get").mockImplementation(
@@ -76,7 +53,7 @@ describe("useImpression", () => {
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    observers.restore();
   });
 
   const setup = (
@@ -97,7 +74,7 @@ describe("useImpression", () => {
     const { result, rerender } = renderHook(() => useImpression(vi.fn()));
     const ref = result.current;
 
-    expect(MockIntersectionObserver.instances).toHaveLength(0);
+    expect(observers.instances).toHaveLength(0);
     rerender();
     expect(result.current).toBe(ref);
   });
@@ -105,8 +82,8 @@ describe("useImpression", () => {
   it("observes with a default threshold of 0.5 in the browser viewport", () => {
     const { el } = setup();
 
-    expect(live()[0].observed).toEqual([el]);
-    expect(live()[0].init).toEqual({
+    expect(observers.active[0].targets).toEqual([el]);
+    expect(observers.active[0].options).toEqual({
       root: null,
       rootMargin: "0px",
       threshold: 0.5,
@@ -116,7 +93,7 @@ describe("useImpression", () => {
   it("calls the callback once after 1 second of visibility by default", () => {
     const { onImpression } = setup();
 
-    const entry = notify(live()[0], 0.6);
+    const entry = notify(observers.active[0], 0.6);
     advance(999);
     expect(onImpression).not.toHaveBeenCalled();
 
@@ -128,7 +105,7 @@ describe("useImpression", () => {
   it("does not start the timer below the threshold", () => {
     const { onImpression } = setup();
 
-    notify(live()[0], 0.4);
+    notify(observers.active[0], 0.4);
     advance(5000);
 
     expect(onImpression).not.toHaveBeenCalled();
@@ -137,13 +114,13 @@ describe("useImpression", () => {
   it("resets the timer when the element leaves before the duration", () => {
     const { onImpression } = setup({ minDurationMs: 1000 });
 
-    notify(live()[0], 1);
+    notify(observers.active[0], 1);
     advance(800);
-    notify(live()[0], 0);
+    notify(observers.active[0], 0);
     advance(5000);
     expect(onImpression).not.toHaveBeenCalled();
 
-    notify(live()[0], 1);
+    notify(observers.active[0], 1);
     advance(800);
     expect(onImpression).not.toHaveBeenCalled();
     advance(200);
@@ -153,9 +130,9 @@ describe("useImpression", () => {
   it("keeps the timer running when visibility changes but stays above the threshold", () => {
     const { onImpression } = setup({ threshold: 0.5, minDurationMs: 1000 });
 
-    notify(live()[0], 0.6);
+    notify(observers.active[0], 0.6);
     advance(500);
-    notify(live()[0], 1);
+    notify(observers.active[0], 1);
     advance(500);
 
     expect(onImpression).toHaveBeenCalledTimes(1);
@@ -164,9 +141,9 @@ describe("useImpression", () => {
   it("uses the entry that was latest when the timer fired", () => {
     const { onImpression } = setup();
 
-    notify(live()[0], 0.6);
+    notify(observers.active[0], 0.6);
     advance(500);
-    const latest = notify(live()[0], 0.9);
+    const latest = notify(observers.active[0], 0.9);
     advance(500);
 
     expect(onImpression).toHaveBeenCalledWith(latest);
@@ -177,7 +154,7 @@ describe("useImpression", () => {
       const root = document.createElement("section");
       setup({ root, rootMargin: "10px", threshold: 0.25 });
 
-      expect(live()[0].init).toEqual({
+      expect(observers.active[0].options).toEqual({
         root,
         rootMargin: "10px",
         threshold: 0.25,
@@ -187,7 +164,7 @@ describe("useImpression", () => {
     it("respects a custom minDurationMs", () => {
       const { onImpression } = setup({ minDurationMs: 250 });
 
-      notify(live()[0], 1);
+      notify(observers.active[0], 1);
       advance(249);
       expect(onImpression).not.toHaveBeenCalled();
       advance(1);
@@ -197,7 +174,7 @@ describe("useImpression", () => {
     it("reports as soon as the element is visible with minDurationMs 0", () => {
       const { onImpression } = setup({ minDurationMs: 0 });
 
-      notify(live()[0], 1);
+      notify(observers.active[0], 1);
       advance(0);
 
       expect(onImpression).toHaveBeenCalledTimes(1);
@@ -205,15 +182,15 @@ describe("useImpression", () => {
 
     it("clamps the threshold and falls back for an invalid duration", () => {
       setup({ threshold: 3, minDurationMs: -5 });
-      expect(live()[0].init.threshold).toBe(1);
+      expect(observers.active[0].options.threshold).toBe(1);
 
       const { onImpression } = setup({
         threshold: Number.NaN,
         minDurationMs: Number.NaN,
       });
-      expect(live()[1].init.threshold).toBe(0.5);
+      expect(observers.active[1].options.threshold).toBe(0.5);
 
-      notify(live()[1], 1);
+      notify(observers.active[1], 1);
       advance(999);
       expect(onImpression).not.toHaveBeenCalled();
       advance(1);
@@ -223,63 +200,63 @@ describe("useImpression", () => {
     it("clamps a negative threshold to 0", () => {
       setup({ threshold: -1 });
 
-      expect(live()[0].init.threshold).toBe(0);
+      expect(observers.active[0].options.threshold).toBe(0);
     });
 
     it("re-observes when an option changes", () => {
       const { rerender } = setup({ threshold: 0.5 });
-      const first = live()[0];
+      const first = observers.active[0];
 
       rerender({ options: { threshold: 0.9 } });
 
       expect(first.disconnected).toBe(true);
-      expect(live()).toHaveLength(1);
-      expect(live()[0].init.threshold).toBe(0.9);
+      expect(observers.active).toHaveLength(1);
+      expect(observers.active[0].options.threshold).toBe(0.9);
     });
   });
 
   describe("once", () => {
     it("reports a single impression and stops observing by default", () => {
       const { onImpression } = setup();
-      const observer = live()[0];
+      const observer = observers.active[0];
 
       notify(observer, 1);
       advance(1000);
 
       expect(onImpression).toHaveBeenCalledTimes(1);
       expect(observer.disconnected).toBe(true);
-      expect(live()).toHaveLength(0);
+      expect(observers.active).toHaveLength(0);
     });
 
     it("does not report again after being disabled and re-enabled", () => {
       const { rerender, onImpression } = setup({ once: true });
-      notify(live()[0], 1);
+      notify(observers.active[0], 1);
       advance(1000);
 
       rerender({ options: { once: true, enabled: false } });
       rerender({ options: { once: true, enabled: true } });
 
-      expect(live()).toHaveLength(0);
+      expect(observers.active).toHaveLength(0);
       expect(onImpression).toHaveBeenCalledTimes(1);
     });
 
     it("reports a new element even after the previous one was reported", () => {
       const { result, onImpression } = setup();
-      notify(live()[0], 1);
+      notify(observers.active[0], 1);
       advance(1000);
 
       const next = document.createElement("div");
       act(() => result.current(next));
-      expect(live()[0].observed).toEqual([next]);
+      expect(observers.active[0].targets).toEqual([next]);
 
-      notify(live()[0], 1);
+      notify(observers.active[0], 1);
       advance(1000);
       expect(onImpression).toHaveBeenCalledTimes(2);
     });
 
     it("with once false, reports again after leaving and re-entering", () => {
       const { onImpression } = setup({ once: false });
-      const observer = live()[0];
+      const observer = observers.active[0];
 
       notify(observer, 1);
       advance(1000);
@@ -301,16 +278,16 @@ describe("useImpression", () => {
     it("does not observe while disabled", () => {
       setup({ enabled: false });
 
-      expect(MockIntersectionObserver.instances).toHaveLength(0);
+      expect(observers.instances).toHaveLength(0);
     });
 
     it("disconnects and clears the timer when disabled", () => {
       const { rerender, onImpression } = setup();
-      notify(live()[0], 1);
+      notify(observers.active[0], 1);
       advance(500);
 
       rerender({ options: { enabled: false } });
-      expect(live()).toHaveLength(0);
+      expect(observers.active).toHaveLength(0);
       advance(5000);
       expect(onImpression).not.toHaveBeenCalled();
     });
@@ -319,7 +296,7 @@ describe("useImpression", () => {
       const { rerender, onImpression } = setup({ enabled: false });
 
       rerender({ options: { enabled: true } });
-      notify(live()[0], 1);
+      notify(observers.active[0], 1);
       advance(999);
       expect(onImpression).not.toHaveBeenCalled();
       advance(1);
@@ -332,7 +309,7 @@ describe("useImpression", () => {
       const { onImpression } = setup();
       visibilityState = "hidden";
 
-      notify(live()[0], 1);
+      notify(observers.active[0], 1);
       advance(5000);
       expect(onImpression).not.toHaveBeenCalled();
 
@@ -346,7 +323,7 @@ describe("useImpression", () => {
     it("pauses while hidden and resumes with the remaining time", () => {
       const { onImpression } = setup({ minDurationMs: 1000 });
 
-      notify(live()[0], 1);
+      notify(observers.active[0], 1);
       advance(400);
       setVisibility("hidden");
       advance(10_000);
@@ -371,7 +348,7 @@ describe("useImpression", () => {
 
     it("does not restart a repeated impression on a visibility change", () => {
       const { onImpression } = setup({ once: false });
-      notify(live()[0], 1);
+      notify(observers.active[0], 1);
       advance(1000);
 
       setVisibility("hidden");
@@ -391,12 +368,12 @@ describe("useImpression", () => {
         initialProps: { cb: first },
       });
       act(() => result.current(el));
-      const observer = live()[0];
+      const observer = observers.active[0];
 
       notify(observer, 1);
       advance(500);
       rerender({ cb: second });
-      expect(live()).toEqual([observer]);
+      expect(observers.active).toEqual([observer]);
       advance(500);
 
       expect(first).not.toHaveBeenCalled();
@@ -411,8 +388,8 @@ describe("useImpression", () => {
       };
       const { getByTestId } = render(createElement(Demo));
 
-      expect(live()[0].observed).toEqual([getByTestId("box")]);
-      notify(live()[0], 1);
+      expect(observers.active[0].targets).toEqual([getByTestId("box")]);
+      notify(observers.active[0], 1);
       advance(1000);
       expect(onImpression).toHaveBeenCalledTimes(1);
     });
@@ -421,7 +398,7 @@ describe("useImpression", () => {
   describe("cleanup", () => {
     it("disconnects and never calls back after unmount", () => {
       const { unmount, onImpression } = setup();
-      const observer = live()[0];
+      const observer = observers.active[0];
       notify(observer, 1);
       advance(500);
 
@@ -446,18 +423,18 @@ describe("useImpression", () => {
 
     it("clears the timer and stops observing when the element is detached", () => {
       const { result, onImpression } = setup();
-      notify(live()[0], 1);
+      notify(observers.active[0], 1);
       advance(500);
 
       act(() => result.current(null));
-      expect(live()).toHaveLength(0);
+      expect(observers.active).toHaveLength(0);
       advance(5000);
       expect(onImpression).not.toHaveBeenCalled();
     });
 
     it("ignores an empty batch of entries", () => {
       const { onImpression } = setup();
-      const observer = live()[0];
+      const observer = observers.active[0];
 
       act(() => {
         observer.callback([], observer as unknown as IntersectionObserver);
@@ -470,12 +447,12 @@ describe("useImpression", () => {
 
   describe("environment", () => {
     it("does nothing when IntersectionObserver is unavailable", () => {
-      vi.stubGlobal("IntersectionObserver", undefined);
+      observers.restore();
       const { onImpression } = setup();
 
       advance(5000);
 
-      expect(MockIntersectionObserver.instances).toHaveLength(0);
+      expect(observers.instances).toHaveLength(0);
       expect(onImpression).not.toHaveBeenCalled();
     });
 
@@ -486,7 +463,7 @@ describe("useImpression", () => {
       };
 
       expect(renderToString(createElement(Demo))).toContain("ad");
-      expect(MockIntersectionObserver.instances).toHaveLength(0);
+      expect(observers.instances).toHaveLength(0);
     });
   });
 
@@ -499,8 +476,8 @@ describe("useImpression", () => {
       };
       render(createElement(StrictMode, null, createElement(Demo)));
 
-      expect(live()).toHaveLength(1);
-      notify(live()[0], 1);
+      expect(observers.active).toHaveLength(1);
+      notify(observers.active[0], 1);
       advance(1000);
       expect(onImpression).toHaveBeenCalledTimes(1);
     });

@@ -71,11 +71,10 @@ const main = () => {
       /** Each check that failed for this package. */
       const checks = [
         ["publint", ["exec", "publint", "run", tarball, "--strict"]],
-        // `node10` resolution is ignored: it can't read `exports`, and the
-        // library requires Node 24.
-        ...(types
-          ? [["attw", ["exec", "attw", tarball, "--profile", "node16"]]]
-          : []),
+        // Every resolution mode is checked, including `node10`, which can't
+        // read `exports`: `typesVersions` makes `@altalyst/hookify/testing`
+        // resolve for it.
+        ...(types ? [["attw", ["exec", "attw", tarball]]] : []),
       ];
 
       for (const [tool, args] of checks) {

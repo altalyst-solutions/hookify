@@ -14,7 +14,9 @@ Changesets, CI).
 ```
 packages/hookify/src/hooks/   one file per hook (use-kebab-case.ts), exported from src/hooks/index.ts
 packages/hookify/src/utils/   internal helpers (dev-warnings.ts), not part of the public API
+packages/hookify/src/testing/ test helpers (fakes for browser APIs), the separate `@altalyst/hookify/testing` entry; see below
 packages/hookify/tests/hooks/ one spec per hook, mirrors src/hooks
+packages/hookify/tests/testing/ one spec per test helper, mirrors src/testing
 docs-site/docs/hooks/         one .mdx page per hook
 docs-site/src/hook-examples/use-x/   live demo components (App.tsx plus one file per demo)
 packages/hookify-mcp/         @altalyst/hookify-mcp, the MCP server for AI agents; see its README
@@ -103,6 +105,29 @@ If you touched docs, also run `pnpm docs:check && pnpm build && pnpm -F docs-sit
   stable references, and stop there. No speculative configuration.
 - **`eslint-disable`:** only when unavoidable, always on the single line,
   and with a `--` reason explaining why.
+
+## Test helpers (`src/testing/`)
+
+`src/testing/` is a second public entry, published as `@altalyst/hookify/testing`
+(`dist/testing.js`, `dist/testing.cjs`, and types in `dist/testing.d.ts` and
+`dist/testing.d.cts`, with a `typesVersions` fallback for `node10` resolution).
+It holds fakes for browser APIs that jsdom lacks, so consumers can test
+components that use hookify.
+
+- It is **never** imported by `src/index.ts` or any hook, so `dist/hookify.js`
+  doesn't contain it, and it gets no `"use client"` banner.
+- It has no dependency on a test runner or on React: no `vi`, `jest` or
+  `@testing-library` imports. Fakes install themselves on `globalThis`, and
+  `restore()` puts back what was there before (or deletes the global).
+- Each `installX()` returns a controller with `instances`, `active`,
+  `trigger(target, overrides)` and `restore()`. Callers wrap `trigger` in
+  `act()` themselves.
+- The same style rules, TSDoc rules and per-file coverage thresholds as the
+  hooks apply. Our own specs use the fakes, so a helper stays honest to what
+  the hooks need.
+- Name helpers `installX` for a fake that replaces a global and `createXEntry`
+  for a value factory. Use `{@link ...}` and prose rather than `@throws`, which
+  the jsdoc and tsdoc lint rules disagree on.
 
 ## Documentation style (TSDoc)
 

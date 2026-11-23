@@ -4,51 +4,38 @@ import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useResizeObserver } from "@/hooks";
+import {
+  createResizeObserverEntry,
+  type FakeResizeObserver,
+  installResizeObserver,
+  type ResizeObserverController,
+  type ResizeObserverEntryInit,
+} from "@/testing";
 
-class MockResizeObserver {
-  static instances: MockResizeObserver[] = [];
+let observers: ResizeObserverController;
 
-  observed: Element[] = [];
-  observeOptions: ResizeObserverOptions[] = [];
-  disconnected = false;
-
-  constructor(readonly callback: ResizeObserverCallback) {
-    MockResizeObserver.instances.push(this);
-  }
-
-  observe(target: Element, options?: ResizeObserverOptions) {
-    this.observed.push(target);
-    this.observeOptions.push(options ?? {});
-  }
-
-  unobserve() {}
-
-  disconnect() {
-    this.disconnected = true;
-  }
-}
-
-const live = () => MockResizeObserver.instances.filter((o) => !o.disconnected);
-
-const makeEntry = (target: Element, width = 100): ResizeObserverEntry =>
-  ({
-    target,
-    contentRect: { width, height: 50 },
-  }) as unknown as ResizeObserverEntry;
-
-const notify = (observer: MockResizeObserver, entries: ResizeObserverEntry[]) =>
+/** Delivers an entry for `el` to its observer, inside `act()`, and returns it. */
+const trigger = (el: Element, size?: ResizeObserverEntryInit) => {
+  let entry!: ResizeObserverEntry;
   act(() => {
-    observer.callback(entries, observer as unknown as ResizeObserver);
+    entry = observers.trigger(el, size);
+  });
+  return entry;
+};
+
+/** Delivers a batch of entries to one observer, inside `act()`. */
+const notify = (observer: FakeResizeObserver, entries: ResizeObserverEntry[]) =>
+  act(() => {
+    observer.notify(entries);
   });
 
 describe("useResizeObserver", () => {
   beforeEach(() => {
-    MockResizeObserver.instances = [];
-    vi.stubGlobal("ResizeObserver", MockResizeObserver);
+    observers = installResizeObserver();
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    observers.restore();
   });
 
   it("returns a stable callback ref and does not observe until attached", () => {
@@ -56,7 +43,7 @@ describe("useResizeObserver", () => {
     const first = result.current;
 
     expect(typeof first).toBe("function");
-    expect(MockResizeObserver.instances).toHaveLength(0);
+    expect(observers.instances).toHaveLength(0);
 
     rerender();
     expect(result.current).toBe(first);
@@ -70,14 +57,13 @@ describe("useResizeObserver", () => {
     );
 
     act(() => result.current(el));
-    expect(live()).toHaveLength(1);
-    expect(live()[0].observed).toEqual([el]);
+    expect(observers.active).toHaveLength(1);
+    expect(observers.active[0].targets).toEqual([el]);
 
-    const entry = makeEntry(el, 240);
-    notify(live()[0], [entry]);
+    const entry = trigger(el, { width: 240 });
 
     expect(callback).toHaveBeenCalledTimes(1);
-    expect(callback).toHaveBeenCalledWith(entry, live()[0]);
+    expect(callback).toHaveBeenCalledWith(entry, observers.active[0]);
   });
 
   it("does not re-render the component on resize", () => {
@@ -90,7 +76,7 @@ describe("useResizeObserver", () => {
     act(() => result.current(el));
     const before = renders;
 
-    notify(live()[0], [makeEntry(el)]);
+    trigger(el);
     expect(renders).toBe(before);
   });
 
@@ -104,8 +90,8 @@ describe("useResizeObserver", () => {
     };
     const { getByTestId } = render(createElement(Demo));
 
-    expect(live()[0].observed).toEqual([getByTestId("box")]);
-    notify(live()[0], [makeEntry(getByTestId("box"), 300)]);
+    expect(observers.active[0].targets).toEqual([getByTestId("box")]);
+    trigger(getByTestId("box"), { width: 300 });
     expect(seen).toEqual([300]);
   });
 
@@ -115,7 +101,10 @@ describe("useResizeObserver", () => {
     const { result } = renderHook(() => useResizeObserver(callback));
     act(() => result.current(el));
 
-    notify(live()[0], [makeEntry(el, 1), makeEntry(el, 2)]);
+    notify(observers.active[0], [
+      createResizeObserverEntry(el, { width: 1 }),
+      createResizeObserverEntry(el, { width: 2 }),
+    ]);
     expect(callback).toHaveBeenCalledTimes(2);
   });
 
@@ -127,12 +116,12 @@ describe("useResizeObserver", () => {
       initialProps: { cb: first },
     });
     act(() => result.current(el));
-    const observer = live()[0];
+    const observer = observers.active[0];
 
     rerender({ cb: second });
-    expect(live()).toEqual([observer]);
+    expect(observers.active).toEqual([observer]);
 
-    notify(observer, [makeEntry(el)]);
+    trigger(el);
     expect(first).not.toHaveBeenCalled();
     expect(second).toHaveBeenCalledTimes(1);
   });
@@ -143,7 +132,9 @@ describe("useResizeObserver", () => {
       const { result } = renderHook(() => useResizeObserver(() => {}));
       act(() => result.current(el));
 
-      expect(live()[0].observeOptions).toEqual([{ box: "content-box" }]);
+      expect(observers.active[0].observations).toEqual([
+        { target: el, options: { box: "content-box" } },
+      ]);
     });
 
     it("passes a custom box and re-observes when it changes", () => {
@@ -157,14 +148,16 @@ describe("useResizeObserver", () => {
         }
       );
       act(() => result.current(el));
-      const first = live()[0];
-      expect(first.observeOptions).toEqual([{ box: "border-box" }]);
+      const first = observers.active[0];
+      expect(first.observations).toEqual([
+        { target: el, options: { box: "border-box" } },
+      ]);
 
       rerender({ box: "device-pixel-content-box" });
       expect(first.disconnected).toBe(true);
-      expect(live()).toHaveLength(1);
-      expect(live()[0].observeOptions).toEqual([
-        { box: "device-pixel-content-box" },
+      expect(observers.active).toHaveLength(1);
+      expect(observers.active[0].observations).toEqual([
+        { target: el, options: { box: "device-pixel-content-box" } },
       ]);
     });
   });
@@ -177,14 +170,14 @@ describe("useResizeObserver", () => {
         { initialProps: { enabled: false } }
       );
       act(() => result.current(el));
-      expect(MockResizeObserver.instances).toHaveLength(0);
+      expect(observers.instances).toHaveLength(0);
 
       rerender({ enabled: true });
-      expect(live()).toHaveLength(1);
-      expect(live()[0].observed).toEqual([el]);
+      expect(observers.active).toHaveLength(1);
+      expect(observers.active[0].targets).toEqual([el]);
 
       rerender({ enabled: false });
-      expect(live()).toHaveLength(0);
+      expect(observers.active).toHaveLength(0);
     });
   });
 
@@ -193,7 +186,7 @@ describe("useResizeObserver", () => {
       const el = document.createElement("div");
       const { result, unmount } = renderHook(() => useResizeObserver(() => {}));
       act(() => result.current(el));
-      const observer = live()[0];
+      const observer = observers.active[0];
 
       unmount();
       expect(observer.disconnected).toBe(true);
@@ -205,7 +198,7 @@ describe("useResizeObserver", () => {
       act(() => result.current(el));
       act(() => result.current(null));
 
-      expect(live()).toHaveLength(0);
+      expect(observers.active).toHaveLength(0);
     });
 
     it("moves the observer to a new element", () => {
@@ -215,19 +208,19 @@ describe("useResizeObserver", () => {
       act(() => result.current(a));
       act(() => result.current(b));
 
-      expect(live()).toHaveLength(1);
-      expect(live()[0].observed).toEqual([b]);
+      expect(observers.active).toHaveLength(1);
+      expect(observers.active[0].targets).toEqual([b]);
     });
   });
 
   describe("environment", () => {
     it("does nothing when ResizeObserver is unavailable", () => {
-      vi.stubGlobal("ResizeObserver", undefined);
+      observers.restore();
       const el = document.createElement("div");
       const { result } = renderHook(() => useResizeObserver(() => {}));
 
       expect(() => act(() => result.current(el))).not.toThrow();
-      expect(MockResizeObserver.instances).toHaveLength(0);
+      expect(observers.instances).toHaveLength(0);
     });
 
     it("renders on the server without observing", () => {
@@ -237,7 +230,7 @@ describe("useResizeObserver", () => {
       };
 
       expect(renderToString(createElement(Demo))).toContain("ok");
-      expect(MockResizeObserver.instances).toHaveLength(0);
+      expect(observers.instances).toHaveLength(0);
     });
   });
 
@@ -249,7 +242,7 @@ describe("useResizeObserver", () => {
       };
       render(createElement(StrictMode, null, createElement(Demo)));
 
-      expect(live()).toHaveLength(1);
+      expect(observers.active).toHaveLength(1);
     });
   });
 });

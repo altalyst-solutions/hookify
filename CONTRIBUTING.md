@@ -22,7 +22,9 @@ from the root.
 ```
 packages/hookify/   # the published @altalyst/hookify package
   src/hooks/        # Hook source files (one file per hook)
+  src/testing/      # Test helpers, published as @altalyst/hookify/testing
   tests/hooks/      # Vitest + Testing Library specs, mirroring src/hooks
+  tests/testing/    # Specs for the test helpers
   CHANGELOG.md      # written by Changesets
 packages/hookify-mcp/ # MCP server that gives AI agents the hooks' docs
   scripts/build-data.ts # builds its hook data from the library's types and the docs pages
