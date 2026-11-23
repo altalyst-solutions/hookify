@@ -155,6 +155,46 @@ jobs:
           echo "consumer-test: $TEST_RESULT"
           [ "$LIST_RESULT" = "success" ] && [ "$TEST_RESULT" = "success" ]
 
+  # Reports how a pull request changes the gzipped size of the bundle and of
+  # each hook compared with its base branch, in the job summary. It only
+  # reports (the budgets are enforced by `pnpm size` in pr-check), so it isn't
+  # a required check. Both sides are measured with the pull request's own
+  # size-limit config, so tooling changes can't skew the comparison.
+  size-report:
+    if: ${{ github.repository == 'altalyst-solutions/hookify' && github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Node and install dependencies
+        uses: ./.github/actions/setup-deps
+
+      - name: Build library
+        run: pnpm -F @altalyst/hookify build
+
+      # Keep the files the base branch may not have, then measure this branch.
+      - name: Measure the pull request
+        run: |
+          mkdir -p "$RUNNER_TEMP/size"
+          cp .size-limit.mjs .github/scripts/size-report.mjs "$RUNNER_TEMP/size/"
+          SIZE_LIMIT_MEASURE=1 pnpm exec size-limit --json > "$RUNNER_TEMP/size/head.json" || true
+
+      - name: Measure the base branch
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          git checkout --force --detach "$BASE_SHA"
+          pnpm install --frozen-lockfile
+          pnpm -F @altalyst/hookify build
+          cp "$RUNNER_TEMP/size/.size-limit.mjs" .size-limit.mjs
+          SIZE_LIMIT_MEASURE=1 pnpm exec size-limit --json > "$RUNNER_TEMP/size/base.json" || true
+
+      - name: Write size report
+        run: node "$RUNNER_TEMP/size/size-report.mjs" "$RUNNER_TEMP/size/base.json" "$RUNNER_TEMP/size/head.json" >> "$GITHUB_STEP_SUMMARY"
+
   react-compat:
     if: ${{ github.repository == 'altalyst-solutions/hookify' }}
     runs-on: ubuntu-latest
