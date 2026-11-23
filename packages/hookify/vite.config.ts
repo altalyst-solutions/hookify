@@ -14,14 +14,18 @@ export default defineConfig({
   build: {
     copyPublicDir: false,
     lib: {
-      entry: resolve(import.meta.dirname, "src/index.ts"),
+      entry: {
+        index: resolve(import.meta.dirname, "src/index.ts"),
+        testing: resolve(import.meta.dirname, "src/testing/index.ts"),
+      },
       formats: ["es", "cjs"],
-      fileName: (format) => (format === "es" ? "hookify.js" : "hookify.cjs"),
+      fileName: (format, entryName) =>
+        `${entryName === "index" ? "hookify" : entryName}.${format === "es" ? "js" : "cjs"}`,
     },
     rollupOptions: {
       external: ["react", "react-dom", "react/jsx-runtime"],
       output: {
-        banner: '"use client";',
+        banner: (chunk) => (chunk.name === "index" ? '"use client";' : ""),
         globals: {
           react: "React",
           "react-dom": "ReactDOM",
@@ -35,10 +39,12 @@ export default defineConfig({
       bundleTypes: true, // renamed from `rollupTypes` in vite-plugin-dts v5
       afterBuild: () => {
         // CJS consumers need a `.d.cts` so TypeScript treats the types as CommonJS
-        copyFileSync(
-          resolve(outDir, "index.d.ts"),
-          resolve(outDir, "index.d.cts")
-        );
+        for (const name of ["index", "testing"]) {
+          copyFileSync(
+            resolve(outDir, `${name}.d.ts`),
+            resolve(outDir, `${name}.d.cts`)
+          );
+        }
       },
     }),
   ],
