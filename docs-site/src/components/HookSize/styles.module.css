@@ -1,0 +1,15 @@
+.size {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  padding: 0.1rem 0.6rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 999px;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.text {
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.8rem;
+}

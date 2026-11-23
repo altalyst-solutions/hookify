@@ -20,18 +20,16 @@
  * hooks to reset.
  */
 
-import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+
+import { measureSizes } from "./measure-sizes.mjs";
 
 /** Absolute path of the repository root (two levels above this script). */
 const ROOT = resolve(import.meta.dirname, "../..");
 
 /** Absolute path of the budgets file. */
 const BUDGETS = resolve(ROOT, "packages/hookify/size-budgets.json");
-
-/** The name `.size-limit.mjs` gives to the whole-package check. */
-const BUNDLE_CHECK = "bundle (all hooks)";
 
 /** The extra room a new budget leaves above the measured size, as a ratio. */
 const HEADROOM = 1.1;
@@ -55,29 +53,6 @@ const toBudget = (size) => `${Math.ceil((size * HEADROOM) / STEP) * STEP} B`;
  */
 const toBytes = (budget) => parseInt(budget, 10);
 
-/**
- * Measures the bundle and every hook with the same config that `pnpm size`
- * uses, in a mode that doesn't require budgets to exist.
- *
- * @returns One `{ name, size }` entry for each check.
- */
-const measure = () => {
-  const result = spawnSync("pnpm", ["exec", "size-limit", "--json"], {
-    cwd: ROOT,
-    encoding: "utf8",
-    env: { ...process.env, SIZE_LIMIT_MEASURE: "1" },
-  });
-
-  try {
-    return JSON.parse(result.stdout);
-  } catch {
-    process.stderr.write(result.stderr || result.stdout);
-    throw new Error(
-      "size-limit didn't report any sizes. Run `pnpm build` first."
-    );
-  }
-};
-
 /** Runs the update and reports what changed. */
 const main = () => {
   const args = process.argv.slice(2);
@@ -87,14 +62,7 @@ const main = () => {
   const current = existsSync(BUDGETS)
     ? JSON.parse(readFileSync(BUDGETS, "utf8"))
     : { hooks: {} };
-  const sizes = measure();
-
-  const hookSizes = Object.fromEntries(
-    sizes
-      .filter((row) => row.name !== BUNDLE_CHECK)
-      .map((row) => [row.name, row.size])
-  );
-  const bundleSize = sizes.find((row) => row.name === BUNDLE_CHECK)?.size;
+  const { bundle: bundleSize, hooks: hookSizes } = measureSizes();
 
   const unknown = [...reset].filter(
     (name) => name !== "bundle" && !(name in hookSizes)

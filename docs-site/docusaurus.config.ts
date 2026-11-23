@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 
 import { themes as prismThemes } from "prism-react-renderer";
@@ -98,6 +99,21 @@ const config: Config = {
 
   plugins: [
     ["docusaurus-plugin-typedoc", typedocOptions],
+    // Exposes the gzipped sizes written by .github/scripts/generate-hook-sizes.mjs
+    // (run by `pnpm docs:build`). When the file is missing, for example in
+    // plain `docs:dev` or a build of an older release, the data is empty and
+    // the site simply shows no sizes.
+    () => ({
+      name: "hookify-hook-sizes",
+      async contentLoaded({ actions }) {
+        const file = path.resolve(__dirname, "src/data/hook-sizes.json");
+        actions.setGlobalData(
+          fs.existsSync(file)
+            ? JSON.parse(fs.readFileSync(file, "utf8"))
+            : { hooks: {} }
+        );
+      },
+    }),
     () => ({
       name: "hookify-local-demo-source",
       configureWebpack: (config) => {
