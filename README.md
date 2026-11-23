@@ -8,7 +8,7 @@
   <p>
     <a href="https://www.npmjs.com/package/@altalyst/hookify"><img src="https://img.shields.io/npm/v/@altalyst/hookify.svg?color=3ECC5F" alt="npm version" /></a>
     <a href="https://www.npmjs.com/package/@altalyst/hookify"><img src="https://img.shields.io/npm/dm/@altalyst/hookify.svg?color=3ECC5F" alt="npm downloads" /></a>
-    <a href="https://bundlephobia.com/package/@altalyst/hookify"><img src="https://img.shields.io/bundlephobia/minzip/@altalyst/hookify?color=3ECC5F" alt="bundle size" /></a>
+    <a href="https://altalyst-solutions.github.io/hookify/hooks"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Faltalyst-solutions.github.io%2Fhookify%2Fnext%2Fsize-badge.json" alt="gzipped size" /></a>
     <a href="https://github.com/altalyst-solutions/hookify/actions/workflows/pr-check.yml"><img src="https://github.com/altalyst-solutions/hookify/actions/workflows/pr-check.yml/badge.svg" alt="PR Check status" /></a>
     <img src="https://img.shields.io/npm/types/@altalyst/hookify.svg?color=3178C6" alt="TypeScript" />
     <a href="https://github.com/altalyst-solutions/hookify/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome" /></a>
