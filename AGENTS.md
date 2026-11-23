@@ -212,6 +212,10 @@ longer exists. You maintain the file in the same PR as the change, with
 `pnpm size:update`; CI never writes it, and `pnpm size:update` never changes an
 existing budget unless you name it.
 
+Each PR's `size-report` job (a report only, not a gate) summarizes how the PR
+changes the size of the bundle and of every hook compared with the base
+branch.
+
 - **New hook:** `pnpm build && pnpm size:update`, then commit the file.
 - **Change that stays within the budget** (most edits): nothing to do.
 - **Hook grows past its budget on purpose:** `pnpm build && pnpm size:update useX`

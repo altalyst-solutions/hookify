@@ -136,6 +136,12 @@ request that changes a hook's size, and reviewers see every change to it in
 the diff. CI never writes it, and `pnpm size:update` never changes an existing
 budget unless you name it, so a regression can't be hidden by accident.
 
+Every pull request also gets a size report in the `size-report` job's summary
+(open the job in the PR's checks and look at the summary). It compares the
+bundle and every hook with the base branch and lists those that changed. It
+only reports, so use it to check that a change grew or shrank the hooks you
+expected.
+
 | You are...                                    | Do this                                                                                                                                                       |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Adding a hook                                 | Run `pnpm build && pnpm size:update`, then commit the new line in `size-budgets.json`.                                                                        |
