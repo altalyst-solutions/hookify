@@ -3,6 +3,10 @@ import {
   useMediaQuery,
   useToggleState,
 } from "@altalyst/hookify";
+import {
+  installResizeObserver,
+  type ResizeObserverController,
+} from "@altalyst/hookify/testing";
 
 export const probe = (): [boolean, boolean] => {
   const options: UseMediaQueryOptions = { defaultValue: false };
@@ -16,4 +20,19 @@ export const probe = (): [boolean, boolean] => {
 
   void toggleFn;
   return [on, matches];
+};
+
+// The `./testing` subpath must resolve to real types too.
+export const testingProbe = (): ResizeObserverController => {
+  const observers = installResizeObserver();
+  const el = document.createElement("div");
+  new ResizeObserver(() => {}).observe(el);
+
+  const entry: ResizeObserverEntry = observers.trigger(el, { width: 10 });
+  void entry;
+
+  // @ts-expect-error The target has to be an element.
+  observers.trigger("nope");
+
+  return observers;
 };
