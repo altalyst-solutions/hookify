@@ -5,7 +5,11 @@ import {
   useMediaQuery,
   useToggleState,
 } from "@altalyst/hookify";
-import { installIntersectionObserver } from "@altalyst/hookify/testing";
+import {
+  installDocumentVisibility,
+  installIntersectionObserver,
+  installMatchMedia,
+} from "@altalyst/hookify/testing";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 
@@ -31,3 +35,19 @@ assert.equal(entries.length, 1);
 assert.equal(entries[0].isIntersecting, true);
 assert.equal(typeof IntersectionObserver, "undefined");
 console.log("ESM import of the testing helpers works");
+
+// `matchMedia` is installed on `globalThis` too, so it works without a DOM.
+const media = installMatchMedia();
+const changes = [];
+globalThis
+  .matchMedia("(min-width: 600px)")
+  .addEventListener("change", (event) => changes.push(event.matches));
+media.setMatches("(min-width: 600px)", true);
+media.restore();
+
+assert.deepEqual(changes, [true]);
+assert.equal(typeof globalThis.matchMedia, "undefined");
+
+// The document helper needs a DOM, and says so.
+assert.throws(() => installDocumentVisibility(), /needs a document/);
+console.log("ESM import of the matchMedia and visibility helpers works");

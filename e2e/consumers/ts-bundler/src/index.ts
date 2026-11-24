@@ -4,7 +4,11 @@ import {
   useToggleState,
 } from "@altalyst/hookify";
 import {
+  type DocumentVisibilityController,
+  installDocumentVisibility,
+  installMatchMedia,
   installResizeObserver,
+  type MatchMediaController,
   type ResizeObserverController,
 } from "@altalyst/hookify/testing";
 
@@ -35,4 +39,32 @@ export const testingProbe = (): ResizeObserverController => {
   observers.trigger("nope");
 
   return observers;
+};
+
+export const mediaProbe = (): MatchMediaController => {
+  const media = installMatchMedia({ matches: false });
+
+  media.setMatches("(min-width: 600px)", true);
+  const matches: boolean = media.getMatches("(min-width: 600px)");
+  const listeners: number = media.listenerCount();
+  void matches;
+  void listeners;
+
+  // @ts-expect-error `matches` has to be a boolean.
+  media.setMatches("(min-width: 600px)", "yes");
+
+  return media;
+};
+
+export const visibilityProbe = (): DocumentVisibilityController => {
+  const visibility = installDocumentVisibility({ visibilityState: "hidden" });
+
+  visibility.setVisibility("visible");
+  const hidden: boolean = visibility.hidden;
+  void hidden;
+
+  // @ts-expect-error Only real visibility states are accepted.
+  visibility.setVisibility("sleeping");
+
+  return visibility;
 };
