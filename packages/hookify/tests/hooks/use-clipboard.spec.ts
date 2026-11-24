@@ -3,25 +3,17 @@ import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useClipboard } from "@/hooks";
-
-const setClipboard = (value: unknown) =>
-  Object.defineProperty(navigator, "clipboard", {
-    value,
-    configurable: true,
-  });
+import { type ClipboardController, installClipboard } from "@/testing";
 
 describe("useClipboard", () => {
-  let writeText: ReturnType<typeof vi.fn>;
+  let clipboard: ClipboardController;
 
   beforeEach(() => {
-    writeText = vi.fn().mockResolvedValue(undefined);
-    setClipboard({ writeText });
+    clipboard = installClipboard();
   });
 
   afterEach(() => {
-    // jsdom has no Clipboard API, so remove the property rather than leaving
-    // a stub behind for other test files.
-    delete (navigator as { clipboard?: unknown }).clipboard;
+    clipboard.restore();
   });
 
   it("starts idle", () => {
@@ -39,7 +31,7 @@ describe("useClipboard", () => {
     });
 
     expect(ok).toBe(true);
-    expect(writeText).toHaveBeenCalledWith("hello");
+    expect(clipboard.writes).toEqual(["hello"]);
     expect(result.current.copied).toBe(true);
 
     act(() => {
@@ -100,7 +92,7 @@ describe("useClipboard", () => {
 
   it("sets error and resolves false when the write rejects", async () => {
     const failure = new Error("denied");
-    writeText.mockRejectedValue(failure);
+    clipboard.failNext(failure);
     const onError = vi.fn();
     const onCopy = vi.fn();
     const { result } = renderHook(() => useClipboard({ onError, onCopy }));
@@ -118,7 +110,7 @@ describe("useClipboard", () => {
   });
 
   it("wraps non-Error rejections in an Error", async () => {
-    writeText.mockRejectedValue("nope");
+    clipboard.failNext("nope");
     const { result } = renderHook(() => useClipboard());
     await act(async () => {
       await result.current.copy("x");
@@ -128,7 +120,7 @@ describe("useClipboard", () => {
   });
 
   it("reports an error when the Clipboard API is unavailable", async () => {
-    setClipboard(undefined);
+    clipboard.restore();
     const { result } = renderHook(() => useClipboard());
 
     let ok: boolean | undefined;
@@ -141,7 +133,7 @@ describe("useClipboard", () => {
   });
 
   it("clears a previous error on a successful copy and on reset", async () => {
-    writeText.mockRejectedValueOnce(new Error("fail"));
+    clipboard.failNext(new Error("fail"));
     const { result } = renderHook(() => useClipboard());
 
     await act(async () => {
@@ -155,7 +147,7 @@ describe("useClipboard", () => {
     expect(result.current.error).toBeNull();
     expect(result.current.copied).toBe(true);
 
-    writeText.mockRejectedValueOnce(new Error("fail"));
+    clipboard.failNext(new Error("fail"));
     await act(async () => {
       await result.current.copy("x");
     });
@@ -189,12 +181,8 @@ describe("useClipboard", () => {
   });
 
   it("lets the latest of overlapping copies win", async () => {
-    let resolveFirst: () => void = () => {};
-    writeText
-      .mockImplementationOnce(
-        () => new Promise<void>((resolve) => (resolveFirst = resolve))
-      )
-      .mockRejectedValueOnce(new Error("second failed"));
+    clipboard.deferNext();
+    clipboard.failNext(new Error("second failed"));
     const { result } = renderHook(() => useClipboard());
 
     let first: Promise<boolean> = Promise.resolve(false);
@@ -205,7 +193,7 @@ describe("useClipboard", () => {
       await result.current.copy("b");
     });
     await act(async () => {
-      resolveFirst();
+      clipboard.pending[0].resolve();
       await first;
     });
 
@@ -223,10 +211,7 @@ describe("useClipboard", () => {
   });
 
   it("ignores a copy that resolves after unmount", async () => {
-    let resolve: () => void = () => {};
-    writeText.mockImplementationOnce(
-      () => new Promise<void>((r) => (resolve = r))
-    );
+    clipboard.deferNext();
     const onCopy = vi.fn();
     const { result, unmount } = renderHook(() => useClipboard({ onCopy }));
 
@@ -236,7 +221,7 @@ describe("useClipboard", () => {
     });
     unmount();
     await act(async () => {
-      resolve();
+      clipboard.pending[0].resolve();
       await pending;
     });
 

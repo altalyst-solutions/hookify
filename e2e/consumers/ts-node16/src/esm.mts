@@ -5,12 +5,19 @@ import {
   useToggleState,
 } from "@altalyst/hookify";
 import {
+  type ClipboardController,
+  createMemoryStorage,
   type DocumentVisibilityController,
+  dispatchStorageEvent,
+  installClipboard,
   installDocumentVisibility,
+  installLocalStorage,
   installMatchMedia,
   installResizeObserver,
   type MatchMediaController,
+  type MemoryStorage,
   type ResizeObserverController,
+  type StorageController,
 } from "@altalyst/hookify/testing";
 
 export const probe = (): [boolean, boolean] => {
@@ -68,4 +75,38 @@ export const visibilityProbe = (): DocumentVisibilityController => {
   visibility.setVisibility("sleeping");
 
   return visibility;
+};
+
+export const storageProbe = (): [MemoryStorage, StorageController] => {
+  const storage = createMemoryStorage({ items: { a: "1" }, quota: 100 });
+  const items: Record<string, string> = storage.snapshot();
+  const local = installLocalStorage({ storage, blocked: false });
+  void items;
+
+  dispatchStorageEvent("a", "2", storage);
+  dispatchStorageEvent(null, null);
+
+  // @ts-expect-error The new value has to be a string or null.
+  dispatchStorageEvent("a", 2, storage);
+
+  return [storage, local];
+};
+
+export const clipboardProbe = async (): Promise<ClipboardController> => {
+  const clipboard = installClipboard({ text: "start" });
+
+  clipboard.setPermission("denied");
+  clipboard.failNext("nope");
+  clipboard.deferNext();
+  const text: string = clipboard.text;
+  const writes: readonly string[] = clipboard.writes;
+  clipboard.pending[0]?.resolve();
+  void text;
+  void writes;
+
+  // @ts-expect-error Only granted or denied are accepted.
+  clipboard.setPermission("maybe");
+
+  await navigator.clipboard.writeText("x");
+  return clipboard;
 };
