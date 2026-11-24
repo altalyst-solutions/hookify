@@ -2,32 +2,36 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { usePersistedState } from "@/hooks";
-
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
-
-  return {
-    getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => {
-      store[key] = value;
-    },
-    removeItem: (key: string) => {
-      delete store[key];
-    },
-    clear: () => {
-      store = {};
-    },
-  };
-})();
+import {
+  createMemoryStorage,
+  dispatchStorageEvent,
+  installLocalStorage,
+  installSessionStorage,
+  type StorageController,
+} from "@/testing";
 
 describe("usePersistedState", () => {
+  let local: StorageController;
+  let session: StorageController;
+
+  /** Simulates another tab changing storage, inside `act()`. */
+  const otherTab = (
+    key: string | null,
+    newValue: string | null,
+    storage: Storage
+  ) =>
+    act(() => {
+      dispatchStorageEvent(key, newValue, storage);
+    });
+
   beforeEach(() => {
-    // Undone after each test by `unstubGlobals` in vitest.config.ts.
-    vi.stubGlobal("localStorage", localStorageMock);
+    local = installLocalStorage();
+    session = installSessionStorage();
   });
 
   afterEach(() => {
-    localStorage.clear();
+    session.restore();
+    local.restore();
     vi.clearAllMocks();
   });
 
@@ -70,15 +74,7 @@ describe("usePersistedState", () => {
       usePersistedState("testKey", "defaultValue")
     );
 
-    act(() => {
-      localStorage.setItem("testKey", JSON.stringify("externalValue"));
-      window.dispatchEvent(
-        new StorageEvent("storage", {
-          key: "testKey",
-          newValue: JSON.stringify("externalValue"),
-        })
-      );
-    });
+    otherTab("testKey", JSON.stringify("externalValue"), localStorage);
 
     const [value] = result.current;
     expect(value).toBe("externalValue");
@@ -185,11 +181,7 @@ describe("usePersistedState", () => {
       usePersistedState("testKey", "defaultValue")
     );
 
-    act(() => {
-      window.dispatchEvent(
-        new StorageEvent("storage", { key: "testKey", newValue: null })
-      );
-    });
+    otherTab("testKey", null, localStorage);
 
     expect(result.current[0]).toBe("defaultValue");
   });
@@ -200,9 +192,7 @@ describe("usePersistedState", () => {
       usePersistedState("testKey", "defaultValue")
     );
 
-    act(() => {
-      window.dispatchEvent(new StorageEvent("storage", { key: null }));
-    });
+    otherTab(null, null, localStorage);
 
     expect(result.current[0]).toBe("defaultValue");
   });
@@ -212,15 +202,7 @@ describe("usePersistedState", () => {
       usePersistedState("testKey", "defaultValue")
     );
 
-    act(() => {
-      window.dispatchEvent(
-        new StorageEvent("storage", {
-          key: "testKey",
-          newValue: JSON.stringify("fromSession"),
-          storageArea: window.sessionStorage,
-        })
-      );
-    });
+    otherTab("testKey", JSON.stringify("fromSession"), sessionStorage);
 
     expect(result.current[0]).toBe("defaultValue");
   });
@@ -271,10 +253,6 @@ describe("usePersistedState", () => {
   });
 
   describe("with a custom storage", () => {
-    afterEach(() => {
-      window.sessionStorage.clear();
-    });
-
     it("reads the initial value from the given storage", () => {
       window.sessionStorage.setItem("draft", JSON.stringify("from session"));
       localStorage.setItem("draft", JSON.stringify("from local"));
@@ -302,13 +280,7 @@ describe("usePersistedState", () => {
     });
 
     it("works with any object that has getItem and setItem", () => {
-      const store = new Map<string, string>([["count", "2"]]);
-      const storage = {
-        getItem: (key: string) => store.get(key) ?? null,
-        setItem: (key: string, value: string) => {
-          store.set(key, value);
-        },
-      };
+      const storage = createMemoryStorage({ items: { count: "2" } });
 
       const { result } = renderHook(() =>
         usePersistedState("count", 0, { storage })
@@ -319,17 +291,15 @@ describe("usePersistedState", () => {
         result.current[1]((prev) => prev + 1);
       });
 
-      expect(store.get("count")).toBe("3");
+      expect(storage.getItem("count")).toBe("3");
     });
 
     it("does not re-write the value when an inline storage object changes identity", () => {
-      const store = new Map<string, string>();
-      const setItem = vi.fn((key: string, value: string) => {
-        store.set(key, value);
-      });
+      const store = createMemoryStorage();
+      const setItem = vi.spyOn(store, "setItem");
       const makeStorage = () => ({
-        getItem: (key: string) => store.get(key) ?? null,
-        setItem,
+        getItem: (key: string) => store.getItem(key),
+        setItem: (key: string, value: string) => store.setItem(key, value),
       });
 
       const { result, rerender } = renderHook(() =>
@@ -349,40 +319,18 @@ describe("usePersistedState", () => {
         usePersistedState("draft", "", { storage: window.sessionStorage })
       );
 
-      act(() => {
-        window.dispatchEvent(
-          new StorageEvent("storage", {
-            key: "draft",
-            newValue: JSON.stringify("other tab"),
-            storageArea: window.sessionStorage,
-          })
-        );
-      });
+      otherTab("draft", JSON.stringify("other tab"), sessionStorage);
 
       expect(result.current[0]).toBe("other tab");
     });
 
     it("ignores storage events from a different storage area", () => {
-      const store = new Map<string, string>();
-      const storage = {
-        getItem: (key: string) => store.get(key) ?? null,
-        setItem: (key: string, value: string) => {
-          store.set(key, value);
-        },
-      };
+      const storage = createMemoryStorage();
       const { result } = renderHook(() =>
         usePersistedState("draft", "", { storage })
       );
 
-      act(() => {
-        window.dispatchEvent(
-          new StorageEvent("storage", {
-            key: "draft",
-            newValue: JSON.stringify("from session"),
-            storageArea: window.sessionStorage,
-          })
-        );
-      });
+      otherTab("draft", JSON.stringify("from session"), sessionStorage);
 
       expect(result.current[0]).toBe("");
     });
@@ -414,11 +362,11 @@ describe("usePersistedState", () => {
   describe("without an available storage", () => {
     it("keeps the value in memory when localStorage access throws", () => {
       const error = vi.spyOn(console, "error").mockImplementation(() => {});
-      const blocked = vi
-        .spyOn(window, "localStorage", "get")
-        .mockImplementation(() => {
-          throw new DOMException("Blocked", "SecurityError");
-        });
+      local.restore();
+      const storage = createMemoryStorage();
+      local = installLocalStorage({ storage, blocked: true });
+      // The global really is blocked, so the hook has to recover from it.
+      expect(() => window.localStorage).toThrow();
 
       const { result } = renderHook(() =>
         usePersistedState("blocked", "initial")
@@ -431,11 +379,26 @@ describe("usePersistedState", () => {
 
       expect(result.current[0]).toBe("next");
       expect(error).not.toHaveBeenCalled();
-      // The hook really hit the blocked getter, and recovered from it.
-      expect(blocked).toHaveBeenCalled();
+      expect(storage.snapshot()).toEqual({});
+    });
 
-      // Restore before the file's afterEach, which clears localStorage.
-      blocked.mockRestore();
+    it("keeps the value in memory and logs when the storage is full", () => {
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      const storage = createMemoryStorage({ quota: 0 });
+      const { result } = renderHook(() =>
+        usePersistedState("full", "initial", { storage })
+      );
+
+      act(() => {
+        result.current[1]("next");
+      });
+
+      expect(result.current[0]).toBe("next");
+      expect(storage.snapshot()).toEqual({});
+      expect(error).toHaveBeenCalledWith(
+        'Error setting storage key "full":',
+        expect.objectContaining({ name: "QuotaExceededError" })
+      );
     });
   });
 });
