@@ -2,29 +2,33 @@ import { act, renderHook } from "@testing-library/react";
 import { createElement, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useNow } from "@/hooks";
+import {
+  type DocumentVisibilityController,
+  installDocumentVisibility,
+} from "@/testing";
 
 const START = new Date("2026-01-01T00:00:00.000Z").getTime();
 
 describe("useNow", () => {
-  let visibilityState: DocumentVisibilityState;
+  let visibility: DocumentVisibilityController;
 
+  /** Changes the visibility inside `act()`, as the browser does when the tab is hidden or shown. */
   const setVisibility = (state: DocumentVisibilityState) => {
     act(() => {
-      visibilityState = state;
-      document.dispatchEvent(new Event("visibilitychange"));
+      visibility.setVisibility(state);
     });
   };
 
   beforeEach(() => {
-    visibilityState = "visible";
-    // `restoreMocks` in vitest.config.ts restores the real getter after each test.
-    vi.spyOn(document, "visibilityState", "get").mockImplementation(
-      () => visibilityState
-    );
+    visibility = installDocumentVisibility();
     vi.setSystemTime(START);
+  });
+
+  afterEach(() => {
+    visibility.restore();
   });
 
   describe("value", () => {
@@ -205,7 +209,7 @@ describe("useNow", () => {
     });
 
     it("does not start a timer when mounted while hidden", () => {
-      visibilityState = "hidden";
+      setVisibility("hidden");
       const { result } = renderHook(() => useNow());
 
       expect(vi.getTimerCount()).toBe(0);
@@ -241,13 +245,9 @@ describe("useNow", () => {
     });
 
     it("does not listen for visibility changes when disabled", () => {
-      const addSpy = vi.spyOn(document, "addEventListener");
       renderHook(() => useNow({ pauseWhenHidden: false }));
 
-      expect(addSpy).not.toHaveBeenCalledWith(
-        "visibilitychange",
-        expect.anything()
-      );
+      expect(visibility.listenersAdded).toBe(0);
     });
 
     it("keeps consumers with different settings independent", () => {
@@ -265,15 +265,12 @@ describe("useNow", () => {
     });
 
     it("removes the visibility listener on unmount", () => {
-      const removeSpy = vi.spyOn(document, "removeEventListener");
       const { unmount } = renderHook(() => useNow());
+      expect(visibility.listenerCount).toBe(1);
 
       unmount();
 
-      expect(removeSpy).toHaveBeenCalledWith(
-        "visibilitychange",
-        expect.any(Function)
-      );
+      expect(visibility.listenerCount).toBe(0);
     });
   });
 
