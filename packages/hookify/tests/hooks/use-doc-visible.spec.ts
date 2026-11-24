@@ -1,76 +1,71 @@
 import { act, renderHook } from "@testing-library/react";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useDocVisible } from "@/hooks";
+import {
+  type DocumentVisibilityController,
+  installDocumentVisibility,
+} from "@/testing";
 
 describe("useDocVisible", () => {
-  let visibilityState: DocumentVisibilityState;
+  let visibility: DocumentVisibilityController;
+
+  /** Changes the visibility inside `act()`, as the browser does when the tab is hidden or shown. */
+  const setVisibility = (state: DocumentVisibilityState) =>
+    act(() => {
+      visibility.setVisibility(state);
+    });
 
   beforeEach(() => {
-    // Set up initial visibility state
-    visibilityState = "visible";
+    visibility = installDocumentVisibility();
+  });
 
-    // Mock document.visibilityState; `restoreMocks` in vitest.config.ts
-    // restores the real getter after each test.
-    vi.spyOn(document, "visibilityState", "get").mockImplementation(
-      () => visibilityState
-    );
+  afterEach(() => {
+    visibility.restore();
   });
 
   it("should return true when document is initially visible", () => {
-    visibilityState = "visible";
     const { result } = renderHook(() => useDocVisible());
 
     expect(result.current).toBe(true);
   });
 
   it("should return false when document is initially hidden", () => {
-    visibilityState = "hidden";
+    setVisibility("hidden");
     const { result } = renderHook(() => useDocVisible());
 
     expect(result.current).toBe(false);
   });
 
   it("should update state when visibility changes from visible to hidden", () => {
-    visibilityState = "visible";
     const { result } = renderHook(() => useDocVisible());
 
     expect(result.current).toBe(true);
 
-    act(() => {
-      visibilityState = "hidden";
-      document.dispatchEvent(new Event("visibilitychange"));
-    });
+    setVisibility("hidden");
 
     expect(result.current).toBe(false);
   });
 
   it("should update state when visibility changes from hidden to visible", () => {
-    visibilityState = "hidden";
+    setVisibility("hidden");
     const { result } = renderHook(() => useDocVisible());
 
     expect(result.current).toBe(false);
 
-    act(() => {
-      visibilityState = "visible";
-      document.dispatchEvent(new Event("visibilitychange"));
-    });
+    setVisibility("visible");
 
     expect(result.current).toBe(true);
   });
 
   it("should call onChange callback when visibility changes", () => {
     const onChange = vi.fn();
-    visibilityState = "visible";
 
     renderHook(() => useDocVisible({ onChange }));
 
-    act(() => {
-      visibilityState = "hidden";
-      document.dispatchEvent(new Event("visibilitychange"));
-    });
+    setVisibility("hidden");
 
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenCalledWith(false);
@@ -78,20 +73,13 @@ describe("useDocVisible", () => {
 
   it("should call onChange callback with correct values on multiple changes", () => {
     const onChange = vi.fn();
-    visibilityState = "visible";
 
     renderHook(() => useDocVisible({ onChange }));
 
-    act(() => {
-      visibilityState = "hidden";
-      document.dispatchEvent(new Event("visibilitychange"));
-    });
+    setVisibility("hidden");
     expect(onChange).toHaveBeenCalledWith(false);
 
-    act(() => {
-      visibilityState = "visible";
-      document.dispatchEvent(new Event("visibilitychange"));
-    });
+    setVisibility("visible");
     expect(onChange).toHaveBeenCalledWith(true);
 
     expect(onChange).toHaveBeenCalledTimes(2);
@@ -99,7 +87,6 @@ describe("useDocVisible", () => {
 
   it("should not call onChange callback on initial mount", () => {
     const onChange = vi.fn();
-    visibilityState = "visible";
 
     renderHook(() => useDocVisible({ onChange }));
 
@@ -109,7 +96,6 @@ describe("useDocVisible", () => {
   it("should handle onChange callback updates", () => {
     const onChange1 = vi.fn();
     const onChange2 = vi.fn();
-    visibilityState = "visible";
 
     const { rerender } = renderHook(
       ({ callback }) => useDocVisible({ onChange: callback }),
@@ -118,10 +104,7 @@ describe("useDocVisible", () => {
       }
     );
 
-    act(() => {
-      visibilityState = "hidden";
-      document.dispatchEvent(new Event("visibilitychange"));
-    });
+    setVisibility("hidden");
 
     expect(onChange1).toHaveBeenCalledWith(false);
     expect(onChange2).not.toHaveBeenCalled();
@@ -129,73 +112,45 @@ describe("useDocVisible", () => {
     // Update the callback
     rerender({ callback: onChange2 });
 
-    act(() => {
-      visibilityState = "visible";
-      document.dispatchEvent(new Event("visibilitychange"));
-    });
+    setVisibility("visible");
 
     expect(onChange1).toHaveBeenCalledTimes(1);
     expect(onChange2).toHaveBeenCalledWith(true);
   });
 
   it("should properly cleanup event listeners on unmount", () => {
-    const addEventListenerSpy = vi.spyOn(document, "addEventListener");
-    const removeEventListenerSpy = vi.spyOn(document, "removeEventListener");
-
     const { unmount } = renderHook(() => useDocVisible());
 
-    expect(addEventListenerSpy).toHaveBeenCalledWith(
-      "visibilitychange",
-      expect.any(Function)
-    );
+    expect(visibility.listenerCount).toBe(1);
 
     unmount();
 
-    expect(removeEventListenerSpy).toHaveBeenCalledWith(
-      "visibilitychange",
-      expect.any(Function)
-    );
-
-    addEventListenerSpy.mockRestore();
-    removeEventListenerSpy.mockRestore();
+    expect(visibility.listenerCount).toBe(0);
+    expect(visibility.listenersAdded).toBe(visibility.listenersRemoved);
   });
 
   it("should not trigger updates after unmount", () => {
     const onChange = vi.fn();
-    visibilityState = "visible";
 
     const { unmount } = renderHook(() => useDocVisible({ onChange }));
 
     unmount();
 
-    act(() => {
-      visibilityState = "hidden";
-      document.dispatchEvent(new Event("visibilitychange"));
-    });
+    setVisibility("hidden");
 
     expect(onChange).not.toHaveBeenCalled();
   });
 
   it("should handle rapid visibility changes correctly", () => {
     const onChange = vi.fn();
-    visibilityState = "visible";
 
     renderHook(() => useDocVisible({ onChange }));
 
-    act(() => {
-      visibilityState = "hidden";
-      document.dispatchEvent(new Event("visibilitychange"));
-    });
+    setVisibility("hidden");
 
-    act(() => {
-      visibilityState = "visible";
-      document.dispatchEvent(new Event("visibilitychange"));
-    });
+    setVisibility("visible");
 
-    act(() => {
-      visibilityState = "hidden";
-      document.dispatchEvent(new Event("visibilitychange"));
-    });
+    setVisibility("hidden");
 
     expect(onChange).toHaveBeenCalledTimes(3);
     expect(onChange).toHaveBeenNthCalledWith(1, false);
@@ -204,7 +159,6 @@ describe("useDocVisible", () => {
   });
 
   it("should return stable reference between re-renders when visibility doesn't change", () => {
-    visibilityState = "visible";
     const { result, rerender } = renderHook(() => useDocVisible());
 
     const firstValue = result.current;
@@ -215,23 +169,19 @@ describe("useDocVisible", () => {
   });
 
   it("should handle prerender visibility state", () => {
-    visibilityState = "prerender" as DocumentVisibilityState;
+    setVisibility("prerender" as DocumentVisibilityState);
     const { result } = renderHook(() => useDocVisible());
 
     // prerender is not "visible", so should return false
     expect(result.current).toBe(false);
 
-    act(() => {
-      visibilityState = "visible";
-      document.dispatchEvent(new Event("visibilitychange"));
-    });
+    setVisibility("visible");
 
     expect(result.current).toBe(true);
   });
 
   it("should not call onChange when visibility state is the same", () => {
     const onChange = vi.fn();
-    visibilityState = "visible";
 
     renderHook(() => useDocVisible({ onChange }));
 
@@ -245,7 +195,7 @@ describe("useDocVisible", () => {
 
   it("reports the document as visible when rendering on the server", () => {
     // The client snapshot would be `false`; the server snapshot must win.
-    visibilityState = "hidden";
+    setVisibility("hidden");
     const Comp = () => createElement("span", null, String(useDocVisible()));
 
     expect(renderToString(createElement(Comp))).toContain("true");

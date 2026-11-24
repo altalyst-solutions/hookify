@@ -124,7 +124,7 @@ pnpm check:package  # after a build: publint and are-the-types-wrong on the pack
 pnpm size           # after a build: gzipped size of the bundle and of each hook against packages/hookify/size-budgets.json
 pnpm size:update    # after a build: add budgets for new hooks, drop deleted ones; name a hook to raise its budget
 pnpm test:consumers # after a build: install the packed library into the e2e/consumers fixtures
-pnpm setup:consumers # after a build: install the fixtures' dependencies in place so editors resolve their imports
+pnpm setup:consumers # once, after a build: install the fixtures' dependencies in place, linked to the library, so editors resolve their imports
 pnpm test:mcp       # MCP server tests, including find_hook's golden queries
 ```
 

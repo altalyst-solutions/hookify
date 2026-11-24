@@ -6,12 +6,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useImpression } from "@/hooks";
 import {
   createIntersectionObserverEntry,
+  type DocumentVisibilityController,
   type FakeIntersectionObserver,
+  installDocumentVisibility,
   installIntersectionObserver,
   type IntersectionObserverController,
 } from "@/testing";
 
 let observers: IntersectionObserverController;
+let visibility: DocumentVisibilityController;
 
 /**
  * Reports the observed element at the given visibility ratio, inside `act()`.
@@ -34,25 +37,20 @@ const advance = (ms: number) =>
   });
 
 describe("useImpression", () => {
-  let visibilityState: DocumentVisibilityState;
-
+  /** Changes the visibility inside `act()`, as the browser does when the tab is hidden or shown. */
   const setVisibility = (state: DocumentVisibilityState) => {
     act(() => {
-      visibilityState = state;
-      document.dispatchEvent(new Event("visibilitychange"));
+      visibility.setVisibility(state);
     });
   };
 
   beforeEach(() => {
     observers = installIntersectionObserver();
-    visibilityState = "visible";
-    // `restoreMocks` in vitest.config.ts restores the real getter after each test.
-    vi.spyOn(document, "visibilityState", "get").mockImplementation(
-      () => visibilityState
-    );
+    visibility = installDocumentVisibility();
   });
 
   afterEach(() => {
+    visibility.restore();
     observers.restore();
   });
 
@@ -307,7 +305,7 @@ describe("useImpression", () => {
   describe("document visibility", () => {
     it("does not start the timer while the document is hidden", () => {
       const { onImpression } = setup();
-      visibilityState = "hidden";
+      setVisibility("hidden");
 
       notify(observers.active[0], 1);
       advance(5000);
@@ -410,15 +408,12 @@ describe("useImpression", () => {
     });
 
     it("removes the visibility listener on unmount", () => {
-      const remove = vi.spyOn(document, "removeEventListener");
       const { unmount } = setup();
+      expect(visibility.listenerCount).toBe(1);
 
       unmount();
 
-      expect(remove).toHaveBeenCalledWith(
-        "visibilitychange",
-        expect.any(Function)
-      );
+      expect(visibility.listenerCount).toBe(0);
     });
 
     it("clears the timer and stops observing when the element is detached", () => {
