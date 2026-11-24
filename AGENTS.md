@@ -41,7 +41,7 @@ pnpm check:package  # after a build: publint and attw on the packed packages
 pnpm size           # after a build: gzipped size of the bundle and of each hook against packages/hookify/size-budgets.json
 pnpm size:update    # after a build: add budgets for new hooks, drop deleted ones; name a hook to raise its budget
 pnpm test:consumers # after a build: install the packed library into the e2e/consumers fixtures
-pnpm setup:consumers # after a build: install the fixtures' dependencies in place so editors resolve their imports
+pnpm setup:consumers # once, after a build: install the fixtures' dependencies in place, linked to the library, so editors resolve their imports
 ```
 
 `pnpm format` fixes formatting. To run a single spec: `pnpm -F @altalyst/hookify exec vitest run tests/hooks/use-x.spec.ts`.
@@ -119,9 +119,12 @@ components that use hookify.
 - It has no dependency on a test runner or on React: no `vi`, `jest` or
   `@testing-library` imports. Fakes install themselves on `globalThis`, and
   `restore()` puts back what was there before (or deletes the global).
-- Each `installX()` returns a controller with `instances`, `active`,
-  `trigger(target, overrides)` and `restore()`. Callers wrap `trigger` in
-  `act()` themselves.
+- Each `installX()` returns a controller with `restore()` and the methods that
+  drive the fake: `instances`, `active` and `trigger(target, overrides)` for the
+  observers, `setMatches(query, matches)` for `matchMedia`, and
+  `setVisibility(state)` for the document. Fakes that add listeners also expose
+  `listenerCount`, `listenersAdded` and `listenersRemoved`. Callers wrap the
+  methods that fire events in `act()` themselves.
 - The same style rules, TSDoc rules and per-file coverage thresholds as the
   hooks apply. Our own specs use the fakes, so a helper stays honest to what
   the hooks need.
