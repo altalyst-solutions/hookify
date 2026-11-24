@@ -128,9 +128,11 @@ components that use hookify.
 - The same style rules, TSDoc rules and per-file coverage thresholds as the
   hooks apply. Our own specs use the fakes, so a helper stays honest to what
   the hooks need.
-- Name helpers `installX` for a fake that replaces a global and `createXEntry`
-  for a value factory. Use `{@link ...}` and prose rather than `@throws`, which
-  the jsdoc and tsdoc lint rules disagree on.
+- Name helpers `installX` for a fake that replaces a global, `createXEntry` or
+  `createX` for a value factory, and `dispatchX` for a function that fires an
+  event the browser would fire in another tab or context. Use `{@link ...}` and
+  prose rather than `@throws`, which the jsdoc and tsdoc lint rules disagree
+  on.
 
 ## Documentation style (TSDoc)
 
