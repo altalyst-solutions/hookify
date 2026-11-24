@@ -29,9 +29,10 @@
  *
  * The fixtures only get their dependencies inside the temporary directories,
  * so an editor shows unresolved imports in the folder itself. To fix that, run
- * the script with `--install` to install the packed library and each
- * fixture's dependencies in place (`node_modules` is ignored by Git, and
- * `package.json` stays untouched):
+ * the script with `--install` to install each fixture's dependencies in place,
+ * with `@altalyst/hookify` linked to `packages/hookify` (`node_modules` is
+ * ignored by Git, and `package.json` stays untouched). The link follows every
+ * `pnpm build`, so run `--install` once, not after each change to the library:
  *
  * ```sh
  * node e2e/consumers/run.mjs --install [fixture...]
@@ -140,17 +141,18 @@ const runFixture = (name, workDir, tarball, script) => {
 };
 
 /**
- * Installs the tarball and a fixture's dependencies inside the fixture's own
- * folder, so editors can resolve its imports. Neither `package.json` nor a
- * lockfile is written.
+ * Installs a fixture's dependencies inside the fixture's own folder, with the
+ * library linked to the workspace package instead of copied, so editors can
+ * resolve its imports. A link follows every rebuild of `dist`, so nothing goes
+ * stale when the library gains exports. Neither `package.json` nor a lockfile
+ * is written.
  *
  * @param name - The fixture's folder name.
- * @param tarball - The packed library.
  */
-const installFixture = (name, tarball) => {
+const installFixture = (name) => {
   execFileSync(
     "npm",
-    [...INSTALL_ARGS, "--no-save", "--no-package-lock", tarball],
+    [...INSTALL_ARGS, "--no-save", "--no-package-lock", LIBRARY_DIR],
     { cwd: join(FIXTURES_DIR, name), stdio: "inherit" }
   );
 };
@@ -171,13 +173,16 @@ const main = () => {
   const failures = [];
 
   try {
-    const tarball = packLibrary(workDir);
+    if (install && !existsSync(join(LIBRARY_DIR, "dist"))) {
+      throw new Error("The library isn't built. Run `pnpm build` first.");
+    }
+    const tarball = install ? undefined : packLibrary(workDir);
 
     for (const name of fixtures) {
       console.log(`\n=== ${name}`);
       try {
         if (install) {
-          installFixture(name, tarball);
+          installFixture(name);
           console.log(`Installed ${name}`);
         } else {
           runFixture(name, workDir, tarball, script);
