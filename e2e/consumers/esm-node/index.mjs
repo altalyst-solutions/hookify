@@ -6,6 +6,8 @@ import {
   useToggleState,
 } from "@altalyst/hookify";
 import {
+  createMemoryStorage,
+  installClipboard,
   installDocumentVisibility,
   installIntersectionObserver,
   installMatchMedia,
@@ -51,3 +53,20 @@ assert.equal(typeof globalThis.matchMedia, "undefined");
 // The document helper needs a DOM, and says so.
 assert.throws(() => installDocumentVisibility(), /needs a document/);
 console.log("ESM import of the matchMedia and visibility helpers works");
+
+// Storage and clipboard fakes need no DOM either (Node 21+ has `navigator`).
+const storage = createMemoryStorage({ items: { a: "1" }, quota: 10 });
+assert.equal(storage.getItem("a"), "1");
+assert.throws(() => storage.setItem("b", "x".repeat(20)), {
+  name: "QuotaExceededError",
+});
+
+const clipboard = installClipboard();
+await navigator.clipboard.writeText("copied");
+assert.equal(await navigator.clipboard.readText(), "copied");
+clipboard.setPermission("denied");
+await assert.rejects(navigator.clipboard.writeText("no"), {
+  name: "NotAllowedError",
+});
+clipboard.restore();
+console.log("ESM import of the storage and clipboard helpers works");
