@@ -417,6 +417,7 @@ const buildEntry = (
     keywords: (data.keywords as string[]) ?? [],
     related: (data.related as string[] | undefined) ?? [],
     browserApis: (data.browserApis as string[]) ?? [],
+    testing: (data.testing as string[] | undefined) ?? [],
     useWhen: readUseCases(body),
     signature: renderSignature(name, declaration, callables, source),
     details: commentText(doc?.comment).replace(LIVE_EXAMPLE_LINE, "").trim(),

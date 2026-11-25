@@ -60,11 +60,11 @@ can install it from there.
 
 ## What it offers
 
-| Tool         | What your agent gets                                                                                                                                                                                                |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `list_hooks` | Every hook in one line, grouped by category (state, timing, async, DOM, browser, lifecycle, refs).                                                                                                                  |
-| `get_hook`   | One hook's signature, parameters, option and return types with their defaults, use cases and behavior details. Set `includeAllExamples: true` to include every documented example; by default it returns the first. |
-| `find_hook`  | The best hooks for a problem described in plain language, with the use case each one fits.                                                                                                                          |
+| Tool         | What your agent gets                                                                                                                                                                                                                                                                            |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `list_hooks` | Every hook in one line, grouped by category (state, timing, async, DOM, browser, lifecycle, refs).                                                                                                                                                                                              |
+| `get_hook`   | One hook's signature, parameters, option and return types with their defaults, use cases, behavior details and the test fakes from `@altalyst/hookify/testing` that fake its browser APIs. Set `includeAllExamples: true` to include every documented example; by default it returns the first. |
+| `find_hook`  | The best hooks for a problem described in plain language, with the use case each one fits.                                                                                                                                                                                                      |
 
 You don't call these yourself; your agent picks them when it needs to. Prompts
 like these lead it there:

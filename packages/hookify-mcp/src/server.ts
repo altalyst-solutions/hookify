@@ -108,7 +108,7 @@ export const createServer = (options: CreateServerOptions = {}) => {
     {
       title: "Get a hookify hook",
       description:
-        "Get everything needed to use one @altalyst/hookify hook correctly: its signature, parameters, option and return types with defaults, when to use it, behavior details and its docs link. Set includeAllExamples to true to return every documented example instead of only the first.",
+        "Get everything needed to use one @altalyst/hookify hook correctly: its signature, parameters, option and return types with defaults, when to use it, behavior details, the test fakes that fake its browser APIs, and its docs link. Set includeAllExamples to true to return every documented example instead of only the first.",
       inputSchema: z.object({
         name: z
           .string()
