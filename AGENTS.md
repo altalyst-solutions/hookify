@@ -209,7 +209,12 @@ Adding or changing a hook means all of the following, in the same PR:
      `category` (`state`, `timing`, `async`, `dom`, `browser`, `lifecycle` or
      `refs`), optional `related` (other hook names) and `browserApis` (web
      features the hook relies on, such as `IntersectionObserver`; `[]` for
-     none; not timers or `AbortController`). Deprecated hooks add
+     none; not timers or `AbortController`) and `testing` (the helpers from
+     `@altalyst/hookify/testing` that fake those APIs in a test, such as
+     `installIntersectionObserver`; omit it when none apply). A hook that
+     needs a fake also gets a bullet in its "Usage notes" linking to the
+     testing guide (`docs-site/docs/testing.md`), and a new fake gets a
+     section there. Deprecated hooks add
      `deprecated: true` and `replacedBy`. Use cases stay in
      `## When to use it`, which needs at least two bullets. `pnpm docs:check`
      enforces all of it.

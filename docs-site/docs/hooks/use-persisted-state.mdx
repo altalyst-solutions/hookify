@@ -7,6 +7,13 @@ keywords:
 category: state
 related: [useFrecency, useToggleState]
 browserApis: [Web Storage]
+testing:
+  [
+    createMemoryStorage,
+    installLocalStorage,
+    installSessionStorage,
+    dispatchStorageEvent,
+  ]
 ---
 
 import HookDemo from "@site/src/components/HookDemo";
@@ -90,6 +97,10 @@ function usePersistedState<T>(
 - Changing `key` loads the value stored under the new key (or
   `initialValue`); the previous value is never written under the new key.
 - `setValue` keeps a stable identity across renders, just like `useState`.
+- To test components that use it in jsdom, fake web storage with
+  `installLocalStorage` or `installSessionStorage` (or pass a `createMemoryStorage`
+  storage), and simulate another tab with `dispatchStorageEvent`. All of them come
+  from `@altalyst/hookify/testing`; see the [testing guide](/testing#web-storage).
 
 ## Example
 

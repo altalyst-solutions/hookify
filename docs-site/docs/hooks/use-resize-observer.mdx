@@ -6,6 +6,7 @@ keywords: [resize, resizeobserver, element size, canvas, chart]
 category: dom
 related: [useElementSize]
 browserApis: [ResizeObserver]
+testing: [installResizeObserver]
 ---
 
 import HookDemo from "@site/src/components/HookDemo";
@@ -105,6 +106,9 @@ is the element type, for example `useResizeObserver<HTMLDivElement>(...)`.
   of what you store.
 - To combine it with another ref, call both from a function ref:
   `ref={(el) => { ref(el); myRef.current = el; }}`.
+- To test components that use it in jsdom, fake `ResizeObserver` with
+  `installResizeObserver` from `@altalyst/hookify/testing`. See the [testing
+  guide](/testing#intersectionobserver-and-resizeobserver).
 
 ## Examples
 

@@ -6,6 +6,7 @@ keywords: [current time, time ago, relative time, clock, countdown, date]
 category: timing
 related: [useInterval, useDocVisible]
 browserApis: [Page Visibility API]
+testing: [installDocumentVisibility]
 ---
 
 import HookDemo from "@site/src/components/HookDemo";
@@ -122,6 +123,9 @@ function useNow(options?: UseNowOptions): number;
   fake timers (`vi.useFakeTimers()`, `vi.setSystemTime()`) control it. Wrap
   `advanceTimersByTime` in `act`.
 - Safe under React `StrictMode`.
+- To test components that use it in jsdom, fake page visibility with
+  `installDocumentVisibility` from `@altalyst/hookify/testing`. See the [testing
+  guide](/testing#page-visibility).
 
 ## Example
 

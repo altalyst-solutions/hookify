@@ -57,7 +57,13 @@ docs-site/          # Docusaurus documentation site (private workspace package)
    category: timing # state, timing, async, dom, browser, lifecycle or refs
    related: [useOtherHook] # optional
    browserApis: [IntersectionObserver] # web features it relies on, [] for none
+   testing: [installIntersectionObserver] # optional: fakes from @altalyst/hookify/testing
    ```
+
+   If a fake in `@altalyst/hookify/testing` covers the browser API, list it in
+   `testing` (`pnpm docs:check` checks that it exists), add a bullet to the
+   page's "Usage notes" that links to the [testing guide](docs-site/docs/testing.md),
+   and, for a new fake, add a section to that guide.
 
    Use cases go in the page's `## When to use it` section (at least two
    bullets), not in the front matter. Quote a description that contains

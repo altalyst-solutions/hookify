@@ -15,6 +15,7 @@ keywords:
 category: browser
 related: [useWebLock, useDocVisible]
 browserApis: [Web Locks API, BroadcastChannel]
+testing: [installWebLocks, installBroadcastChannel]
 ---
 
 import HookDemo from "@site/src/components/HookDemo";
@@ -144,6 +145,9 @@ function useTabLeader<TMessage = unknown>(
   latest props, and changing them doesn't re-run the election.
 - The election is shared only by tabs of the **same origin**, and by the same
   browser profile.
+- To test components that use it in jsdom, fake the Web Locks API and
+  `BroadcastChannel` with `installWebLocks` and `installBroadcastChannel` from
+  `@altalyst/hookify/testing`. See the [testing guide](/testing#web-locks).
 
 ## Example
 
