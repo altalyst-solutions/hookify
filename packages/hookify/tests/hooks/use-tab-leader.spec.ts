@@ -1,98 +1,29 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, cleanup, renderHook } from "@testing-library/react";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useTabLeader, type UseTabLeaderOptions } from "@/hooks";
+import {
+  type BroadcastChannelController,
+  installBroadcastChannel,
+  installWebLocks,
+  type WebLocksController,
+} from "@/testing";
 
-const abortError = () => new DOMException("Aborted", "AbortError");
+let channels: BroadcastChannelController;
+let locks: WebLocksController;
+/** Whether `locks` was installed by the current test, so it must be restored. */
+let locksInstalled = false;
 
-// A small in-memory stand-in for `navigator.locks`: exclusive locks, FIFO
-// queueing and abort signals, with callbacks run asynchronously like browsers.
-const createFakeLocks = () => {
-  const held = new Set<string>();
-  const queue: Array<{ name: string; grant: () => void }> = [];
-
-  const grantNext = (name: string) => {
-    const index = queue.findIndex((entry) => entry.name === name);
-    if (index !== -1) queue.splice(index, 1)[0].grant();
-  };
-
-  const request = vi.fn(
-    (
-      name: string,
-      options: LockOptions,
-      callback: LockGrantedCallback<unknown>
-    ) =>
-      new Promise((resolve, reject) => {
-        const grant = () => {
-          held.add(name);
-          Promise.resolve()
-            .then(() => callback({ name, mode: "exclusive" } as Lock))
-            .then(resolve, reject)
-            .finally(() => {
-              held.delete(name);
-              grantNext(name);
-            });
-        };
-
-        if (options.signal?.aborted) {
-          reject(options.signal.reason);
-        } else if (!held.has(name)) {
-          grant();
-        } else {
-          const entry = { name, grant };
-          queue.push(entry);
-          options.signal?.addEventListener("abort", () => {
-            const index = queue.indexOf(entry);
-            if (index === -1) return;
-            queue.splice(index, 1);
-            reject(options.signal?.reason ?? abortError());
-          });
-        }
-      })
-  );
-
-  return { request, held, queue };
+/** Installs the Web Locks fake for the current test. */
+const useLocks = () => {
+  locks = installWebLocks();
+  locksInstalled = true;
 };
 
-const channels = new Map<string, Set<FakeBroadcastChannel>>();
-
-// Delivers to every other open channel with the same name, asynchronously and
-// cloned, but never to the sender, like the real `BroadcastChannel`.
-class FakeBroadcastChannel {
-  onmessage: ((event: MessageEvent) => void) | null = null;
-  isClosed = false;
-
-  constructor(readonly name: string) {
-    if (!channels.has(name)) channels.set(name, new Set());
-    channels.get(name)!.add(this);
-  }
-
-  postMessage(data: unknown) {
-    if (this.isClosed) throw new DOMException("Closed", "InvalidStateError");
-    const cloned = structuredClone(data);
-    for (const channel of channels.get(this.name)!) {
-      if (channel === this) continue;
-      void Promise.resolve().then(() => {
-        if (!channel.isClosed) channel.onmessage?.({ data: cloned } as never);
-      });
-    }
-  }
-
-  close() {
-    this.isClosed = true;
-    channels.get(this.name)?.delete(this);
-  }
-}
-
-// A tab that isn't running the hook, for scripting what other tabs send.
-const createPeer = (key: string) => {
-  const channel = new FakeBroadcastChannel(`hookify:tab-leader:${key}`);
-  const received: Array<{ type: string; [field: string]: unknown }> = [];
-  channel.onmessage = (event) => received.push(event.data);
-  return { channel, received };
-};
+/** A tab that isn't running the hook, for scripting what other tabs send. */
+const createPeer = (key: string) => channels.peer(`hookify:tab-leader:${key}`);
 
 const settle = (ms = 0) =>
   act(async () => {
@@ -112,12 +43,14 @@ const render = (
 
 describe("useTabLeader", () => {
   beforeEach(() => {
-    channels.clear();
-    vi.stubGlobal("BroadcastChannel", FakeBroadcastChannel);
+    channels = installBroadcastChannel();
   });
 
   afterEach(() => {
-    delete (navigator as { locks?: unknown }).locks;
+    cleanup();
+    channels.restore();
+    if (locksInstalled) locks.restore();
+    locksInstalled = false;
   });
 
   it("is not the leader during server rendering", () => {
@@ -130,14 +63,8 @@ describe("useTabLeader", () => {
   });
 
   describe("with Web Locks", () => {
-    let locks: ReturnType<typeof createFakeLocks>;
-
     beforeEach(() => {
-      locks = createFakeLocks();
-      Object.defineProperty(navigator, "locks", {
-        value: locks,
-        configurable: true,
-      });
+      useLocks();
     });
 
     it("elects a lone instance and calls onElected once", async () => {
@@ -154,11 +81,12 @@ describe("useTabLeader", () => {
       expect(result.current.leaderId).toBe(result.current.id);
       expect(onElected).toHaveBeenCalledTimes(1);
       expect(onDemoted).not.toHaveBeenCalled();
-      expect(locks.request).toHaveBeenCalledWith(
-        "hookify:tab-leader:k",
-        expect.objectContaining({ signal: expect.any(AbortSignal) }),
-        expect.any(Function)
-      );
+      expect(locks.requests).toEqual([
+        {
+          name: "hookify:tab-leader:k",
+          options: { signal: expect.any(AbortSignal) },
+        },
+      ]);
     });
 
     it("elects exactly one leader and tells followers who it is", async () => {
@@ -237,7 +165,9 @@ describe("useTabLeader", () => {
       expect(onElected).toHaveBeenCalledTimes(2);
       expect(result.current.isLeader).toBe(true);
       expect(result.current.id).not.toBe(firstId);
-      expect(locks.held).toEqual(new Set(["hookify:tab-leader:b"]));
+      expect(locks.held).toEqual([
+        { name: "hookify:tab-leader:b", mode: "exclusive" },
+      ]);
     });
 
     it("steps down while disabled and takes part again when enabled", async () => {
@@ -254,7 +184,7 @@ describe("useTabLeader", () => {
         id: null,
       });
       expect(onDemoted).toHaveBeenCalledTimes(1);
-      expect(locks.held.size).toBe(0);
+      expect(locks.held).toHaveLength(0);
 
       rerender({ key: "k", options: { enabled: true, onDemoted } });
       await settle();
@@ -266,7 +196,7 @@ describe("useTabLeader", () => {
       const { result } = render("k", { enabled: false });
       await settle();
 
-      expect(locks.request).not.toHaveBeenCalled();
+      expect(locks.requests).toHaveLength(0);
       expect(result.current.isLeader).toBe(false);
     });
 
@@ -275,14 +205,14 @@ describe("useTabLeader", () => {
       await settle();
       const follower = render("k");
       await settle();
-      expect(locks.queue).toHaveLength(1);
+      expect(locks.pending).toHaveLength(1);
 
       follower.unmount();
-      expect(locks.queue).toHaveLength(0);
+      expect(locks.pending).toHaveLength(0);
 
       leader.unmount();
       await settle();
-      expect(locks.held.size).toBe(0);
+      expect(locks.held).toHaveLength(0);
     });
 
     it("keeps exactly one leader and balanced callbacks in StrictMode", async () => {
@@ -302,7 +232,7 @@ describe("useTabLeader", () => {
       await settle();
 
       expect(onElected.mock.calls.length).toBe(onDemoted.mock.calls.length);
-      expect(locks.held.size).toBe(0);
+      expect(locks.held).toHaveLength(0);
     });
 
     it("calls the latest callbacks without re-electing", async () => {
@@ -313,7 +243,7 @@ describe("useTabLeader", () => {
 
       rerender({ key: "k", options: { onDemoted: second } });
       await settle();
-      expect(locks.request).toHaveBeenCalledTimes(1);
+      expect(locks.requests).toHaveLength(1);
 
       rerender({ key: "k", options: { enabled: false, onDemoted: second } });
       expect(first).not.toHaveBeenCalled();
@@ -334,14 +264,12 @@ describe("useTabLeader", () => {
       });
 
       expect(result.current.isLeader).toBe(true);
-      expect(locks.held.size).toBe(1);
+      expect(locks.held).toHaveLength(1);
       expect(() => vi.runAllTimers()).toThrow(failure);
     });
 
     it("leads alone when the lock request fails", async () => {
-      locks.request.mockRejectedValueOnce(
-        new DOMException("Denied", "SecurityError")
-      );
+      locks.failNext(new DOMException("Denied", "SecurityError"));
       const onElected = vi.fn();
       const { result } = render("k", { onElected });
       await settle();
@@ -355,7 +283,7 @@ describe("useTabLeader", () => {
       await settle();
       const peer = createPeer("k");
 
-      peer.channel.postMessage({ type: "leader", id: "intruder" });
+      peer.post({ type: "leader", id: "intruder" });
       await settle();
 
       expect(result.current.isLeader).toBe(true);
@@ -366,7 +294,7 @@ describe("useTabLeader", () => {
       await settle();
       const peer = createPeer("k");
 
-      peer.channel.postMessage({ type: "hello" });
+      peer.post({ type: "hello" });
       await settle();
 
       expect(peer.received).toContainEqual({
@@ -382,9 +310,9 @@ describe("useTabLeader", () => {
       await settle();
       const peer = createPeer("k");
 
-      peer.channel.postMessage({ type: "hello" });
-      peer.channel.postMessage("garbage");
-      peer.channel.postMessage(null);
+      peer.post({ type: "hello" });
+      peer.post("garbage");
+      peer.post(null);
       await settle();
 
       expect(peer.received).toEqual([
@@ -446,8 +374,7 @@ describe("useTabLeader", () => {
 
     it("takes over when the leader stops pinging", async () => {
       const peer = createPeer("k");
-      const ping = () =>
-        peer.channel.postMessage({ type: "ping", id: "old", since: 0 });
+      const ping = () => peer.post({ type: "ping", id: "old", since: 0 });
       const { result } = render("k");
       ping();
       await settle(500);
@@ -472,7 +399,7 @@ describe("useTabLeader", () => {
       await settle(500);
       expect(result.current.isLeader).toBe(true);
 
-      createPeer("k").channel.postMessage({
+      createPeer("k").post({
         type: "ping",
         id: "older",
         since: 0,
@@ -492,11 +419,11 @@ describe("useTabLeader", () => {
       const { result } = render("k");
       const since = Date.now();
 
-      peer.channel.postMessage({ type: "ping", id: "c", since });
+      peer.post({ type: "ping", id: "c", since });
       await settle(500);
       expect(result.current.isLeader).toBe(true);
 
-      peer.channel.postMessage({ type: "ping", id: "a", since });
+      peer.post({ type: "ping", id: "a", since });
       await settle();
       expect(result.current.leaderId).toBe("a");
     });
@@ -507,7 +434,7 @@ describe("useTabLeader", () => {
       await settle();
       peer.received.length = 0;
 
-      peer.channel.postMessage({ type: "hello" });
+      peer.post({ type: "hello" });
       await settle();
 
       expect(peer.received).toEqual([
@@ -518,15 +445,15 @@ describe("useTabLeader", () => {
     it("forgets a tab that says goodbye and ignores leader announcements", async () => {
       const peer = createPeer("k");
       const { result } = render("k");
-      peer.channel.postMessage({ type: "ping", id: "old", since: 0 });
+      peer.post({ type: "ping", id: "old", since: 0 });
       await settle(500);
       expect(result.current.leaderId).toBe("old");
 
-      peer.channel.postMessage({ type: "leader", id: "other" });
+      peer.post({ type: "leader", id: "other" });
       await settle();
       expect(result.current.leaderId).toBe("old");
 
-      peer.channel.postMessage({ type: "bye", id: "old" });
+      peer.post({ type: "bye", id: "old" });
       await settle();
       expect(result.current.isLeader).toBe(true);
     });
@@ -538,7 +465,7 @@ describe("useTabLeader", () => {
 
       unmount();
       await settle();
-      expect(peer.received.at(-1)?.type).toBe("bye");
+      expect(peer.received.at(-1)).toMatchObject({ type: "bye" });
 
       peer.received.length = 0;
       await settle(5000);
@@ -611,10 +538,7 @@ describe("useTabLeader", () => {
 
   describe("messaging", () => {
     beforeEach(() => {
-      Object.defineProperty(navigator, "locks", {
-        value: createFakeLocks(),
-        configurable: true,
-      });
+      useLocks();
     });
 
     it("delivers broadcasts to other tabs but not the sender", async () => {

@@ -4,8 +4,7 @@ import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { isAbortError, useWebLock } from "@/hooks";
-
-const abortError = () => new DOMException("Aborted", "AbortError");
+import { installWebLocks, type WebLocksController } from "@/testing";
 
 const deferred = <T = void>() => {
   let resolve!: (value: T) => void;
@@ -17,137 +16,15 @@ const deferred = <T = void>() => {
   return { promise, resolve, reject };
 };
 
-interface Held {
-  name: string;
-  mode: LockMode;
-  abort: (reason: unknown) => void;
-}
-
-interface Queued {
-  name: string;
-  mode: LockMode;
-  grant: () => void;
-}
-
-// A small in-memory stand-in for `navigator.locks` with the semantics the hook
-// relies on: FIFO queueing, shared/exclusive modes, `ifAvailable`, `steal`
-// and abort signals.
-const createFakeLockManager = () => {
-  const held: Held[] = [];
-  const queue: Queued[] = [];
-
-  const canGrant = (name: string, mode: LockMode) => {
-    const holders = held.filter((entry) => entry.name === name);
-    return (
-      holders.length === 0 ||
-      (mode === "shared" && holders.every((entry) => entry.mode === "shared"))
-    );
-  };
-
-  const pump = () => {
-    const blocked = new Set<string>();
-    for (const request of [...queue]) {
-      if (!blocked.has(request.name) && canGrant(request.name, request.mode)) {
-        queue.splice(queue.indexOf(request), 1);
-        request.grant();
-      } else {
-        blocked.add(request.name);
-      }
-    }
-  };
-
-  const request = vi.fn(
-    (
-      name: string,
-      options: LockOptions,
-      callback: LockGrantedCallback<unknown>
-    ) =>
-      new Promise((resolve, reject) => {
-        const mode = options.mode ?? "exclusive";
-
-        const grant = (onDone?: () => void) => {
-          let settled = false;
-          const entry: Held = {
-            name,
-            mode,
-            abort: (reason) => {
-              if (settled) return;
-              settled = true;
-              reject(reason);
-            },
-          };
-          held.push(entry);
-          const release = () => {
-            held.splice(held.indexOf(entry), 1);
-            onDone?.();
-            pump();
-          };
-          Promise.resolve()
-            .then(() => callback({ name, mode } as Lock))
-            .then(
-              (value) => {
-                if (!settled) resolve(value);
-                settled = true;
-                release();
-              },
-              (error) => {
-                if (!settled) reject(error);
-                settled = true;
-                release();
-              }
-            );
-        };
-
-        if (options.signal?.aborted) {
-          reject(options.signal.reason);
-        } else if (options.steal) {
-          held
-            .filter((entry) => entry.name === name)
-            .forEach((entry) => {
-              entry.abort(abortError());
-              held.splice(held.indexOf(entry), 1);
-            });
-          grant();
-        } else if (
-          canGrant(name, mode) &&
-          !queue.some((q) => q.name === name)
-        ) {
-          grant();
-        } else if (options.ifAvailable) {
-          Promise.resolve()
-            .then(() => callback(null))
-            .then(resolve, reject);
-        } else {
-          const queued: Queued = { name, mode, grant };
-          queue.push(queued);
-          options.signal?.addEventListener("abort", () => {
-            const index = queue.indexOf(queued);
-            if (index === -1) return;
-            queue.splice(index, 1);
-            reject(options.signal?.reason);
-          });
-        }
-      })
-  );
-
-  return { request, held, queue };
-};
-
 describe("useWebLock", () => {
-  let locks: ReturnType<typeof createFakeLockManager>;
+  let locks: WebLocksController;
 
   beforeEach(() => {
-    locks = createFakeLockManager();
-    Object.defineProperty(navigator, "locks", {
-      value: locks,
-      configurable: true,
-    });
+    locks = installWebLocks();
   });
 
   afterEach(() => {
-    // jsdom has no Web Locks API, so remove the property rather than leaving
-    // a stub behind for other test files.
-    delete (navigator as { locks?: unknown }).locks;
+    locks.restore();
   });
 
   it("starts idle", () => {
@@ -367,11 +244,12 @@ describe("useWebLock", () => {
       await result.current.run(() => {});
     });
 
-    expect(locks.request).toHaveBeenCalledWith(
-      "a",
-      { mode: "shared", signal: expect.any(AbortSignal) },
-      expect.any(Function)
-    );
+    expect(locks.requests).toEqual([
+      {
+        name: "a",
+        options: { mode: "shared", signal: expect.any(AbortSignal) },
+      },
+    ]);
   });
 
   it("lets run options override the hook options", async () => {
@@ -382,18 +260,13 @@ describe("useWebLock", () => {
       await result.current.run(() => {}, { ifAvailable: true });
     });
 
-    expect(locks.request).toHaveBeenNthCalledWith(
-      1,
-      "a",
-      { mode: "exclusive", signal: expect.any(AbortSignal) },
-      expect.any(Function)
-    );
-    expect(locks.request).toHaveBeenNthCalledWith(
-      2,
-      "a",
-      { mode: "shared", ifAvailable: true },
-      expect.any(Function)
-    );
+    expect(locks.requests).toEqual([
+      {
+        name: "a",
+        options: { mode: "exclusive", signal: expect.any(AbortSignal) },
+      },
+      { name: "a", options: { mode: "shared", ifAvailable: true } },
+    ]);
   });
 
   it("uses the latest hook options without changing run's identity", async () => {
@@ -409,11 +282,12 @@ describe("useWebLock", () => {
     await act(async () => {
       await result.current.run(() => {});
     });
-    expect(locks.request).toHaveBeenCalledWith(
-      "a",
-      expect.objectContaining({ mode: "shared" }),
-      expect.any(Function)
-    );
+    expect(locks.requests).toEqual([
+      {
+        name: "a",
+        options: expect.objectContaining({ mode: "shared" }),
+      },
+    ]);
   });
 
   it("changes run's identity and uses the new name when name changes", async () => {
@@ -429,11 +303,7 @@ describe("useWebLock", () => {
     await act(async () => {
       await result.current.run(() => {});
     });
-    expect(locks.request).toHaveBeenCalledWith(
-      "b",
-      expect.anything(),
-      expect.any(Function)
-    );
+    expect(locks.requests).toEqual([{ name: "b", options: expect.anything() }]);
   });
 
   it("steals the lock without passing a signal", async () => {
@@ -458,11 +328,10 @@ describe("useWebLock", () => {
 
     expect(fn).toHaveBeenCalledTimes(1);
     expect(isAbortError(heldError)).toBe(true);
-    expect(locks.request).toHaveBeenLastCalledWith(
-      "a",
-      { steal: true },
-      expect.any(Function)
-    );
+    expect(locks.requests.at(-1)).toEqual({
+      name: "a",
+      options: { steal: true },
+    });
   });
 
   it("aborts a pending request on unmount and rejects with an AbortError", async () => {
@@ -492,7 +361,7 @@ describe("useWebLock", () => {
       gate.resolve();
     });
     expect(fn).not.toHaveBeenCalled();
-    expect(locks.queue).toHaveLength(0);
+    expect(locks.pending).toHaveLength(0);
   });
 
   it("aborts the signal given to fn on unmount but leaves the held lock alone", async () => {
@@ -594,7 +463,7 @@ describe("useWebLock", () => {
         .catch((e: unknown) => e);
 
       expect(error).toBe(reason);
-      expect(locks.request).not.toHaveBeenCalled();
+      expect(locks.requests).toHaveLength(0);
       expect(fn).not.toHaveBeenCalled();
     });
 
@@ -637,7 +506,7 @@ describe("useWebLock", () => {
 
   describe("without the Web Locks API", () => {
     beforeEach(() => {
-      delete (navigator as { locks?: unknown }).locks;
+      locks.restore();
     });
 
     it("runs fn directly with a null lock", async () => {
@@ -676,7 +545,7 @@ describe("useWebLock", () => {
     };
 
     expect(renderToString(createElement(Demo))).toContain("false-false");
-    expect(locks.request).not.toHaveBeenCalled();
+    expect(locks.requests).toHaveLength(0);
   });
 
   it("works under StrictMode", async () => {

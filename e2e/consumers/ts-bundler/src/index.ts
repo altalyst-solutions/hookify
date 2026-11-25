@@ -8,15 +8,23 @@ import {
   createMemoryStorage,
   type DocumentVisibilityController,
   dispatchStorageEvent,
+  installBroadcastChannel,
   installClipboard,
   installDocumentVisibility,
   installLocalStorage,
   installMatchMedia,
   installResizeObserver,
+  installWebLocks,
+  type BroadcastChannelController,
+  type BroadcastPeer,
+  type LockInfo,
+  type LockRequestRecord,
   type MatchMediaController,
   type MemoryStorage,
+  type ReceivedMessage,
   type ResizeObserverController,
   type StorageController,
+  type WebLocksController,
 } from "@altalyst/hookify/testing";
 
 export const probe = (): [boolean, boolean] => {
@@ -108,4 +116,43 @@ export const clipboardProbe = async (): Promise<ClipboardController> => {
 
   await navigator.clipboard.writeText("x");
   return clipboard;
+};
+
+export const locksProbe = async (): Promise<WebLocksController> => {
+  const locks = installWebLocks();
+
+  const other = locks.hold("job", "shared");
+  await other.granted;
+  other.release();
+  locks.failNext(new Error("nope"));
+  locks.releaseAll("job");
+  const held: readonly LockInfo[] = locks.held;
+  const pending: readonly LockInfo[] = locks.pending;
+  const requests: readonly LockRequestRecord[] = locks.requests;
+  void held;
+  void pending;
+  void requests;
+
+  // @ts-expect-error Only shared or exclusive are accepted.
+  locks.hold("job", "mixed");
+
+  return locks;
+};
+
+export const broadcastChannelProbe = (): BroadcastChannelController => {
+  const channels = installBroadcastChannel();
+
+  const peer: BroadcastPeer = channels.peer("room");
+  peer.post({ hello: 1 });
+  const received: unknown[] = peer.received;
+  const closed: boolean = peer.closed;
+  const open: readonly string[] = channels.open;
+  const posted: readonly ReceivedMessage[] = channels.posted;
+  void received;
+  void closed;
+  void open;
+  void posted;
+  peer.close();
+
+  return channels;
 };
