@@ -7,10 +7,12 @@ import {
 } from "@altalyst/hookify";
 import {
   createMemoryStorage,
+  installBroadcastChannel,
   installClipboard,
   installDocumentVisibility,
   installIntersectionObserver,
   installMatchMedia,
+  installWebLocks,
 } from "@altalyst/hookify/testing";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
@@ -69,4 +71,28 @@ await assert.rejects(navigator.clipboard.writeText("no"), {
   name: "NotAllowedError",
 });
 clipboard.restore();
-console.log("ESM import of the storage and clipboard helpers works");
+
+// Web Locks and BroadcastChannel fakes, including a lock held by another tab.
+const locks = installWebLocks();
+const other = locks.hold("job");
+await other.granted;
+let ran = false;
+const waiting = navigator.locks.request("job", () => {
+  ran = true;
+});
+await Promise.resolve();
+assert.equal(ran, false);
+other.release();
+await waiting;
+assert.equal(ran, true);
+locks.restore();
+
+const channels = installBroadcastChannel();
+const peer = channels.peer("room");
+const channel = new BroadcastChannel("room");
+channel.postMessage({ hello: 1 });
+await new Promise((resolve) => setTimeout(resolve, 0));
+assert.deepEqual(peer.received, [{ hello: 1 }]);
+channel.close();
+channels.restore();
+console.log("ESM import of the storage, clipboard and lock helpers works");

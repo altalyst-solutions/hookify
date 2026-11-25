@@ -7,10 +7,12 @@ const {
 } = require("@altalyst/hookify");
 const {
   createMemoryStorage,
+  installBroadcastChannel,
   installClipboard,
   installDocumentVisibility,
   installIntersectionObserver,
   installMatchMedia,
+  installWebLocks,
 } = require("@altalyst/hookify/testing");
 const { createElement } = require("react");
 const { renderToString } = require("react-dom/server");
@@ -70,7 +72,33 @@ const clipboard = installClipboard();
     name: "NotAllowedError",
   });
   clipboard.restore();
-  console.log("CommonJS require of the storage and clipboard helpers works");
+
+  // Web Locks and BroadcastChannel fakes, including a lock held by another tab.
+  const locks = installWebLocks();
+  const other = locks.hold("job");
+  await other.granted;
+  let ran = false;
+  const waiting = navigator.locks.request("job", () => {
+    ran = true;
+  });
+  await Promise.resolve();
+  assert.equal(ran, false);
+  other.release();
+  await waiting;
+  assert.equal(ran, true);
+  locks.restore();
+
+  const channels = installBroadcastChannel();
+  const peer = channels.peer("room");
+  const channel = new BroadcastChannel("room");
+  channel.postMessage({ hello: 1 });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.deepEqual(peer.received, [{ hello: 1 }]);
+  channel.close();
+  channels.restore();
+  console.log(
+    "CommonJS require of the storage, clipboard and lock helpers works"
+  );
 })().catch((error) => {
   console.error(error);
   process.exitCode = 1;
