@@ -7,6 +7,7 @@ keywords:
 category: browser
 related: [useInterval, useNow]
 browserApis: [Page Visibility API]
+testing: [installDocumentVisibility]
 ---
 
 import HookDemo from "@site/src/components/HookDemo";
@@ -73,6 +74,9 @@ interface UseDocVisibleOptions {
   mismatches.
 - The `onChange` callback only fires when the visibility actually changes,
   never on every render.
+- To test components that use it in jsdom, fake page visibility with
+  `installDocumentVisibility` from `@altalyst/hookify/testing`. See the [testing
+  guide](/testing#page-visibility).
 
 ## Hook source
 

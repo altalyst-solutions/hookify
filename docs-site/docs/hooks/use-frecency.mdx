@@ -7,6 +7,7 @@ keywords:
 category: state
 related: [usePersistedState]
 browserApis: [Web Storage]
+testing: [createMemoryStorage, installLocalStorage]
 ---
 
 import HookDemo from "@site/src/components/HookDemo";
@@ -128,6 +129,9 @@ function useFrecency<T extends string | number>(
   them can differ from the server HTML. If you hydrate such a list, render it
   after mounting.
 - Safe under React `StrictMode`.
+- To test components that use it in jsdom, fake web storage with
+  `createMemoryStorage` and `installLocalStorage` from
+  `@altalyst/hookify/testing`. See the [testing guide](/testing#web-storage).
 
 ## Examples
 

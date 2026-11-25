@@ -127,14 +127,18 @@ export const formatHook = (
     );
   }
 
-  sections.push(
-    [
-      `Import: \`import { ${hook.name} } from "@altalyst/hookify";\` (version ${data.hookifyVersion})`,
-      `Category: ${hook.category}`,
-      `Browser APIs: ${hook.browserApis.length > 0 ? `${hook.browserApis.join(", ")} (SSR-safe; see the details for what happens without them)` : "none"}`,
-      `Docs: ${hook.docsUrl}`,
-    ].join("\n")
-  );
+  const header = [
+    `Import: \`import { ${hook.name} } from "@altalyst/hookify";\` (version ${data.hookifyVersion})`,
+    `Category: ${hook.category}`,
+    `Browser APIs: ${hook.browserApis.length > 0 ? `${hook.browserApis.join(", ")} (SSR-safe; see the details for what happens without them)` : "none"}`,
+  ];
+  if (hook.testing.length > 0) {
+    header.push(
+      `Test fakes: ${hook.testing.join(", ")} (import from "@altalyst/hookify/testing" to test components that use it in jsdom)`
+    );
+  }
+  header.push(`Docs: ${hook.docsUrl}`);
+  sections.push(header.join("\n"));
 
   sections.push(`## Signature\n\`\`\`ts\n${hook.signature}\n\`\`\``);
 

@@ -6,6 +6,7 @@ keywords: [analytics, ad impression, viewed, mark as read, dwell time, tracking]
 category: dom
 related: [useIntersectionObserver, useDocVisible]
 browserApis: [IntersectionObserver, Page Visibility API]
+testing: [installIntersectionObserver, installDocumentVisibility]
 ---
 
 import HookDemo from "@site/src/components/HookDemo";
@@ -137,6 +138,10 @@ function useImpression<T extends Element = HTMLElement>(
   environment such as jsdom, which does not provide it, and wrap timer advances
   in `act`.
 - Safe under React `StrictMode`.
+- To test components that use it in jsdom, fake `IntersectionObserver` and page
+  visibility with `installIntersectionObserver` and `installDocumentVisibility`
+  from `@altalyst/hookify/testing`. See the [testing
+  guide](/testing#intersectionobserver-and-resizeobserver).
 
 ## Example
 

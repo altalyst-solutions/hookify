@@ -6,6 +6,7 @@ keywords: [visibility, in view, viewport, lazy load, infinite scroll, scroll]
 category: dom
 related: [useImpression, useIsStuck, useElementSize]
 browserApis: [IntersectionObserver]
+testing: [installIntersectionObserver]
 ---
 
 import HookDemo from "@site/src/components/HookDemo";
@@ -118,6 +119,9 @@ notification). The type parameter `T` is the element type, for example
   option changes, and when `enabled` becomes `false`.
 - To combine it with another ref, call both from a function ref:
   `ref={(el) => { ref(el); myRef.current = el; }}`.
+- To test components that use it in jsdom, fake `IntersectionObserver` with
+  `installIntersectionObserver` from `@altalyst/hookify/testing`. See the
+  [testing guide](/testing#intersectionobserver-and-resizeobserver).
 
 ## Examples
 

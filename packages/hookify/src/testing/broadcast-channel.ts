@@ -100,9 +100,12 @@ interface Channel {
  * @example
  * ```tsx
  * import { act, render, screen } from "@testing-library/react";
- * import { installBroadcastChannel } from "@altalyst/hookify/testing";
+ * import { installBroadcastChannel, type BroadcastChannelController } from "@altalyst/hookify/testing";
  *
- * const channels = installBroadcastChannel();
+ * let channels: BroadcastChannelController;
+ * beforeEach(() => {
+ *   channels = installBroadcastChannel();
+ * });
  * afterEach(() => channels.restore());
  *
  * it("shows what another tab broadcasts", async () => {

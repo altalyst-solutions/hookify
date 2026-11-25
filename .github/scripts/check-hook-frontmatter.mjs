@@ -21,6 +21,8 @@
  * - `category` is one of {@link CATEGORIES};
  * - `related` (optional) only names other existing hooks;
  * - `browserApis` lists the browser APIs the hook relies on (empty for none);
+ * - `testing` (optional) only names helpers exported from
+ *   `@altalyst/hookify/testing`, the fakes to use when testing the hook;
  * - a deprecated page sets `replacedBy` to an existing, non-deprecated hook;
  * - every other page has a `## When to use it` section with at least two
  *   bullets, which is where the use cases live (they are not repeated in the
@@ -44,6 +46,9 @@ const PAGES_DIR = resolve(ROOT, "docs-site/docs/hooks");
 
 /** The library's hooks barrel file; each `export *` line is one hook. */
 const HOOKS_INDEX = resolve(ROOT, "packages/hookify/src/hooks/index.ts");
+
+/** Directory of the `@altalyst/hookify/testing` entry. */
+const TESTING_DIR = resolve(ROOT, "packages/hookify/src/testing");
 
 /**
  * Allowed values for `category`, with what belongs in each.
@@ -71,6 +76,7 @@ const METADATA_KEYS = new Set([
   "category",
   "related",
   "browserApis",
+  "testing",
   "deprecated",
   "replacedBy",
 ]);
@@ -102,6 +108,24 @@ const readExportedSlugs = () => {
       (match) => match[1]
     )
   );
+};
+
+/**
+ * Reads the names exported from the `@altalyst/hookify/testing` entry.
+ *
+ * @returns {Set<string>} The `export const` names of every module that the
+ *   entry's `index.ts` re-exports with `export * from "./module"`.
+ */
+const readTestingExports = () => {
+  const index = readFileSync(resolve(TESTING_DIR, "index.ts"), "utf8");
+  const names = new Set();
+  for (const [, module] of index.matchAll(/export \* from "\.\/([a-z-]+)";/g)) {
+    const source = readFileSync(resolve(TESTING_DIR, `${module}.ts`), "utf8");
+    for (const [, name] of source.matchAll(/^export const (\w+)/gm)) {
+      names.add(name);
+    }
+  }
+  return names;
 };
 
 /**
@@ -154,9 +178,10 @@ const isStringList = (value) =>
  * @param {string} body - The page without its front matter.
  * @param {Map<string, Record<string, unknown>>} pages - Every page's front
  *   matter, by hook name, for cross-page checks.
+ * @param {Set<string>} testingExports - The names exported by the testing entry.
  * @returns {string[]} The problems found; empty when the page is valid.
  */
-const checkPage = (slug, data, body, pages) => {
+const checkPage = (slug, data, body, pages, testingExports) => {
   const problems = [];
   const name = toHookName(slug);
 
@@ -233,6 +258,23 @@ const checkPage = (slug, data, body, pages) => {
     );
   }
 
+  if (data.testing !== undefined) {
+    if (!isStringList(data.testing)) {
+      problems.push("`testing` must be a list of helper names");
+    } else {
+      if (new Set(data.testing).size !== data.testing.length) {
+        problems.push("`testing` has duplicates");
+      }
+      for (const helper of data.testing) {
+        if (!testingExports.has(helper)) {
+          problems.push(
+            `\`testing\` names \`${helper}\`, which \`@altalyst/hookify/testing\` doesn't export`
+          );
+        }
+      }
+    }
+  }
+
   if (data.deprecated !== undefined && data.deprecated !== true) {
     problems.push("`deprecated` must be `true` or left out");
   }
@@ -268,6 +310,7 @@ const checkPage = (slug, data, body, pages) => {
 /** Runs every check and reports the results. */
 const main = () => {
   const exported = readExportedSlugs();
+  const testingExports = readTestingExports();
   const files = readdirSync(PAGES_DIR).filter((file) => file.endsWith(".mdx"));
   const slugs = new Set(files.map((file) => basename(file, ".mdx")));
 
@@ -307,7 +350,8 @@ const main = () => {
       slug,
       pages.get(toHookName(slug)),
       body,
-      pages
+      pages,
+      testingExports
     )) {
       add(`${slug}.mdx`, problem);
     }

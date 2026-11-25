@@ -110,6 +110,28 @@ describe("hooks data", () => {
     );
   });
 
+  it("names the test fakes a hook needs, all of which the testing entry exports", async () => {
+    const { readFileSync, readdirSync } = await import("node:fs");
+    const testingDir = resolve(HOOKS_INDEX, "../../testing");
+    const exports = new Set(
+      readdirSync(testingDir)
+        .filter((file) => file !== "index.ts")
+        .flatMap((file) => [
+          ...readFileSync(resolve(testingDir, file), "utf8").matchAll(
+            /^export const (\w+)/gm
+          ),
+        ])
+        .map((match) => match[1])
+    );
+    expect(findHook("useClipboard")?.testing).toEqual(["installClipboard"]);
+    expect(findHook("useDebounce")?.testing).toEqual([]);
+    for (const hook of hooksData.hooks) {
+      for (const helper of hook.testing) {
+        expect(exports.has(helper), `${hook.name}: ${helper}`).toBe(true);
+      }
+    }
+  });
+
   it("points deprecated hooks at an existing, current replacement", () => {
     const deprecated = hooksData.hooks.filter((hook) => hook.deprecated);
     expect(deprecated.map((hook) => hook.name).sort()).toEqual([

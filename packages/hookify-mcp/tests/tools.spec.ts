@@ -128,6 +128,19 @@ describe("hookify MCP server", () => {
       );
     });
 
+    it("names the test fakes for hooks that need browser APIs faked", async () => {
+      const client = await connect();
+      const { text } = await call(client, "get_hook", { name: "useTabLeader" });
+      expect(text).toContain(
+        'Test fakes: installWebLocks, installBroadcastChannel (import from "@altalyst/hookify/testing"'
+      );
+
+      const { text: plain } = await call(client, "get_hook", {
+        name: "useDebouncedCallback",
+      });
+      expect(plain).not.toContain("Test fakes");
+    });
+
     it("returns only the first documented example by default", async () => {
       const { text } = await call(await connect(), "get_hook", {
         name: "useControlledState",

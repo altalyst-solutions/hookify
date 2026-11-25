@@ -6,6 +6,7 @@ keywords: [width, height, dimensions, container query, responsive, measure]
 category: dom
 related: [useResizeObserver, useMediaQuery]
 browserApis: [ResizeObserver]
+testing: [installResizeObserver]
 ---
 
 import HookDemo from "@site/src/components/HookDemo";
@@ -112,6 +113,9 @@ example `useElementSize<HTMLDivElement>()`.
 - Need to react to the viewport instead? Use
   [`useMediaQuery`](./use-media-query.mdx). For custom DOM events, use
   [`useEventListener`](./use-event-listener.mdx).
+- To test components that use it in jsdom, fake `ResizeObserver` with
+  `installResizeObserver` from `@altalyst/hookify/testing`. See the [testing
+  guide](/testing#intersectionobserver-and-resizeobserver).
 
 ## Examples
 

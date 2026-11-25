@@ -4,6 +4,7 @@ const sidebars: SidebarsConfig = {
   docsSidebar: [
     "getting-started",
     "ai-agents",
+    "testing",
     {
       type: "category",
       label: "Hooks",

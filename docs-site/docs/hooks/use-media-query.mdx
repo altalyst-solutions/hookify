@@ -14,6 +14,7 @@ keywords:
 category: browser
 related: [useElementSize]
 browserApis: [matchMedia]
+testing: [installMatchMedia]
 ---
 
 import HookDemo from "@site/src/components/HookDemo";
@@ -90,6 +91,9 @@ function useMediaQuery(query: string, options?: UseMediaQueryOptions): boolean;
 - Works with React 18 and 19, including StrictMode.
 - Need to react to an element's size instead of the viewport's? Use
   [`useElementSize`](./use-element-size.mdx).
+- To test components that use it in jsdom, fake `matchMedia` with
+  `installMatchMedia` from `@altalyst/hookify/testing`. See the [testing
+  guide](/testing#matchmedia).
 
 ## Example
 

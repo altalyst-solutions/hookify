@@ -6,6 +6,7 @@ keywords: [lock, mutex, multiple tabs, token refresh, serialize, cross-tab]
 category: browser
 related: [useTabLeader]
 browserApis: [Web Locks API]
+testing: [installWebLocks]
 ---
 
 import HookDemo from "@site/src/components/HookDemo";
@@ -140,6 +141,9 @@ function useWebLock(
   `navigator` during render, so the hook is SSR-safe.
 - `run` keeps a stable identity until `name` changes. The `options` you pass
   to the hook are read when `run` is called, so inline objects are safe.
+- To test components that use it in jsdom, fake the Web Locks API with
+  `installWebLocks` from `@altalyst/hookify/testing`. See the [testing
+  guide](/testing#web-locks).
 
 ## Example
 

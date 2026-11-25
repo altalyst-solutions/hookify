@@ -33,6 +33,11 @@ export interface HookEntry {
   related: string[];
   /** Web platform features the hook relies on; empty for none. */
   browserApis: string[];
+  /**
+   * Helpers from `@altalyst/hookify/testing` that fake what the hook needs in
+   * a test, from the docs page's `testing`; empty for none.
+   */
+  testing: string[];
   /** Use cases from the docs page's "When to use it" section, as plain text. */
   useWhen: string[];
   /** Set when the hook is deprecated. */

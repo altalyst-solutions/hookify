@@ -6,6 +6,7 @@ keywords: [sticky, position sticky, sticky header, pinned, shadow on scroll]
 category: dom
 related: [useIntersectionObserver]
 browserApis: [IntersectionObserver]
+testing: [installIntersectionObserver]
 ---
 
 import HookDemo from "@site/src/components/HookDemo";
@@ -139,6 +140,9 @@ function useIsStuck<T extends Element = HTMLElement>(
   call its callback with an entry that has `boundingClientRect` and
   `rootBounds`, wrapped in `act`.
 - Safe under React `StrictMode`.
+- To test components that use it in jsdom, fake `IntersectionObserver` with
+  `installIntersectionObserver` from `@altalyst/hookify/testing`. See the
+  [testing guide](/testing#intersectionobserver-and-resizeobserver).
 
 ## Examples
 

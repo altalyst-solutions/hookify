@@ -71,9 +71,12 @@ export interface DocumentVisibilityController {
  * @example
  * ```tsx
  * import { act, render, screen } from "@testing-library/react";
- * import { installDocumentVisibility } from "@altalyst/hookify/testing";
+ * import { installDocumentVisibility, type DocumentVisibilityController } from "@altalyst/hookify/testing";
  *
- * const visibility = installDocumentVisibility();
+ * let visibility: DocumentVisibilityController;
+ * beforeEach(() => {
+ *   visibility = installDocumentVisibility();
+ * });
  * afterEach(() => visibility.restore());
  *
  * it("pauses the clock while the tab is hidden", () => {

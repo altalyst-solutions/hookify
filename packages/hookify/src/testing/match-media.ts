@@ -228,9 +228,12 @@ const createFakeClass = (
  * @example
  * ```tsx
  * import { act, render, screen } from "@testing-library/react";
- * import { installMatchMedia } from "@altalyst/hookify/testing";
+ * import { installMatchMedia, type MatchMediaController } from "@altalyst/hookify/testing";
  *
- * const media = installMatchMedia();
+ * let media: MatchMediaController;
+ * beforeEach(() => {
+ *   media = installMatchMedia();
+ * });
  * afterEach(() => media.restore());
  *
  * it("shows the wide layout on large screens", () => {
