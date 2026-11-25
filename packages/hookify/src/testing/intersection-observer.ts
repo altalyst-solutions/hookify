@@ -222,9 +222,12 @@ const createFakeClass = (instances: FakeIntersectionObserver[]) =>
  * @example
  * ```tsx
  * import { act, render, screen } from "@testing-library/react";
- * import { installIntersectionObserver } from "@altalyst/hookify/testing";
+ * import { installIntersectionObserver, type IntersectionObserverController } from "@altalyst/hookify/testing";
  *
- * const observers = installIntersectionObserver();
+ * let observers: IntersectionObserverController;
+ * beforeEach(() => {
+ *   observers = installIntersectionObserver();
+ * });
  * afterEach(() => observers.restore());
  *
  * it("loads the image when it scrolls into view", () => {

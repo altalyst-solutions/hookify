@@ -110,9 +110,12 @@ const notAllowed = () =>
  * ```tsx
  * import { render, screen } from "@testing-library/react";
  * import userEvent from "@testing-library/user-event";
- * import { installClipboard } from "@altalyst/hookify/testing";
+ * import { installClipboard, type ClipboardController } from "@altalyst/hookify/testing";
  *
- * const clipboard = installClipboard();
+ * let clipboard: ClipboardController;
+ * beforeEach(() => {
+ *   clipboard = installClipboard();
+ * });
  * afterEach(() => clipboard.restore());
  *
  * it("copies the invite link", async () => {

@@ -181,9 +181,12 @@ const installStorage = (
  * @example
  * ```tsx
  * import { render, screen } from "@testing-library/react";
- * import { installLocalStorage } from "@altalyst/hookify/testing";
+ * import { installLocalStorage, type StorageController } from "@altalyst/hookify/testing";
  *
- * const local = installLocalStorage();
+ * let local: StorageController;
+ * beforeEach(() => {
+ *   local = installLocalStorage();
+ * });
  * afterEach(() => local.restore());
  *
  * it("starts from the saved theme", () => {
@@ -228,9 +231,12 @@ export const installSessionStorage = (
  * @example
  * ```tsx
  * import { act, render, screen } from "@testing-library/react";
- * import { dispatchStorageEvent, installLocalStorage } from "@altalyst/hookify/testing";
+ * import { dispatchStorageEvent, installLocalStorage, type StorageController } from "@altalyst/hookify/testing";
  *
- * const local = installLocalStorage();
+ * let local: StorageController;
+ * beforeEach(() => {
+ *   local = installLocalStorage();
+ * });
  * afterEach(() => local.restore());
  *
  * it("follows changes made in another tab", () => {

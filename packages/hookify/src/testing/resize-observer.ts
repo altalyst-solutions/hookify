@@ -218,9 +218,12 @@ const createFakeClass = (instances: FakeResizeObserver[]) =>
  * @example
  * ```tsx
  * import { act, render, screen } from "@testing-library/react";
- * import { installResizeObserver } from "@altalyst/hookify/testing";
+ * import { installResizeObserver, type ResizeObserverController } from "@altalyst/hookify/testing";
  *
- * const observers = installResizeObserver();
+ * let observers: ResizeObserverController;
+ * beforeEach(() => {
+ *   observers = installResizeObserver();
+ * });
  * afterEach(() => observers.restore());
  *
  * it("shows the width of the box", () => {

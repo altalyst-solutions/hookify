@@ -123,9 +123,12 @@ const abortError = () =>
  * @example
  * ```tsx
  * import { act, render, screen } from "@testing-library/react";
- * import { installWebLocks } from "@altalyst/hookify/testing";
+ * import { installWebLocks, type WebLocksController } from "@altalyst/hookify/testing";
  *
- * const locks = installWebLocks();
+ * let locks: WebLocksController;
+ * beforeEach(() => {
+ *   locks = installWebLocks();
+ * });
  * afterEach(() => locks.restore());
  *
  * it("waits while another tab holds the lock", async () => {
