@@ -28,6 +28,7 @@ packages/hookify/   # the published @altalyst/hookify package
   CHANGELOG.md      # written by Changesets
 packages/hookify-mcp/ # MCP server that gives AI agents the hooks' docs
   scripts/build-data.ts # builds its hook data from the library's types and the docs pages
+  src/detect/       # finds hand-written code that a hook could replace (parses with @babel/parser)
 docs-site/          # Docusaurus documentation site (private workspace package)
   docs/hooks/       # One .mdx page per hook (demo + docs)
   src/hook-examples # Example components used by the live demos
