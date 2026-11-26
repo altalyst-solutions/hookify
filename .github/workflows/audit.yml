@@ -43,7 +43,32 @@ jobs:
           node-version-file: ".nvmrc"
           package-manager-cache: false
 
-      # pnpm audit reads pnpm-lock.yaml, so no install is needed.
-      - name: Run pnpm audit
+      - name: Test audit summary
+        run: node --test .github/scripts/audit-summary.test.mjs
+
+      # pnpm reads the lockfile without an install and filters JSON by audit level.
+      # Collect every advisory; the summary applies the matrix failure threshold.
+      - name: Collect pnpm audit results
+        id: audit
         working-directory: ${{ matrix.directory }}
-        run: pnpm audit --audit-level=${{ matrix.level }}
+        env:
+          AUDIT_JSON_PATH: ${{ runner.temp }}/audit-${{ matrix.name }}.json
+          AUDIT_STDERR_PATH: ${{ runner.temp }}/audit-${{ matrix.name }}.stderr
+        run: |
+          set +e
+          pnpm audit --json --audit-level=info \
+            > "$AUDIT_JSON_PATH" 2> "$AUDIT_STDERR_PATH"
+          audit_status=$?
+          set -e
+          printf 'exit_code=%s\n' "$audit_status" >> "$GITHUB_OUTPUT"
+
+      - name: Write audit summary
+        if: always()
+        env:
+          AUDIT_EXIT_CODE: ${{ steps.audit.outputs.exit_code }}
+          AUDIT_JSON_PATH: ${{ runner.temp }}/audit-${{ matrix.name }}.json
+          AUDIT_STDERR_PATH: ${{ runner.temp }}/audit-${{ matrix.name }}.stderr
+          AUDIT_LEVEL: ${{ matrix.level }}
+          AUDIT_NAME: ${{ matrix.name }}
+          AUDIT_DIRECTORY: ${{ matrix.directory }}
+        run: node .github/scripts/audit-summary.mjs >> "$GITHUB_STEP_SUMMARY"
