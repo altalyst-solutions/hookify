@@ -40,11 +40,13 @@
     "test": "pnpm build && vitest"
   },
   "dependencies": {
+    "@babel/parser": "^7.29.14",
     "@modelcontextprotocol/server": "^2.4.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@altalyst/hookify": "workspace:*",
+    "@babel/types": "^7.29.14",
     "@modelcontextprotocol/client": "^2.4.0",
     "@types/node": "^22.4.0",
     "typescript": "^5.9.3",
