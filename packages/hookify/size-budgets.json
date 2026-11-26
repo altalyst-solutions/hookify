@@ -1,5 +1,6 @@
 {
   "bundle": "9570 B",
+  "testing": "4510 B",
   "hooks": {
     "useApi": "750 B",
     "useAsync": "560 B",

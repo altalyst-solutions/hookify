@@ -8,6 +8,8 @@
  * - `bundle`: the whole package, importing everything.
  * - one check per hook, importing only that hook, which also proves that the
  *   hook is tree-shakeable.
+ * - `testing`: the `@altalyst/hookify/testing` entry, importing everything. It
+ *   is for tests, so it has one budget rather than one per helper.
  *
  * Budgets live in `packages/hookify/size-budgets.json`. This config fails when
  * a hook has no budget, or when a budget names a hook that no longer exists,
@@ -32,6 +34,9 @@ const ROOT = import.meta.dirname;
 /** Path of the built ES bundle, relative to the root. */
 const BUNDLE = "packages/hookify/dist/hookify.js";
 
+/** Path of the built ES bundle of the testing entry, relative to the root. */
+const TESTING_BUNDLE = "packages/hookify/dist/testing.js";
+
 /** Path of the budgets file, relative to the root. */
 const BUDGETS = "packages/hookify/size-budgets.json";
 
@@ -45,7 +50,14 @@ if (!existsSync(resolve(ROOT, BUNDLE))) {
   throw new Error(`${BUNDLE} doesn't exist. Run \`pnpm build\` first.`);
 }
 
-/** The budgets: `bundle` for the whole package, `hooks` for each hook. */
+if (!existsSync(resolve(ROOT, TESTING_BUNDLE))) {
+  throw new Error(`${TESTING_BUNDLE} doesn't exist. Run \`pnpm build\` first.`);
+}
+
+/**
+ * The budgets: `bundle` for the whole package, `testing` for the testing
+ * entry, `hooks` for each hook.
+ */
 const budgets =
   measureOnly && !existsSync(resolve(ROOT, BUDGETS))
     ? { hooks: {} }
@@ -60,6 +72,12 @@ const missing = hooks.filter((name) => !(name in budgets.hooks));
 if (missing.length > 0 && !measureOnly) {
   throw new Error(
     `No size budget for: ${missing.join(", ")}.\nRun \`pnpm size:update\` to add them to ${BUDGETS}, then commit the file.`
+  );
+}
+
+if (budgets.testing === undefined && !measureOnly) {
+  throw new Error(
+    `No size budget for the testing entry.\nRun \`pnpm size:update\` to add it to ${BUDGETS}, then commit the file.`
   );
 }
 
@@ -86,6 +104,13 @@ export default [
     name: "bundle (all hooks)",
     import: "*",
     limit: budgets.bundle ?? PLACEHOLDER_LIMIT,
+  },
+  {
+    ...shared,
+    path: TESTING_BUNDLE,
+    name: "testing (all helpers)",
+    import: "*",
+    limit: budgets.testing ?? PLACEHOLDER_LIMIT,
   },
   ...hooks.map((name) => ({
     ...shared,
