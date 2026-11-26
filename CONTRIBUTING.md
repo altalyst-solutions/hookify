@@ -127,7 +127,7 @@ pnpm format         # prettier --write
 pnpm format:check   # prettier --check
 pnpm build          # build the library (tsc + vite), then the MCP server
 pnpm check:package  # after a build: publint and are-the-types-wrong on the packed packages
-pnpm size           # after a build: gzipped size of the bundle and of each hook against packages/hookify/size-budgets.json
+pnpm size           # after a build: gzipped size of the bundle, the testing entry and each hook against packages/hookify/size-budgets.json
 pnpm size:update    # after a build: add budgets for new hooks, drop deleted ones; name a hook to raise its budget
 pnpm test:consumers # after a build: install the packed library into the e2e/consumers fixtures
 pnpm setup:consumers # once, after a build: install the fixtures' dependencies in place, linked to the library, so editors resolve their imports
@@ -141,7 +141,8 @@ checks on every PR via `.github/workflows/pr-check.yml`.
 
 ### Size budgets
 
-Every hook, and the package as a whole, has a gzipped size budget in
+Every hook, the package as a whole and the `@altalyst/hookify/testing` entry
+have a gzipped size budget in
 `packages/hookify/size-budgets.json`. `pnpm size` (run in CI on every pull
 request, after a build) measures what a consumer would bundle when importing
 only that hook, and fails when a hook goes over its budget, has no budget, or
@@ -165,7 +166,12 @@ expected.
 | Making a hook smaller                         | Optional. To keep the budget tight, run `pnpm size:update useYourHook`.                                                                                       |
 | Removing or renaming a hook                   | Run `pnpm size:update` to drop the old line and add the new one.                                                                                              |
 
-`pnpm size:update bundle` resets the whole-package budget, and
+The testing entry has one budget for all its helpers. When you add or grow a
+helper in `src/testing`, `pnpm size` may fail on it. Run
+`pnpm build && pnpm size:update testing` and commit the new number.
+
+`pnpm size:update bundle` resets the whole-package budget,
+`pnpm size:update testing` resets the testing entry's, and
 `pnpm size:update --all` resets every budget.
 
 ## Commit messages and versioning

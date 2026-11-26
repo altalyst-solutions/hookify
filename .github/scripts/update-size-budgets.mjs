@@ -9,6 +9,7 @@
  * pnpm size:update                 # add new hooks, remove deleted ones
  * pnpm size:update useDebounce     # also reset a hook's budget to its current size
  * pnpm size:update bundle          # also reset the whole-package budget
+ * pnpm size:update testing         # also reset the testing entry's budget
  * pnpm size:update --all           # reset every budget
  * ```
  *
@@ -62,14 +63,18 @@ const main = () => {
   const current = existsSync(BUDGETS)
     ? JSON.parse(readFileSync(BUDGETS, "utf8"))
     : { hooks: {} };
-  const { bundle: bundleSize, hooks: hookSizes } = measureSizes();
+  const {
+    bundle: bundleSize,
+    testing: testingSize,
+    hooks: hookSizes,
+  } = measureSizes();
 
   const unknown = [...reset].filter(
-    (name) => name !== "bundle" && !(name in hookSizes)
+    (name) => name !== "bundle" && name !== "testing" && !(name in hookSizes)
   );
   if (unknown.length > 0) {
     throw new Error(
-      `Unknown hook(s): ${unknown.join(", ")}. Hooks are: ${Object.keys(hookSizes).join(", ")}.`
+      `Unknown hook(s): ${unknown.join(", ")}. Hooks are: ${Object.keys(hookSizes).join(", ")}, plus bundle and testing.`
     );
   }
 
@@ -99,18 +104,35 @@ const main = () => {
     (name) => !(name in hookSizes)
   );
 
-  let bundle = current.bundle;
-  if (bundle === undefined || resetAll || reset.has("bundle")) {
-    const next = toBudget(bundleSize);
-    if (bundle !== undefined && next !== bundle)
-      resets.push(`bundle: ${bundle} -> ${next}`);
-    if (bundle === undefined) added.push("bundle");
-    bundle = next;
-  } else if (bundleSize > toBytes(bundle)) {
-    exceeded.push(`bundle: ${bundleSize} B > ${bundle}`);
-  }
+  /**
+   * Works out the budget of one of the whole-entry checks.
+   *
+   * @param name - `bundle` or `testing`.
+   * @param size - Its measured size in bytes.
+   * @returns The budget to keep or write.
+   */
+  const entryBudget = (name, size) => {
+    const existing = current[name];
+    if (existing === undefined || resetAll || reset.has(name)) {
+      const next = toBudget(size);
+      if (existing !== undefined && next !== existing)
+        resets.push(`${name}: ${existing} -> ${next}`);
+      if (existing === undefined) added.push(name);
+      return next;
+    }
+    if (size > toBytes(existing)) {
+      exceeded.push(`${name}: ${size} B > ${existing}`);
+    }
+    return existing;
+  };
 
-  writeFileSync(BUDGETS, `${JSON.stringify({ bundle, hooks }, null, 2)}\n`);
+  const bundle = entryBudget("bundle", bundleSize);
+  const testing = entryBudget("testing", testingSize);
+
+  writeFileSync(
+    BUDGETS,
+    `${JSON.stringify({ bundle, testing, hooks }, null, 2)}\n`
+  );
 
   const report = (label, items) => {
     if (items.length > 0)

@@ -16,11 +16,14 @@ const ROOT = resolve(import.meta.dirname, "../..");
 /** The name `.size-limit.mjs` gives to the whole-package check. */
 export const BUNDLE_CHECK = "bundle (all hooks)";
 
+/** The name `.size-limit.mjs` gives to the testing entry's check. */
+export const TESTING_CHECK = "testing (all helpers)";
+
 /**
  * Measures the bundle and every hook.
  *
- * @returns The whole-package size in bytes, and a map from hook name to its
- *   size in bytes, both gzipped.
+ * @returns The whole-package size and the testing entry's size in bytes, and a
+ *   map from hook name to its size in bytes, all gzipped.
  */
 export const measureSizes = () => {
   const result = spawnSync("pnpm", ["exec", "size-limit", "--json"], {
@@ -41,9 +44,12 @@ export const measureSizes = () => {
 
   return {
     bundle: rows.find((row) => row.name === BUNDLE_CHECK)?.size,
+    testing: rows.find((row) => row.name === TESTING_CHECK)?.size,
     hooks: Object.fromEntries(
       rows
-        .filter((row) => row.name !== BUNDLE_CHECK)
+        .filter(
+          (row) => row.name !== BUNDLE_CHECK && row.name !== TESTING_CHECK
+        )
         .map((row) => [row.name, row.size])
     ),
   };

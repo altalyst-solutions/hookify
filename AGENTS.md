@@ -38,7 +38,7 @@ pnpm typecheck:all  # builds, then type-checks the library, MCP server, docs sit
 pnpm coverage       # vitest with per-file coverage thresholds
 pnpm build          # typecheck + vite build, then the MCP server
 pnpm check:package  # after a build: publint and attw on the packed packages
-pnpm size           # after a build: gzipped size of the bundle and of each hook against packages/hookify/size-budgets.json
+pnpm size           # after a build: gzipped size of the bundle, the testing entry and each hook against packages/hookify/size-budgets.json
 pnpm size:update    # after a build: add budgets for new hooks, drop deleted ones; name a hook to raise its budget
 pnpm test:consumers # after a build: install the packed library into the e2e/consumers fixtures
 pnpm setup:consumers # once, after a build: install the fixtures' dependencies in place, linked to the library, so editors resolve their imports
@@ -247,15 +247,16 @@ in an `.mdx` page by hand, and nothing needs updating when a hook is added.
 ## Size budgets
 
 `packages/hookify/size-budgets.json` holds a gzipped size budget for every
-hook and for the whole package. `pnpm size` (run after `pnpm build`, and in CI)
+hook, for the whole package and for the `@altalyst/hookify/testing` entry (one
+budget for all its helpers). `pnpm size` (run after `pnpm build`, and in CI)
 fails when a hook is over its budget, has no budget, or has a budget but no
 longer exists. You maintain the file in the same PR as the change, with
 `pnpm size:update`; CI never writes it, and `pnpm size:update` never changes an
 existing budget unless you name it.
 
 Each PR's `size-report` job (a report only, not a gate) summarizes how the PR
-changes the size of the bundle and of every hook compared with the base
-branch.
+changes the size of the bundle, the testing entry and every hook compared with
+the base branch.
 
 - **New hook:** `pnpm build && pnpm size:update`, then commit the file.
 - **Change that stays within the budget** (most edits): nothing to do.
@@ -268,7 +269,9 @@ branch.
 - **Hook gets smaller:** optional; `pnpm size:update useX` tightens its budget.
 - **Hook removed or renamed:** `pnpm size:update` drops the old line and adds
   the new one.
-- `pnpm size:update bundle` resets the whole-package budget, and
+- **Testing helper added or grown:** `pnpm build && pnpm size:update testing`.
+- `pnpm size:update bundle` resets the whole-package budget,
+  `pnpm size:update testing` the testing entry's, and
   `pnpm size:update --all` resets everything.
 
 ## Changesets and commits

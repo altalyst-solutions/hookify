@@ -19,6 +19,9 @@ import { readFileSync } from "node:fs";
 /** The name `.size-limit.mjs` gives to the whole-package check. */
 const BUNDLE_CHECK = "bundle (all hooks)";
 
+/** The name `.size-limit.mjs` gives to the testing entry's check. */
+const TESTING_CHECK = "testing (all helpers)";
+
 /**
  * Reads a `size-limit --json` report.
  *
@@ -104,12 +107,18 @@ const main = () => {
           formatSize(head.get(BUNDLE_CHECK)),
           formatChange(base.get(BUNDLE_CHECK), head.get(BUNDLE_CHECK)),
         ],
+        [
+          "Testing entry",
+          formatSize(base.get(TESTING_CHECK)),
+          formatSize(head.get(TESTING_CHECK)),
+          formatChange(base.get(TESTING_CHECK), head.get(TESTING_CHECK)),
+        ],
       ]
     )
   );
 
   const names = [...new Set([...base.keys(), ...head.keys()])].filter(
-    (name) => name !== BUNDLE_CHECK
+    (name) => name !== BUNDLE_CHECK && name !== TESTING_CHECK
   );
   const changed = names
     .filter((name) => base.get(name) !== head.get(name))
